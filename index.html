@@ -1673,6 +1673,10 @@ main.content{
                   <label class="flbl">Mobile Number <span style="color:var(--red)">*</span></label>
                   <input type="tel" class="finput" id="book-phone" placeholder="+91 or +880 number" autocomplete="tel" inputmode="tel"/>
                 </div>
+                <div>
+                  <label class="flbl">Reason for Visit</label>
+                  <input type="text" class="finput" id="book-reason" placeholder="e.g. Fever, Follow-up, Check-up"/>
+                </div>
                 <button class="msub" onclick="confirmBooking()" style="margin-top:4px">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   Confirm Appointment
@@ -2634,7 +2638,7 @@ async function handleSignup(){
   try{
     const {data,error}=await _supa.auth.signUp({email,password:pass});
     if(error){err.textContent=error.message||'Signup failed. Please try again.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Create Account';btn.disabled=false;}return;}
-    if(!data.user){err.textContent='Check your email to confirm your account, then sign in.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Create Account';btn.disabled=false;}switchAuthTab('login');return;}
+    if(!data.user||!data.session){err.textContent='Check your email to confirm your account, then sign in.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Create Account';btn.disabled=false;}switchAuthTab('login');return;}
     const {data:clinicRow,error:clinicErr}=await _supa.from('clinics').insert({
       owner_id:data.user.id,name:clinic,doctor_name:doctor,
       registration:'',specialty:'General Physician',country:authSelectedCountry,
@@ -2735,6 +2739,7 @@ function goBackToSlots(){
 async function confirmBooking(){
   const name=(document.getElementById("book-name")||{}).value||"";
   const phone=(document.getElementById("book-phone")||{}).value||"";
+  const reason=(document.getElementById("book-reason")||{}).value||"General Consultation";
   if(!name.trim()||!phone.trim()){alert("Please enter your name and mobile number.");return;}
   document.getElementById("book-step2").classList.remove("on");
   document.getElementById("book-step1").classList.remove("on");
@@ -2744,10 +2749,30 @@ async function confirmBooking(){
   if(_clinicId&&selectedSlot){
     try{
       const today=new Date().toISOString().split('T')[0];
+      const dial=DB[mkt].cur.dial;
+      const fullPhone=phone.trim().startsWith("+")?phone.trim():dial+" "+phone.trim();
+      // find or create patient to get a valid patient_id
+      let patientId=null;
+      const {data:existing}=await _supa.from('patients')
+        .select('id').eq('clinic_id',_clinicId).eq('phone',fullPhone).maybeSingle();
+      if(existing){
+        patientId=existing.id;
+      }else{
+        const {data:newPat}=await _supa.from('patients')
+          .insert({clinic_id:_clinicId,name:name.trim(),phone:fullPhone,status:'Active',visit_count:0})
+          .select('id').single();
+        if(newPat)patientId=newPat.id;
+      }
       await _supa.from('appointments').insert({
-        clinic_id:_clinicId,patient_name:name.trim(),patient_phone:phone.trim(),
-        appointment_date:today,appointment_time:selectedSlot,
-        status:'Waiting',source:'dashboard'
+        clinic_id:_clinicId,
+        patient_id:patientId,
+        patient_name:name.trim(),
+        patient_phone:fullPhone,
+        appointment_date:today,
+        appointment_time:selectedSlot,
+        reason:reason.trim()||'General Consultation',
+        status:'Waiting',
+        source:'dashboard'
       });
     }catch(e){}
   }
@@ -2756,8 +2781,8 @@ function resetBooking(){
   document.getElementById("book-success").classList.remove("on");
   document.getElementById("book-step1").classList.add("on");
   document.querySelectorAll(".slot-btn").forEach(b=>b.classList.remove("selected"));
-  const n=document.getElementById("book-name");const p=document.getElementById("book-phone");
-  if(n)n.value="";if(p)p.value="";
+  const n=document.getElementById("book-name");const p=document.getElementById("book-phone");const r=document.getElementById("book-reason");
+  if(n)n.value="";if(p)p.value="";if(r)r.value="";
   selectedSlot=null;
 }
 function copyBookingLink(){
