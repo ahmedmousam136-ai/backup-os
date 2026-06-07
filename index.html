@@ -1,0 +1,2819 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<meta name="theme-color" content="#ffffff" id="meta-theme"/>
+<title>AuraScale OS — Clinic Operating System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ─── RESET & ROOT ─── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+/* ══ LIGHT MODE (default) ══ */
+:root,[data-theme="light"]{
+  --bg:#F7F6F3;
+  --surface:#FFFFFF;
+  --surface2:#FAFAF8;
+  --border:#E8E5DF;
+  --border-mid:#D2CEC6;
+  --border-strong:#AEA9A0;
+  --text-primary:#18170F;
+  --text-secondary:#64605A;
+  --text-tertiary:#9E9A93;
+  --blue:#2E63D4;
+  --blue-light:#4475E0;
+  --blue-bg:#EDF2FC;
+  --blue-border:#BDD0F7;
+  --blue-hover:#2354C0;
+  --green:#12976A;
+  --green-bg:#EAFAF3;
+  --green-border:#9ADEC3;
+  --amber:#C27820;
+  --amber-bg:#FDF4E6;
+  --amber-border:#F0CEAA;
+  --red:#C23838;
+  --red-bg:#FDF0F0;
+  --red-border:#F2B8B8;
+  --sidebar-w:260px;
+  --header-h:54px;
+  --bnav-h:68px;
+  --r-sm:8px;
+  --r-md:12px;
+  --r-lg:16px;
+  --r-xl:20px;
+  --sh-xs:0 1px 3px rgba(0,0,0,.05),0 1px 2px rgba(0,0,0,.04);
+  --sh-sm:0 2px 8px rgba(0,0,0,.07),0 1px 3px rgba(0,0,0,.04);
+  --sh-md:0 4px 18px rgba(0,0,0,.09),0 2px 6px rgba(0,0,0,.05);
+  --sh-lg:0 12px 42px rgba(0,0,0,.13),0 4px 14px rgba(0,0,0,.07);
+  --ease:.17s cubic-bezier(.4,0,.2,1);
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+  --safe-l:env(safe-area-inset-left,0px);
+  --safe-r:env(safe-area-inset-right,0px);
+  --toggle-track:#E8E5DF;
+  --toggle-knob:#FFFFFF;
+  --header-blur:rgba(255,255,255,.94);
+  --sidebar-bg:#FFFFFF;
+}
+
+/* ══ DARK MODE ══ */
+[data-theme="dark"]{
+  --bg:#0F1117;
+  --surface:#171B24;
+  --surface2:#1C2130;
+  --border:#252A38;
+  --border-mid:#2E3448;
+  --border-strong:#3A4160;
+  --text-primary:#E8E9EF;
+  --text-secondary:#8E96B0;
+  --text-tertiary:#525A72;
+  --blue:#4D85F0;
+  --blue-light:#6699F5;
+  --blue-bg:#1A243D;
+  --blue-border:#2A3A5C;
+  --blue-hover:#5C91F5;
+  --green:#1BB880;
+  --green-bg:#0E2A1F;
+  --green-border:#1A4A35;
+  --amber:#E09940;
+  --amber-bg:#271E0E;
+  --amber-border:#3D2E10;
+  --red:#E05050;
+  --red-bg:#250F0F;
+  --red-border:#3D1A1A;
+  --sh-xs:0 1px 3px rgba(0,0,0,.3),0 1px 2px rgba(0,0,0,.25);
+  --sh-sm:0 2px 8px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.25);
+  --sh-md:0 4px 18px rgba(0,0,0,.4),0 2px 6px rgba(0,0,0,.3);
+  --sh-lg:0 12px 42px rgba(0,0,0,.55),0 4px 14px rgba(0,0,0,.35);
+  --toggle-track:#2E3448;
+  --toggle-knob:#E8E9EF;
+  --header-blur:rgba(23,27,36,.94);
+  --sidebar-bg:#171B24;
+}
+
+/* ══ BENGALI FONT SUPPORT ══ */
+[data-lang="bn"] body,
+[data-lang="bn"] button,
+[data-lang="bn"] input,
+[data-lang="bn"] textarea,
+[data-lang="bn"] select,
+[data-lang="bn"] .nb,
+[data-lang="bn"] .pname,
+[data-lang="bn"] .auto-lbl,
+[data-lang="bn"] .aname,
+[data-lang="bn"] .qname,
+[data-lang="bn"] .qrname,
+[data-lang="bn"] .ctx-chip,
+[data-lang="bn"] .mc-lbl,
+[data-lang="bn"] .mc-sub,
+[data-lang="bn"] .ph,
+[data-lang="bn"] .ss,
+[data-lang="bn"] .st,
+[data-lang="bn"] .flbl,
+[data-lang="bn"] .msub,
+[data-lang="bn"] .add-btn,
+[data-lang="bn"] .remind,
+[data-lang="bn"] .qbtn,
+[data-lang="bn"] .pb,
+[data-lang="bn"] .chip,
+[data-lang="bn"] p,
+[data-lang="bn"] span,
+[data-lang="bn"] label{
+  font-family:'Noto Sans Bengali','DM Sans',system-ui,sans-serif;
+  letter-spacing:0;
+  line-height:1.7;
+}
+[data-lang="bn"] .st,
+[data-lang="bn"] .bc-root,
+[data-lang="bn"] .mc-val,
+[data-lang="bn"] .pvisits{
+  font-family:'Noto Sans Bengali',system-ui,sans-serif;
+  font-weight:600;
+}
+
+/* ── BRAND FONT LOCK ── */
+.sb-mark .a,
+.sb-mark .s,
+[data-lang="bn"] .sb-mark .a,
+[data-lang="bn"] .sb-mark .s{
+  font-family:'Instrument Serif',Georgia,serif !important;
+  font-weight:400 !important;
+  letter-spacing:-.02em !important;
+}
+.sb-mark .os,
+[data-lang="bn"] .sb-mark .os{
+  font-family:'DM Sans',sans-serif !important;
+  font-weight:700 !important;
+}
+
+html{
+  background:var(--bg);
+  -webkit-text-size-adjust:100%;
+  scroll-behavior:smooth;
+  touch-action:manipulation;
+}
+body{
+  background:var(--bg);color:var(--text-primary);
+  font-family:'DM Sans',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;overflow-x:hidden;
+  font-size:14px;line-height:1.55;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  transition:background .22s ease,color .22s ease;
+}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:2px}
+button{font-family:'DM Sans',sans-serif;cursor:pointer;border:none;background:none;outline:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+input,textarea,select{font-family:'DM Sans',sans-serif;outline:none;-webkit-appearance:none;appearance:none}
+a{color:inherit;text-decoration:none}
+.serif{font-family:'Instrument Serif',Georgia,serif}
+
+/* ─── LAYOUT ─── */
+#app{display:flex;min-height:100vh;position:relative}
+
+/* ─── OVERLAY ─── */
+#overlay{
+  display:none;position:fixed;inset:0;z-index:38;
+  background:rgba(15,14,10,.5);backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
+}
+#overlay.on{display:block}
+
+/* ─── SIDEBAR ─── */
+#sidebar{
+  width:var(--sidebar-w);
+  background:var(--sidebar-bg);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;bottom:0;z-index:40;
+  transition:transform .28s cubic-bezier(.4,0,.2,1),background .22s ease,border-color .22s ease;
+  will-change:transform;
+  overflow-y:auto;overflow-x:hidden;
+  padding-top:var(--safe-t);
+  -webkit-overflow-scrolling:touch;
+}
+.sb-logo{padding:18px 16px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sb-mark{display:flex;align-items:baseline;gap:0;line-height:1}
+.sb-mark .a{font-size:21px;color:var(--text-primary);letter-spacing:-.02em}
+.sb-mark .s{font-size:21px;color:var(--blue);letter-spacing:-.02em}
+.sb-mark .os{font-size:10px;font-weight:700;color:var(--text-tertiary);letter-spacing:.08em;margin-left:5px;align-self:center;font-family:'DM Sans',sans-serif !important}
+.sb-tag{font-size:10px;color:var(--text-tertiary);letter-spacing:.05em;margin-top:3px}
+
+/* ─── SIDEBAR DOCTOR CARD ─── */
+.sb-doc{padding:11px 13px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sb-doc-inner{background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--r-md);padding:12px 13px;transition:background .22s ease,border-color .22s ease}
+.sb-doc-top{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+.sb-av{width:36px;height:36px;border-radius:9px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',serif;font-size:15px;color:#fff;flex-shrink:0;box-shadow:0 2px 8px rgba(46,99,212,.28)}
+.sb-doc-name{color:var(--text-primary);font-size:12.5px;font-weight:600;letter-spacing:-.01em;line-height:1.3}
+.sb-doc-reg{display:inline-block;margin-top:3px;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);background:var(--surface);border:1px solid var(--blue-border);padding:2px 6px;border-radius:4px;font-weight:700}
+.sb-doc-spec{color:var(--text-secondary);font-size:10.5px;line-height:1.5}
+.sb-online{display:flex;align-items:center;gap:5px;margin-top:7px}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot-g{background:var(--green)}.dot-b{background:var(--blue)}.dot-a{background:var(--amber)}.dot-r{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.blink{animation:pulse 1.8s ease-in-out infinite}
+
+/* ─── WORKSPACE TOGGLE ─── */
+.sb-workspace{margin-top:9px;padding-top:9px;border-top:1px solid var(--blue-border)}
+.sb-workspace-lbl{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-tertiary);font-weight:700;margin-bottom:5px}
+.ws-toggle{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.ws-btn{flex:1;padding:5px 0;font-size:10px;font-weight:700;color:var(--text-tertiary);transition:all var(--ease);cursor:pointer;border:none;background:none;text-align:center;line-height:1.3}
+.ws-btn.active{background:var(--blue);color:#fff}
+
+nav.sb-nav{flex:1;padding:8px 7px;display:flex;flex-direction:column;gap:1px;overflow-y:auto}
+.nav-sec{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-tertiary);font-weight:700;padding:9px 9px 4px;margin-top:4px}
+.nb{
+  width:100%;display:flex;align-items:center;gap:9px;
+  padding:10px 9px;border-radius:var(--r-sm);
+  color:var(--text-secondary);font-size:12.5px;font-weight:500;
+  transition:all var(--ease);cursor:pointer;white-space:nowrap;
+  text-align:left;position:relative;min-height:42px;
+}
+.nb:hover:not(.on){background:var(--bg);color:var(--text-primary)}
+.nb.on{background:var(--blue-bg);color:var(--blue);font-weight:600}
+.nb.on::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:2.5px;background:var(--blue);border-radius:0 2px 2px 0}
+.nb-ic{width:15px;height:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.65}
+.nb.on .nb-ic{opacity:1}
+.nb-badge{margin-left:auto;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);font-size:8.5px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:.02em}
+
+/* ── SIDEBAR FOOTER ── */
+.sb-foot{padding:11px 13px;border-top:1px solid var(--border);flex-shrink:0;padding-bottom:calc(11px + var(--safe-b))}
+.sb-controls{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+
+.theme-toggle{
+  display:flex;align-items:center;gap:5px;
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:5px 8px;cursor:pointer;
+  transition:all var(--ease);min-height:32px;flex:1;
+  color:var(--text-secondary);font-size:10px;font-weight:600;
+  letter-spacing:.04em;
+}
+.theme-toggle:hover{border-color:var(--border-mid);color:var(--text-primary)}
+.theme-ic{width:14px;height:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+
+.lang-toggle{
+  display:flex;align-items:center;gap:5px;
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:5px 8px;cursor:pointer;
+  transition:all var(--ease);min-height:32px;flex:1;
+  color:var(--text-secondary);font-size:10px;font-weight:600;
+  letter-spacing:.04em;
+}
+.lang-toggle:hover{border-color:var(--border-mid);color:var(--text-primary)}
+.lang-active{color:var(--blue);font-weight:700}
+
+.sb-comp{display:flex;align-items:center;gap:5px;color:var(--text-tertiary);font-size:8px;letter-spacing:.04em;margin-bottom:8px;flex-wrap:wrap;line-height:1.5}
+.sb-out{display:flex;align-items:center;gap:6px;color:var(--text-tertiary);font-size:11px;cursor:pointer;transition:color var(--ease);padding:6px 0;min-height:36px}
+.sb-out:hover{color:var(--red)}
+
+/* ─── MAIN ─── */
+#main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;min-width:0}
+
+/* ─── HEADER ─── */
+header{
+  height:var(--header-h);
+  background:var(--header-blur);
+  border-bottom:1px solid var(--border);
+  padding:0 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:30;gap:10px;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  flex-shrink:0;
+  transition:background .22s ease,border-color .22s ease;
+}
+.hdr-l{display:flex;align-items:center;gap:9px;min-width:0;flex:1}
+.hamburger{
+  display:none;width:38px;height:38px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-sm);align-items:center;justify-content:center;
+  color:var(--text-primary);cursor:pointer;flex-shrink:0;
+  box-shadow:var(--sh-xs);
+}
+.bc{display:flex;align-items:center;gap:5px;min-width:0}
+.bc-root{font-family:'Instrument Serif',serif;font-size:15px;color:var(--text-primary);white-space:nowrap}
+.bc-sep{color:var(--text-tertiary);font-size:12px}
+.bc-page{color:var(--text-secondary);font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.hdr-r{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.date-pill{display:flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 9px;font-size:10.5px;color:var(--text-secondary);white-space:nowrap;box-shadow:var(--sh-xs)}
+
+.hdr-theme-btn{
+  width:36px;height:36px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;
+  color:var(--text-secondary);transition:all var(--ease);cursor:pointer;box-shadow:var(--sh-xs);
+  flex-shrink:0;
+}
+.hdr-theme-btn:hover{border-color:var(--border-mid);color:var(--text-primary)}
+
+.hdr-lang-btn{
+  display:flex;align-items:center;gap:4px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:0 9px;height:36px;
+  color:var(--text-secondary);font-size:10.5px;font-weight:600;
+  transition:all var(--ease);cursor:pointer;box-shadow:var(--sh-xs);
+  white-space:nowrap;flex-shrink:0;
+}
+.hdr-lang-btn:hover{border-color:var(--blue-border);color:var(--blue)}
+.hdr-lang-btn .lang-dot{width:5px;height:5px;border-radius:50%;background:var(--blue);flex-shrink:0}
+
+.add-btn{
+  background:var(--blue);border:none;color:#fff;
+  padding:9px 16px;border-radius:var(--r-sm);
+  display:flex;align-items:center;gap:6px;
+  font-size:12.5px;font-weight:700;transition:background var(--ease);
+  box-shadow:0 3px 12px rgba(46,99,212,.32);cursor:pointer;
+  white-space:nowrap;min-height:40px;
+  letter-spacing:.01em;
+}
+.add-btn:hover{background:var(--blue-hover);box-shadow:0 4px 16px rgba(46,99,212,.42)}
+.add-btn:active{transform:scale(.97)}
+
+/* ─── CONTENT ─── */
+main.content{
+  flex:1;
+  padding:20px;
+  background:var(--bg);
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  transition:background .22s ease;
+}
+
+.ctx{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:18px}
+.ctx-chip{display:inline-flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 9px;font-size:10.5px;color:var(--text-secondary);box-shadow:var(--sh-xs);transition:background .22s ease,border-color .22s ease}
+.ctx-chip .lbl{font-weight:600;color:var(--text-primary)}
+.live-badge{display:inline-flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r-sm);padding:5px 9px;font-size:10.5px;color:var(--green);font-weight:600}
+
+/* ══ VIEWS ══ */
+.view{display:none;flex-direction:column;gap:18px}
+.view.on{display:flex}
+
+.sh{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.st{font-family:'Instrument Serif',serif;font-size:23px;color:var(--text-primary);letter-spacing:-.02em;line-height:1.25}
+.ss{color:var(--text-tertiary);font-size:11.5px;margin-top:3px;line-height:1.5}
+
+/* ─── METRICS GRID ─── */
+.mg{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+.mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 16px 14px;transition:all var(--ease);box-shadow:var(--sh-xs)}
+.mc:hover{box-shadow:var(--sh-sm);border-color:var(--border-mid);transform:translateY(-1px)}
+.mc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.mc-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.09em;font-weight:700;color:var(--text-tertiary)}
+.mc-icon{width:27px;height:27px;border-radius:7px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0}
+.mc-val{font-family:'Instrument Serif',serif;font-size:28px;color:var(--text-primary);letter-spacing:-.02em;line-height:1}
+.mc-sub{font-size:10px;color:var(--text-tertiary);margin-top:5px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.up{color:var(--green);font-weight:700}.dn{color:var(--red);font-weight:700}
+
+/* ─── PANELS ─── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs);transition:background .22s ease,border-color .22s ease}
+.ph{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid var(--border)}
+.pt{display:flex;align-items:center;gap:7px;color:var(--text-primary);font-weight:600;font-size:12.5px}
+.pb{display:inline-flex;align-items:center;font-size:9.5px;padding:3px 8px;border-radius:4px;font-weight:700;letter-spacing:.05em;white-space:nowrap}
+.pb-b{color:var(--blue);background:var(--blue-bg);border:1px solid var(--blue-border)}
+.pb-r{color:var(--red);background:var(--red-bg);border:1px solid var(--red-border)}
+.pb-g{color:var(--green);background:var(--green-bg);border:1px solid var(--green-border)}
+.pb-a{color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-border)}
+
+/* ─── CHIPS ─── */
+.chip{display:inline-flex;align-items:center;padding:3px 7px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.ch-in{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.ch-wait{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.ch-prog{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.ch-miss{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.ch-act{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.ch-risk{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.ch-inact{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+
+/* ─── QUEUE ─── */
+.qrow{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;border-bottom:1px solid rgba(228,224,216,.65);transition:background var(--ease);gap:8px}
+[data-theme="dark"] .qrow{border-bottom-color:rgba(37,42,56,.9)}
+.qrow:hover{background:var(--bg)}
+.qrow:last-child{border-bottom:none}
+.token{width:28px;height:28px;border-radius:6px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:700;color:var(--text-secondary);flex-shrink:0}
+.qname{color:var(--text-primary);font-size:12px;font-weight:500}
+.qtime{color:var(--text-tertiary);font-size:10px;display:flex;align-items:center;gap:3px;margin-top:1px}
+
+.wa-icon-btn{
+  flex-shrink:0;background:none;border:none;
+  color:var(--text-tertiary);padding:5px;
+  transition:color var(--ease),background var(--ease);
+  cursor:pointer;border-radius:6px;
+  min-width:30px;min-height:30px;
+  display:flex;align-items:center;justify-content:center;
+}
+.wa-icon-btn:hover{color:var(--green);background:var(--green-bg)}
+
+/* ─── ALERTS ─── */
+.arow{padding:11px 15px;border-bottom:1px solid rgba(228,224,216,.65);transition:background var(--ease)}
+[data-theme="dark"] .arow{border-bottom-color:rgba(37,42,56,.9)}
+.arow:hover{background:var(--bg)}
+.arow:last-child{border-bottom:none}
+.ai{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.aname{color:var(--text-primary);font-size:12px;font-weight:600}
+.acond{color:var(--text-secondary);font-size:10.5px;margin-top:1px}
+.adue{color:var(--text-tertiary);font-size:10px;margin-top:3px}
+.adue .dv{color:var(--amber);font-weight:700}
+.remind{
+  flex-shrink:0;background:var(--surface);border:1px solid var(--border);
+  color:var(--text-primary);font-size:10px;padding:7px 10px;
+  border-radius:6px;display:flex;align-items:center;gap:4px;font-weight:600;
+  transition:all var(--ease);box-shadow:var(--sh-xs);cursor:pointer;
+  white-space:nowrap;min-height:34px;
+}
+.remind:hover{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+
+/* ─── SEARCH ─── */
+.search{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:9px 12px;display:flex;align-items:center;gap:8px;transition:border-color var(--ease);box-shadow:var(--sh-xs)}
+.search:focus-within{border-color:var(--border-mid)}
+.search input{background:none;border:none;color:var(--text-primary);font-size:13px;flex:1;min-width:0;padding:0;min-height:22px}
+.search input::placeholder{color:var(--text-tertiary)}
+
+/* ─── TABLE ─── */
+.tw{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs)}
+.thead{display:grid;grid-template-columns:3fr 2fr 1.4fr 1fr 1.6fr 38px;padding:8px 15px;border-bottom:1px solid var(--border);background:var(--bg)}
+.thead span{font-size:8.5px;text-transform:uppercase;letter-spacing:.11em;font-weight:700;color:var(--text-tertiary);display:flex;align-items:center}
+.cen{justify-content:center}
+.trow{display:grid;grid-template-columns:3fr 2fr 1.4fr 1fr 1.6fr 38px;padding:11px 15px;align-items:center;border-bottom:1px solid rgba(228,224,216,.55);transition:background var(--ease)}
+[data-theme="dark"] .trow{border-bottom-color:rgba(37,42,56,.9)}
+.trow:hover{background:var(--bg)}
+.trow:last-child{border-bottom:none}
+.pav{width:30px;height:30px;border-radius:7px;background:var(--blue-bg);border:1px solid var(--blue-border);display:flex;align-items:center;justify-content:center;color:var(--blue);font-size:11px;font-weight:700;font-family:'Instrument Serif',serif;flex-shrink:0}
+.pname{color:var(--text-primary);font-size:12px;font-weight:500}
+.pphone{color:var(--text-secondary);font-size:10.5px}
+.pvisits{text-align:center;color:var(--text-primary);font-size:14px;font-weight:700;font-family:'Instrument Serif',serif}
+.wa-btn{background:none;border:none;color:var(--text-tertiary);padding:4px;transition:color var(--ease),background var(--ease);cursor:pointer;border-radius:4px;min-width:30px;min-height:30px;display:flex;align-items:center;justify-content:center}
+.wa-btn:hover{color:var(--green);background:var(--green-bg)}
+
+/* ─── WHATSAPP PAGE ─── */
+.auto-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs)}
+.auto-row{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid rgba(228,224,216,.65);transition:background var(--ease);gap:12px}
+[data-theme="dark"] .auto-row{border-bottom-color:rgba(37,42,56,.9)}
+.auto-row:hover{background:var(--bg)}
+.auto-row:last-child{border-bottom:none}
+.auto-ic{width:30px;height:30px;border-radius:7px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0}
+.auto-lbl{color:var(--text-primary);font-size:12.5px;font-weight:600}
+.auto-desc{color:var(--text-tertiary);font-size:10.5px;margin-top:2px;line-height:1.45}
+
+.toggle{position:relative;display:inline-flex;width:42px;height:24px;border-radius:12px;cursor:pointer;transition:background var(--ease);flex-shrink:0;padding:0;border:none;min-width:42px}
+.toggle.on{background:var(--green)}.toggle.off{background:var(--border-mid)}
+.tknob{position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:left var(--ease);top:3px}
+.toggle.on .tknob{left:21px}.toggle.off .tknob{left:3px}
+
+.qr{padding:11px 15px;border-bottom:1px solid rgba(228,224,216,.65);transition:background var(--ease)}
+[data-theme="dark"] .qr{border-bottom-color:rgba(37,42,56,.9)}
+.qr:hover{background:var(--bg)}
+.qr:last-child{border-bottom:none}
+.qr-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px}
+.qav{width:30px;height:30px;border-radius:8px;background:var(--blue-bg);border:1px solid var(--blue-border);display:flex;align-items:center;justify-content:center;color:var(--blue);font-size:12px;font-weight:700;font-family:'Instrument Serif',serif;flex-shrink:0}
+.qrname{color:var(--text-primary);font-size:12px;font-weight:600}
+.qrphone{color:var(--text-tertiary);font-size:10px;margin-top:1px}
+.qbtns{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.qbtn{
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--text-secondary);font-size:10px;
+  padding:6px 10px;border-radius:5px;
+  display:flex;align-items:center;gap:3px;
+  font-weight:600;letter-spacing:.04em;
+  transition:all var(--ease);cursor:pointer;
+  box-shadow:var(--sh-xs);min-height:32px;
+}
+.qbtn:hover{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)}
+
+/* ─── ANALYTICS BAR ─── */
+.abar-row{padding:12px 15px;border-bottom:1px solid rgba(228,224,216,.65)}
+[data-theme="dark"] .abar-row{border-bottom-color:rgba(37,42,56,.9)}
+.abar-row:last-child{border-bottom:none}
+.abar-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.abar-lbl{color:var(--text-primary);font-size:12px;font-weight:500}
+.abar-val{color:var(--text-primary);font-size:13px;font-weight:700;font-family:'Instrument Serif',serif}
+.abar-bg{background:var(--bg);border-radius:3px;height:5px;overflow:hidden}
+.abar-fill{background:var(--blue);height:100%;border-radius:3px;transition:width .5s ease}
+
+.pstat-row{padding:13px 15px;border-bottom:1px solid rgba(228,224,216,.65)}
+[data-theme="dark"] .pstat-row{border-bottom-color:rgba(37,42,56,.9)}
+.pstat-row:last-child{border-bottom:none}
+.pstat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.pstat-l{display:flex;align-items:center;gap:6px}
+.pstat-lbl{color:var(--text-primary);font-size:12px;font-weight:500}
+.pstat-count{font-size:13.5px;font-weight:700;font-family:'Instrument Serif',serif}
+.pstat-tot{color:var(--text-tertiary);font-size:10.5px;font-weight:400;font-family:'DM Sans',sans-serif}
+
+/* ─── MODAL ─── */
+.mod-ov{
+  position:fixed;inset:0;z-index:70;
+  display:none;align-items:flex-end;justify-content:center;
+  background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  padding:0;
+}
+.mod-ov.open{display:flex}
+@media(min-width:600px){.mod-ov{align-items:center;padding:20px}}
+.modal{
+  background:var(--surface);border:1px solid var(--border);
+  width:100%;max-width:440px;
+  box-shadow:var(--sh-lg);
+  animation:slideUp .22s cubic-bezier(.4,0,.2,1);
+  border-radius:var(--r-xl) var(--r-xl) 0 0;
+  max-height:94vh;overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:max(16px, var(--safe-b));
+}
+@media(min-width:600px){
+  .modal{border-radius:var(--r-xl);max-height:90vh;padding-bottom:0}
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:16px 17px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:1}
+.mic{width:32px;height:32px;border-radius:8px;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;color:var(--green);flex-shrink:0}
+.mtitle{color:var(--text-primary);font-weight:700;font-size:13px}
+.mclose{color:var(--text-tertiary);transition:color var(--ease);padding:4px;cursor:pointer;min-width:34px;min-height:34px;display:flex;align-items:center;justify-content:center;border-radius:6px}
+.mclose:hover{color:var(--text-primary);background:var(--bg)}
+.mb{padding:16px 17px;display:flex;flex-direction:column;gap:13px}
+.flbl{color:var(--text-tertiary);font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;display:block;margin-bottom:5px}
+.finput{
+  width:100%;background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:11px 12px;
+  color:var(--text-primary);font-size:14px;
+  transition:border-color var(--ease);min-height:44px;
+}
+.finput:focus{border-color:var(--blue);background:var(--surface)}
+.ftextarea{
+  width:100%;background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:11px 12px;
+  color:var(--text-primary);font-size:14px;
+  resize:none;transition:border-color var(--ease);
+  line-height:1.6;
+}
+.ftextarea:focus{border-color:var(--blue);background:var(--surface)}
+.prow{display:flex;gap:7px}
+.ppfx{
+  background:var(--blue-bg);border:1px solid var(--blue-border);
+  border-radius:var(--r-sm);padding:11px 12px;
+  color:var(--blue);font-size:12px;min-width:62px;
+  display:flex;align-items:center;font-weight:700;
+}
+.msub{
+  width:100%;background:var(--blue);border:none;color:#fff;
+  font-weight:700;padding:13px 0;border-radius:var(--r-sm);
+  display:flex;align-items:center;justify-content:center;
+  gap:6px;font-size:13px;margin-top:2px;
+  transition:background var(--ease);
+  box-shadow:0 2px 8px rgba(46,99,212,.2);
+  cursor:pointer;min-height:46px;
+}
+.msub:hover{background:var(--blue-hover)}
+.msub:active{transform:scale(.98)}
+
+/* ─── BOTTOM NAV ─── */
+.bnav{
+  display:none;
+  position:fixed;
+  bottom:0;left:0;right:0;z-index:35;
+  background:rgba(255,255,255,.97);
+  border-top:1px solid var(--border);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  align-items:center;justify-content:space-around;
+  box-shadow:0 -2px 20px rgba(0,0,0,.06);
+  padding-top:6px;
+  padding-bottom:6px;
+  padding-bottom:max(6px, env(safe-area-inset-bottom));
+  padding-left:env(safe-area-inset-left,0px);
+  padding-right:env(safe-area-inset-right,0px);
+  transition:background .22s ease,border-color .22s ease;
+  -webkit-transform:translateZ(0);transform:translateZ(0);
+  isolation:isolate;
+}
+[data-theme="dark"] .bnav{background:rgba(23,27,36,.97)}
+.bn{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:4px 2px;border-radius:var(--r-sm);
+  color:var(--text-tertiary);font-size:9px;font-weight:600;
+  cursor:pointer;transition:all var(--ease);border:none;background:none;
+  flex:1;max-width:72px;min-width:44px;height:52px;justify-content:center;
+  -webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;
+}
+.bn.on{color:var(--blue)}
+.bn.on .bn-ico{background:var(--blue-bg)}
+.bn-ico{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:background var(--ease);flex-shrink:0}
+.bn-fab{
+  width:50px;height:50px;background:var(--blue);border-radius:50%;
+  border:none;display:flex;align-items:center;justify-content:center;color:#fff;
+  cursor:pointer;box-shadow:0 4px 16px rgba(46,99,212,.4);
+  transition:transform var(--ease),box-shadow var(--ease);flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;min-width:50px;min-height:50px;
+}
+.bn-fab:hover{transform:scale(1.07);box-shadow:0 6px 20px rgba(46,99,212,.5)}
+.bn-fab:active{transform:scale(.92)}
+
+/* ─── EMPTY STATE ─── */
+.empty{text-align:center;padding:40px 24px;color:var(--text-tertiary)}
+.empty-ic{font-size:32px;margin-bottom:10px;opacity:.45}
+.empty-t{font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:4px}
+.empty-s{font-size:11.5px;line-height:1.5}
+
+/* ─── TRUST BAR ─── */
+.trust-bar{display:flex;align-items:center;justify-content:center;gap:14px;padding:10px 14px;background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--r-md);flex-wrap:wrap}
+.trust-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--blue);font-weight:600;letter-spacing:.04em}
+
+/* ─── ONBOARDING BANNER ─── */
+.onboard{background:linear-gradient(135deg,var(--blue-bg) 0%,var(--surface2) 100%);border:1px solid var(--blue-border);border-radius:var(--r-lg);padding:16px 18px;display:flex;align-items:flex-start;gap:14px}
+.onboard-ic{width:38px;height:38px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.onboard-t{font-weight:700;font-size:13px;color:var(--text-primary);margin-bottom:3px}
+.onboard-s{font-size:11.5px;color:var(--text-secondary);line-height:1.5}
+.onboard-prog{display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap}
+.op-step{width:24px;height:4px;border-radius:2px;background:var(--border-mid)}
+.op-step.done{background:var(--blue)}
+.op-txt{font-size:10px;color:var(--text-tertiary);font-weight:600}
+.onboard-dismiss{
+  color:var(--text-tertiary);flex-shrink:0;align-self:flex-start;
+  cursor:pointer;background:none;border:none;
+  min-width:30px;min-height:30px;display:flex;align-items:center;justify-content:center;
+  border-radius:6px;padding:4px;transition:color var(--ease),background var(--ease);
+}
+.onboard-dismiss:hover{color:var(--text-primary);background:var(--border)}
+
+/* ── LANGUAGE MODAL ── */
+.lang-modal-ov{
+  position:fixed;inset:0;z-index:80;
+  display:none;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  padding:20px;
+}
+.lang-modal-ov.open{display:flex}
+.lang-modal{
+  background:var(--surface);border:1px solid var(--border);
+  width:100%;max-width:360px;border-radius:var(--r-xl);
+  box-shadow:var(--sh-lg);animation:slideUp .2s cubic-bezier(.4,0,.2,1);overflow:hidden;
+}
+.lm-head{padding:18px 18px 14px;border-bottom:1px solid var(--border)}
+.lm-title{font-weight:700;font-size:14px;color:var(--text-primary);margin-bottom:2px}
+.lm-sub{font-size:11px;color:var(--text-tertiary);line-height:1.5}
+.lm-opts{padding:12px}
+.lang-opt{
+  width:100%;display:flex;align-items:center;gap:12px;
+  padding:12px 13px;border-radius:var(--r-md);
+  border:1.5px solid var(--border);background:var(--bg);
+  cursor:pointer;transition:all var(--ease);margin-bottom:8px;text-align:left;
+}
+.lang-opt:last-child{margin-bottom:0}
+.lang-opt:hover{border-color:var(--blue-border);background:var(--blue-bg)}
+.lang-opt.active{border-color:var(--blue);background:var(--blue-bg)}
+.lang-info-name{font-size:13px;font-weight:700;color:var(--text-primary)}
+.lang-info-native{font-size:11px;color:var(--text-secondary);margin-top:1px;font-family:'Noto Sans Bengali',system-ui,sans-serif}
+.lang-check{margin-left:auto;color:var(--blue);flex-shrink:0;opacity:0;transition:opacity var(--ease)}
+.lang-opt.active .lang-check{opacity:1}
+.lm-close{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:11px;border-top:1px solid var(--border);color:var(--text-tertiary);font-size:11.5px;font-weight:600;cursor:pointer;transition:all var(--ease)}
+.lm-close:hover{color:var(--text-primary);background:var(--bg)}
+.lang-abbr{font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--blue);}
+
+/* ══ MSV FEATURE STYLES ══ */
+.quick-add-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--green);border:none;color:#fff;
+  padding:9px 14px;border-radius:var(--r-sm);
+  font-size:12px;font-weight:700;
+  box-shadow:0 3px 10px rgba(18,151,106,.3);
+  cursor:pointer;white-space:nowrap;min-height:40px;
+  transition:background var(--ease);
+}
+.quick-add-btn:hover{background:#0e7a57}
+.quick-add-btn:active{transform:scale(.97)}
+@media(max-width:479px){.quick-add-btn{width:100%;justify-content:center}}
+
+.mc-flow{display:flex;align-items:center;gap:0;overflow-x:auto;padding:14px 16px;-webkit-overflow-scrolling:touch}
+.mc-flow-step{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:90px}
+.mc-flow-ic{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mc-flow-ic.red{background:var(--red-bg);border:1.5px solid var(--red-border);color:var(--red)}
+.mc-flow-ic.amber{background:var(--amber-bg);border:1.5px solid var(--amber-border);color:var(--amber)}
+.mc-flow-ic.green{background:var(--green-bg);border:1.5px solid var(--green-border);color:var(--green)}
+.mc-flow-lbl{font-size:10px;font-weight:600;color:var(--text-secondary);text-align:center;line-height:1.3}
+.mc-flow-arrow{color:var(--border-mid);font-size:18px;padding:0 6px;flex-shrink:0;margin-bottom:20px}
+.mcr-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);gap:10px}
+.mcr-row:last-child{border-bottom:none}
+.mcr-name{font-size:12.5px;font-weight:600;color:var(--text-primary);margin-bottom:2px}
+.mcr-time{font-size:10.5px;color:var(--text-tertiary)}
+.mcr-status{font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px}
+.mcr-sent{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.mcr-booked{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.mcr-pending{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+
+.book-page{max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:0;}
+.book-hero{
+  background:linear-gradient(135deg,var(--blue) 0%,var(--blue-hover) 100%);
+  border-radius:var(--r-lg);padding:24px 22px 20px;color:#fff;margin-bottom:16px;
+  box-shadow:0 4px 18px rgba(46,99,212,.28);
+}
+.book-hero-title{font-family:'Instrument Serif',serif;font-size:22px;letter-spacing:-.02em;margin-bottom:4px}
+.book-hero-sub{font-size:12px;opacity:.82;line-height:1.5}
+.book-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px}
+.slot-btn{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--r-sm);padding:10px 6px;
+  font-size:12px;font-weight:600;color:var(--text-secondary);
+  cursor:pointer;transition:all var(--ease);text-align:center;min-height:42px;
+}
+.slot-btn:hover{border-color:var(--blue-border);background:var(--blue-bg);color:var(--blue)}
+.slot-btn.selected{border-color:var(--blue);background:var(--blue-bg);color:var(--blue)}
+.slot-btn.taken{opacity:.38;cursor:not-allowed;text-decoration:line-through}
+.book-confirm-bar{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;gap:12px;
+  box-shadow:var(--sh-sm);
+}
+.book-selected-slot{
+  background:var(--blue-bg);border:1.5px solid var(--blue-border);
+  border-radius:var(--r-sm);padding:10px 13px;
+  display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--blue);
+}
+.book-success{text-align:center;padding:32px 20px;display:none;flex-direction:column;align-items:center;gap:12px;}
+.book-success.on{display:flex}
+.book-success-ic{width:56px;height:56px;background:var(--green-bg);border:2px solid var(--green-border);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--green)}
+.book-success-title{font-family:'Instrument Serif',serif;font-size:20px;color:var(--text-primary);letter-spacing:-.02em}
+.book-success-sub{font-size:12px;color:var(--text-secondary);line-height:1.5;max-width:280px}
+.book-form{display:flex;flex-direction:column;gap:10px}
+.book-form.hidden{display:none}
+.slot-section{display:none}
+.slot-section.on{display:block}
+
+.tmpl-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;box-shadow:var(--sh-xs);}
+.tmpl-head{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tmpl-title{font-size:12px;font-weight:700;color:var(--text-primary)}
+.tmpl-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;border:1px solid}
+.tmpl-badge.green{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+.tmpl-badge.blue{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-border)}
+.tmpl-badge.amber{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-border)}
+.tmpl-body{padding:12px 14px}
+.tmpl-preview{
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:10px 12px;
+  font-size:11.5px;color:var(--text-secondary);line-height:1.6;margin-bottom:10px;font-style:italic;
+}
+.tmpl-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.tmpl-trigger{font-size:10px;color:var(--text-tertiary);display:flex;align-items:center;gap:4px}
+.tmpl-send-btn{
+  background:var(--green);color:#fff;border:none;
+  padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;gap:5px;
+  transition:background var(--ease);min-height:32px;
+}
+.tmpl-send-btn:hover{background:#0e7a57}
+
+.qp-hint{font-size:10.5px;color:var(--text-tertiary);margin-top:2px;line-height:1.4}
+.optional-fields{margin-top:6px}
+.optional-toggle{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--blue);font-weight:600;
+  cursor:pointer;padding:6px 0;background:none;border:none;
+}
+.opt-fields-wrap{display:none;flex-direction:column;gap:9px;margin-top:4px}
+.opt-fields-wrap.open{display:flex}
+
+.mcr-mg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:639px){.mcr-mg{grid-template-columns:repeat(3,1fr);gap:7px}}
+@media(max-width:360px){.mcr-mg{grid-template-columns:1fr 1fr}}
+.mcr-mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;box-shadow:var(--sh-xs)}
+.mcr-mc-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;font-weight:700;color:var(--text-tertiary);margin-bottom:6px}
+.mcr-mc-val{font-family:'Instrument Serif',serif;font-size:26px;color:var(--text-primary);letter-spacing:-.02em;line-height:1}
+.mcr-mc-sub{font-size:10px;color:var(--text-tertiary);margin-top:3px}
+
+.book-link-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--surface);border:1.5px solid var(--blue-border);
+  color:var(--blue);padding:8px 13px;border-radius:var(--r-sm);
+  font-size:12px;font-weight:700;cursor:pointer;
+  transition:all var(--ease);white-space:nowrap;min-height:38px;
+}
+.book-link-btn:hover{background:var(--blue-bg)}
+
+/* ─── SETTINGS VIEW ─── */
+.settings-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs)}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);gap:12px}
+.settings-row:last-child{border-bottom:none}
+.settings-row-lbl{font-size:12.5px;font-weight:600;color:var(--text-primary)}
+.settings-row-sub{font-size:10.5px;color:var(--text-tertiary);margin-top:2px}
+
+/* ═══ AUTH SCREEN — completely independent, full-viewport ═══ */
+#auth-screen{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  min-height:100vh;min-width:100vw;
+  width:100%;height:100%;
+}
+#auth-screen.hidden{display:none !important}
+
+/* App shell hidden until authenticated */
+#app-shell{display:none;flex-direction:column;min-height:100vh}
+#app-shell.authenticated{display:flex}
+
+/* Legacy class kept for inner card layout */
+.auth-wrap{
+  width:100%;display:flex;align-items:center;justify-content:center;
+}
+.auth-card{
+  width:100%;max-width:400px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-xl);box-shadow:var(--sh-lg);overflow:hidden;
+}
+.auth-brand{
+  background:linear-gradient(135deg,var(--blue) 0%,var(--blue-hover) 100%);
+  padding:24px 24px 20px;text-align:center;
+}
+.auth-brand-mark{display:flex;align-items:baseline;justify-content:center;gap:0;line-height:1}
+.auth-brand-mark .a{font-family:'Instrument Serif',Georgia,serif;font-size:26px;color:#fff;letter-spacing:-.02em}
+.auth-brand-mark .s{font-family:'Instrument Serif',Georgia,serif;font-size:26px;color:rgba(255,255,255,.75);letter-spacing:-.02em}
+.auth-brand-mark .os{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;color:rgba(255,255,255,.6);letter-spacing:.08em;margin-left:6px;align-self:center}
+.auth-brand-sub{font-size:11px;color:rgba(255,255,255,.7);margin-top:5px;letter-spacing:.03em}
+
+.auth-country-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.auth-country-btn{
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg);border:1.5px solid var(--border);
+  border-radius:var(--r-md);padding:10px 13px;
+  cursor:pointer;transition:all var(--ease);
+  font-size:12.5px;font-weight:600;color:var(--text-secondary);min-height:44px;
+}
+.auth-country-btn:hover{border-color:var(--blue-border);background:var(--blue-bg);color:var(--blue)}
+.auth-country-btn.selected{border-color:var(--blue);background:var(--blue-bg);color:var(--blue)}
+.auth-country-flag{font-size:18px;line-height:1;flex-shrink:0}
+
+.auth-tabs{display:flex;background:var(--bg);border-bottom:1px solid var(--border)}
+.auth-tab{
+  flex:1;padding:12px 0;font-size:12.5px;font-weight:700;
+  color:var(--text-tertiary);border:none;background:none;
+  cursor:pointer;border-bottom:2px solid transparent;
+  transition:all var(--ease);letter-spacing:.02em;margin-bottom:-1px;
+}
+.auth-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+
+.auth-body{padding:20px 22px 22px}
+.auth-panel{display:none;flex-direction:column;gap:12px}
+.auth-panel.on{display:flex}
+
+.auth-field label{
+  display:block;font-size:9px;text-transform:uppercase;
+  letter-spacing:.12em;font-weight:700;color:var(--text-tertiary);margin-bottom:5px;
+}
+.auth-field .finput{width:100%}
+
+.auth-forgot{
+  font-size:10.5px;color:var(--blue);font-weight:600;
+  background:none;border:none;cursor:pointer;padding:0;
+  align-self:flex-end;margin-top:-4px;transition:color var(--ease);
+}
+.auth-forgot:hover{color:var(--blue-hover)}
+
+.auth-footer-note{text-align:center;font-size:10.5px;color:var(--text-tertiary);line-height:1.6;margin-top:2px}
+.auth-footer-note span{color:var(--blue);font-weight:600;cursor:pointer}
+
+.auth-error{
+  background:var(--red-bg);border:1px solid var(--red-border);
+  color:var(--red);font-size:11px;font-weight:600;
+  border-radius:var(--r-sm);padding:9px 12px;display:none;
+}
+.auth-error.show{display:block}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+═══════════════════════════════════════════════ */
+@media(min-width:1280px){
+  :root{--sidebar-w:272px}
+  main.content{padding:24px 28px}
+  .mg{grid-template-columns:repeat(4,1fr);gap:14px}
+  .st{font-size:25px}
+  .two-col{gap:16px}
+}
+@media(max-width:1279px) and (min-width:1024px){
+  :root{--sidebar-w:248px}
+  .mg{grid-template-columns:repeat(2,1fr);gap:11px}
+  main.content{padding:18px 20px}
+}
+@media(max-width:1023px) and (min-width:768px){
+  :root{--sidebar-w:220px}
+  .bnav{display:flex}
+  main.content{padding:16px 16px;padding-bottom:calc(var(--bnav-h) + 20px + env(safe-area-inset-bottom, 0px));}
+  .mg{grid-template-columns:repeat(2,1fr);gap:10px}
+  .mc-val{font-size:24px}
+  .mc-icon{display:none}
+  .two-col{grid-template-columns:1fr;gap:13px}
+  .thead,.trow{grid-template-columns:3fr 1.8fr 1.2fr 1fr 38px}
+  .col-date{display:none}
+  .date-pill{display:none}
+  .hamburger{display:none!important}
+}
+@media(max-width:767px) and (min-width:640px){
+  #sidebar{transform:translateX(-100%);width:280px}
+  #sidebar.open{transform:translateX(0)}
+  #main{margin-left:0}
+  .hamburger{display:flex!important}
+  .bnav{display:flex}
+  main.content{padding:14px 14px;padding-bottom:calc(var(--bnav-h) + 16px + env(safe-area-inset-bottom, 0px));}
+  .mg{grid-template-columns:repeat(2,1fr);gap:10px}
+  .mc-val{font-size:22px}
+  .mc-icon{display:none}
+  .mc{padding:14px 14px 12px}
+  .two-col{grid-template-columns:1fr;gap:12px}
+  .thead,.trow{grid-template-columns:3fr 1.6fr 1fr 38px}
+  .col-date,.col-status{display:none}
+  .date-pill{display:none}
+  .st{font-size:21px}
+  .onboard{flex-direction:column;gap:10px}
+  .onboard-ic{display:none}
+}
+@media(max-width:639px){
+  :root{--header-h:52px;--bnav-h:56px;--sidebar-w:min(300px, 85vw);}
+  #sidebar{transform:translateX(-100%);box-shadow:var(--sh-lg)}
+  #sidebar.open{transform:translateX(0)}
+  #main{margin-left:0}
+  .hamburger{display:flex!important}
+  .bnav{display:flex}
+  main.content{padding:12px 12px;padding-bottom:calc(var(--bnav-h) + env(safe-area-inset-bottom, 0px) + 14px);}
+  .mg{grid-template-columns:repeat(2,1fr);gap:8px}
+  .mc{padding:13px 13px 11px;border-radius:var(--r-md)}
+  .mc-val{font-size:20px}
+  .mc-lbl{font-size:9.5px}
+  .mc-top{margin-bottom:8px}
+  .mc-icon{display:none}
+  .two-col{grid-template-columns:1fr;gap:11px}
+  .panel{border-radius:var(--r-md)}
+  .tw{border-radius:var(--r-md)}
+  .thead,.trow{grid-template-columns:1fr auto 36px}
+  .col-phone,.col-date,.col-status,.col-visits{display:none}
+  .trow{padding:10px 12px;gap:6px}
+  .thead{padding:8px 12px}
+  .pname{font-size:12px}
+  header{padding:0 12px}
+  .bc-root,.bc-sep{display:none}
+  .bc-page{font-size:14px;font-weight:700;color:var(--text-primary);max-width:none}
+  .date-pill{display:none}
+  .icon-btn{width:34px;height:34px}
+  .hdr-r{gap:5px}
+  .hdr-lang-btn{padding:0 7px;font-size:9.5px}
+  .hdr-theme-btn{width:34px;height:34px}
+  .st{font-size:19px}
+  .ss{font-size:11px}
+  .onboard{padding:13px 14px;gap:10px;flex-direction:column}
+  .onboard-ic{display:none}
+  .sh{gap:9px}
+  .add-btn{font-size:11.5px;padding:8px 12px}
+  .ctx{gap:5px}
+  .ctx-chip{font-size:10px;padding:4px 8px}
+  .live-badge{font-size:10px;padding:4px 8px}
+  .ph{padding:11px 13px}
+  .qrow{padding:10px 13px}
+  .arow{padding:10px 13px}
+  .auto-row{padding:11px 13px}
+  .qr{padding:10px 13px}
+  .ai{flex-wrap:wrap}
+  .auto-ic{width:27px;height:27px}
+  .auto-lbl{font-size:12px}
+  .auto-desc{font-size:10px}
+  .qr-inner{flex-direction:column;align-items:flex-start;gap:8px}
+  .qbtns{width:100%;gap:4px}
+  .qbtn{flex:1;justify-content:center;font-size:9.5px;padding:7px 4px}
+  .trust-bar{gap:8px;padding:9px 12px}
+  .trust-item{font-size:9.5px}
+  .trust-bar .trust-item:nth-child(n+4){display:none}
+  .abar-row{padding:10px 13px}
+  .pstat-row{padding:11px 13px}
+  .sb-controls{gap:5px}
+  .theme-toggle,.lang-toggle{font-size:9.5px;padding:5px 7px}
+  .bn{height:48px;font-size:8.5px}
+  .bn-ico{width:30px;height:30px}
+  .bn-fab{width:46px;height:46px;min-width:46px;min-height:46px}
+}
+@media(max-width:479px){
+  :root{--bnav-h:54px}
+  main.content{padding:10px 10px;padding-bottom:calc(var(--bnav-h) + env(safe-area-inset-bottom, 0px) + 12px);}
+  .mg{gap:7px}
+  .mc-val{font-size:18px}
+  .mc{padding:12px 11px 10px}
+  .sh{flex-direction:column;align-items:stretch}
+  .add-btn{width:100%;justify-content:center}
+  .onboard{padding:12px 13px}
+  .onboard-t{font-size:12.5px}
+  .onboard-s{font-size:11px}
+  .trust-bar .trust-item:nth-child(n+3){display:none}
+  .mb{padding:14px 15px;gap:11px}
+  .mh{padding:14px 15px}
+  .bn{font-size:8px;height:44px}
+  .bn-ico{width:28px;height:28px}
+  .bn-fab{width:44px;height:44px;min-width:44px;min-height:44px}
+}
+@supports(padding-bottom:env(safe-area-inset-bottom)){
+  .bnav{padding-bottom:calc(6px + env(safe-area-inset-bottom));}
+  #sidebar{padding-top:env(safe-area-inset-top);}
+  @media(max-width:1023px) and (min-width:768px){main.content{padding-bottom:calc(var(--bnav-h) + 20px + env(safe-area-inset-bottom));}}
+  @media(max-width:767px) and (min-width:640px){main.content{padding-bottom:calc(var(--bnav-h) + 16px + env(safe-area-inset-bottom));}}
+  @media(max-width:639px){main.content{padding-bottom:calc(var(--bnav-h) + 14px + env(safe-area-inset-bottom));}}
+  @media(max-width:479px){main.content{padding-bottom:calc(var(--bnav-h) + 12px + env(safe-area-inset-bottom));}}
+}
+@media(max-width:479px){
+  .book-slots{grid-template-columns:repeat(3,1fr);gap:6px}
+  .slot-btn{font-size:11px;padding:9px 4px}
+  .mcr-mg{gap:6px}
+  .mcr-mc{padding:11px 10px}
+  .mcr-mc-val{font-size:22px}
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<!-- ══ AUTH SCREEN — outside app shell, always on top ══ -->
+<div id="auth-screen">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <div class="auth-brand-mark">
+          <span class="a">Aura</span><span class="s">Scale</span><span class="os">OS</span>
+        </div>
+        <p class="auth-brand-sub">Clinic Operating System</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="auth-tab-login" onclick="switchAuthTab('login')">Sign In</button>
+        <button class="auth-tab" id="auth-tab-signup" onclick="switchAuthTab('signup')">Create Account</button>
+      </div>
+
+      <div class="auth-body">
+        <!-- LOGIN PANEL -->
+        <div class="auth-panel on" id="auth-panel-login">
+          <div id="auth-login-error" class="auth-error">Invalid email or password. Please try again.</div>
+          <div class="auth-field">
+            <label>Email Address</label>
+            <input type="email" class="finput" id="auth-login-email" placeholder="doctor@clinic.com" autocomplete="email" inputmode="email"/>
+          </div>
+          <div class="auth-field">
+            <label>Password</label>
+            <input type="password" class="finput" id="auth-login-pass" placeholder="Enter your password" autocomplete="current-password"/>
+          </div>
+          <button class="auth-forgot" onclick="handleForgotPassword()">Forgot password?</button>
+          <button class="msub" onclick="handleLogin()" style="margin-top:2px">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            Sign In
+          </button>
+          <p class="auth-footer-note">Don't have an account? <span onclick="switchAuthTab('signup')">Create one free</span></p>
+        </div>
+
+        <!-- SIGNUP PANEL -->
+        <div class="auth-panel" id="auth-panel-signup">
+          <div id="auth-signup-error" class="auth-error">Please fill in all required fields.</div>
+          <div>
+            <label class="flbl">Country <span style="color:var(--red)">*</span></label>
+            <div class="auth-country-row">
+              <button class="auth-country-btn selected" id="auth-country-india" onclick="selectAuthCountry('india')">
+                <span class="auth-country-flag">&#x1F1EE;&#x1F1F3;</span><span>India</span>
+              </button>
+              <button class="auth-country-btn" id="auth-country-bd" onclick="selectAuthCountry('bd')">
+                <span class="auth-country-flag">&#x1F1E7;&#x1F1E9;</span><span>Bangladesh</span>
+              </button>
+            </div>
+          </div>
+          <div class="auth-field">
+            <label>Clinic Name <span style="color:var(--red)">*</span></label>
+            <input type="text" class="finput" id="auth-clinic-name" placeholder="e.g. Sunrise Health Clinic" autocapitalize="words"/>
+          </div>
+          <div class="auth-field">
+            <label>Doctor Name <span style="color:var(--red)">*</span></label>
+            <input type="text" class="finput" id="auth-doctor-name" placeholder="Dr. Full Name" autocapitalize="words"/>
+          </div>
+          <div class="auth-field">
+            <label>Mobile Number <span style="color:var(--red)">*</span></label>
+            <div class="prow">
+              <div class="ppfx" id="auth-dial">+91</div>
+              <input type="tel" class="finput" id="auth-mobile" placeholder="Mobile number" style="flex:1" inputmode="numeric" autocomplete="tel"/>
+            </div>
+          </div>
+          <div class="auth-field">
+            <label>Email Address <span style="color:var(--red)">*</span></label>
+            <input type="email" class="finput" id="auth-signup-email" placeholder="doctor@clinic.com" autocomplete="email" inputmode="email"/>
+          </div>
+          <div class="auth-field">
+            <label>Password <span style="color:var(--red)">*</span></label>
+            <input type="password" class="finput" id="auth-signup-pass" placeholder="Min. 6 characters" autocomplete="new-password"/>
+          </div>
+          <button class="msub" onclick="handleSignup()" style="background:var(--green);box-shadow:0 2px 8px rgba(18,151,106,.2);margin-top:2px">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Create Account
+          </button>
+          <p class="auth-footer-note">Already have an account? <span onclick="switchAuthTab('login')">Sign in here</span></p>
+        </div>
+      </div><!-- /auth-body -->
+
+      <div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 16px;border-top:1px solid var(--border);background:var(--bg)">
+        <div class="trust-item" style="font-size:9px">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          HIPAA
+        </div>
+        <div class="trust-item" style="font-size:9px">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          End-to-End Encrypted
+        </div>
+        <div class="trust-item" style="font-size:9px">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          SOC 2 Type II
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ══ APP SHELL — hidden until authenticated ══ -->
+<div id="app-shell">
+<div id="app">
+  <div id="overlay" onclick="closeSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-mark">
+        <span class="a">Aura</span><span class="s">Scale</span><span class="os">OS</span>
+      </div>
+      <p class="sb-tag" data-i18n="tagline">Clinic Operating System</p>
+    </div>
+
+    <div class="sb-doc">
+      <div class="sb-doc-inner">
+        <div class="sb-doc-top">
+          <div class="sb-av" id="doc-av">M</div>
+          <div>
+            <p class="sb-doc-name" id="doc-name">Dr. Mousham Laskar</p>
+            <span class="sb-doc-reg" id="doc-reg">NMC / WBMCO Registered</span>
+          </div>
+        </div>
+        <p class="sb-doc-spec" id="doc-spec">General Physician &amp; Internal Medicine</p>
+        <div class="sb-online">
+          <span class="dot dot-g blink"></span>
+          <p style="color:var(--text-tertiary);font-size:10px" data-i18n="online_status">Online · Clinic Active</p>
+        </div>
+        <div class="sb-workspace">
+          <p class="sb-workspace-lbl" data-i18n="workspace_lbl">Workspace</p>
+          <div class="ws-toggle">
+            <button class="ws-btn active" id="ws-india" onclick="setMkt('india',this)" data-i18n="ws_india">&#x1F1EE;&#x1F1F3; India</button>
+            <button class="ws-btn" id="ws-bd" onclick="setMkt('bd',this)" data-i18n="ws_bd">&#x1F1E7;&#x1F1E9; Bangladesh</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sb-nav">
+      <p class="nav-sec" data-i18n="nav_main">Main</p>
+      <button class="nb on" onclick="nav('dashboard',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+        <span data-i18n="nav_dashboard">Dashboard</span>
+      </button>
+      <button class="nb" onclick="nav('patients',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+        <span data-i18n="nav_patients">Patients &amp; Appointments</span>
+      </button>
+      <button class="nb" onclick="nav('whatsapp',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
+        <span data-i18n="nav_whatsapp">WhatsApp Engine</span>
+        <span class="nb-badge">3</span>
+      </button>
+      <button class="nb" onclick="nav('analytics',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+        <span data-i18n="nav_reports">Reports</span>
+      </button>
+      <button class="nb" onclick="nav('missed-calls',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.42 19.42 0 0 1 4.43 9.68a2 2 0 0 1 2-2.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L10.68 13.31z"/><line x1="23" y1="1" x2="1" y2="23" stroke-width="1.8"/></svg></span>
+        <span>Missed Call Recovery</span>
+        <span class="nb-badge">5</span>
+      </button>
+      <button class="nb" onclick="nav('book',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg></span>
+        <span>Book Appointment</span>
+      </button>
+      <p class="nav-sec" data-i18n="nav_setup">Setup</p>
+      <button class="nb" onclick="nav('settings',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></span>
+        <span data-i18n="nav_settings">Settings</span>
+      </button>
+    </nav>
+
+    <div class="sb-foot">
+      <div class="sb-controls">
+        <button class="theme-toggle" onclick="toggleTheme()" id="sb-theme-btn" aria-label="Toggle theme">
+          <span class="theme-ic" id="sb-theme-ic">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </span>
+          <span id="sb-theme-lbl">Dark Mode</span>
+        </button>
+        <button class="lang-toggle" onclick="openLangModal()" id="sb-lang-btn" aria-label="Change language">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span id="sb-lang-lbl" class="lang-active">EN</span>
+        </button>
+      </div>
+      <div class="sb-comp">
+        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        HIPAA · SOC 2 Type II · ISO 27001
+      </div>
+      <div class="sb-out" onclick="handleLogout()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span data-i18n="sign_out">Sign Out</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div id="main">
+    <header>
+      <div class="hdr-l">
+        <button class="hamburger" id="hbtn" onclick="toggleSidebar()" aria-label="Open menu">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div class="bc">
+          <span class="bc-root">AuraScale</span>
+          <span class="bc-sep">/</span>
+          <span class="bc-page" id="tab-title" data-i18n="nav_dashboard">Dashboard</span>
+        </div>
+      </div>
+      <div class="hdr-r">
+        <div class="date-pill">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span data-i18n="date_label">Friday, 22 May 2026</span>
+        </div>
+        <button class="hdr-lang-btn" onclick="openLangModal()" id="hdr-lang-btn" aria-label="Change language">
+          <span class="lang-dot"></span>
+          <span class="lang-abbr" id="hdr-lang-lbl">EN</span>
+        </button>
+        <button class="hdr-theme-btn" onclick="toggleTheme()" id="hdr-theme-btn" aria-label="Toggle theme">
+          <span id="hdr-theme-ic">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </span>
+        </button>
+        <button class="icon-btn" style="width:36px;height:36px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);position:relative;transition:all var(--ease);cursor:pointer;box-shadow:var(--sh-xs)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span style="position:absolute;top:5px;right:5px;width:5px;height:5px;background:var(--red);border-radius:50%;border:1.5px solid var(--surface)"></span>
+        </button>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="ctx">
+        <div class="ctx-chip">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span><span data-i18n="ctx_market">Market:</span> <span class="lbl" id="ctx-mkt">India (INR &#x20B9; · +91)</span></span>
+        </div>
+        <div class="ctx-chip">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          <span class="lbl" id="ctx-clinic">Laskar Health Clinic, Salt Lake, Kolkata</span>
+        </div>
+        <div class="live-badge">
+          <span class="dot dot-g blink"></span>
+          <span data-i18n="live">Live</span>
+        </div>
+      </div>
+
+
+      <!-- ── DASHBOARD ── -->
+      <div id="v-dashboard" class="view">
+        <div class="sh">
+          <div>
+            <h1 class="st" data-i18n="dash_greeting">Good morning, Dr. Laskar</h1>
+            <p class="ss" data-i18n="dash_subtitle">Clinic overview · Friday, 22 May 2026</p>
+          </div>
+          <button class="add-btn" onclick="openModal('add-modal')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span data-i18n="new_appointment">New Appointment</span>
+          </button>
+        </div>
+
+        <div class="onboard" id="onboard-banner">
+          <div class="onboard-ic">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <div style="flex:1;min-width:0">
+            <p class="onboard-t" data-i18n="onboard_title">Complete your clinic setup (3 of 5)</p>
+            <p class="onboard-s" data-i18n="onboard_sub">Connect WhatsApp, add your first patients, and enable automated reminders to get started.</p>
+            <div class="onboard-prog">
+              <div class="op-step done"></div>
+              <div class="op-step done"></div>
+              <div class="op-step done"></div>
+              <div class="op-step"></div>
+              <div class="op-step"></div>
+              <span class="op-txt" data-i18n="onboard_steps">3 / 5 complete</span>
+            </div>
+          </div>
+          <button class="onboard-dismiss" onclick="dismissOnboard()" aria-label="Dismiss setup banner">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div class="mg" id="dash-metrics"></div>
+
+        <div class="two-col">
+          <div class="panel">
+            <div class="ph">
+              <div class="pt">
+                <span class="dot dot-g blink"></span>
+                <span data-i18n="queue_title">Today's Queue</span>
+              </div>
+              <span class="pb pb-b" id="q-count">6 patients</span>
+            </div>
+            <div id="queue-list"></div>
+          </div>
+          <div class="panel">
+            <div class="ph">
+              <div class="pt">
+                <span class="dot dot-a"></span>
+                <span data-i18n="alerts_title">Follow-up Alerts</span>
+              </div>
+              <span class="pb pb-r" data-i18n="alerts_window">14-day window</span>
+            </div>
+            <div id="alerts-list"></div>
+          </div>
+        </div>
+
+        <div class="trust-bar">
+          <div class="trust-item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            HIPAA Compliant
+          </div>
+          <div class="trust-item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            End-to-End Encrypted
+          </div>
+          <div class="trust-item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            SOC 2 Type II
+          </div>
+          <div class="trust-item">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            99.9% Uptime
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PATIENTS ── -->
+      <div id="v-patients" class="view">
+        <div class="sh">
+          <div>
+            <h1 class="st" data-i18n="patients_title">Patient Directory</h1>
+            <p class="ss" id="pat-count">7 registered patients</p>
+          </div>
+          <button class="add-btn" onclick="openModal('add-modal')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span data-i18n="new_appointment">New Appointment</span>
+          </button>
+          <button class="quick-add-btn" onclick="openModal('quick-patient-modal')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            Quick Add Patient
+          </button>
+        </div>
+        <div class="search">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="search-inp" placeholder="Search by name or phone..." oninput="renderPats()"/>
+        </div>
+        <div class="tw">
+          <div class="thead">
+            <span data-i18n="th_patient">Patient</span>
+            <span class="col-phone" data-i18n="th_phone">Phone</span>
+            <span class="col-date" data-i18n="th_last_visit">Last Visit</span>
+            <span class="col-visits cen" data-i18n="th_visits">Visits</span>
+            <span class="col-status cen" data-i18n="th_status">Status</span>
+            <span class="cen" style="justify-content:center">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            </span>
+          </div>
+          <div id="pat-table"></div>
+        </div>
+      </div>
+
+      <!-- ── WHATSAPP ── -->
+      <div id="v-whatsapp" class="view">
+        <div class="sh">
+          <div>
+            <h1 class="st" data-i18n="wa_title">WhatsApp &amp; Retention</h1>
+            <p class="ss" data-i18n="wa_sub">Automate patient communications and follow-ups</p>
+          </div>
+          <span class="pb pb-g" style="align-self:flex-start;padding:6px 11px;font-size:10.5px" data-i18n="engine_live">&#9679; Engine Live</span>
+        </div>
+        <div class="auto-card" id="auto-list"></div>
+
+        <div class="sh" style="margin-top:4px">
+          <div>
+            <p class="st" style="font-size:17px">WhatsApp Reminder Templates</p>
+            <p class="ss">Ready-to-send templates · Click to send via WhatsApp</p>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="tmpl-card">
+            <div class="tmpl-head">
+              <p class="tmpl-title">14-Day Follow-Up Reminder</p>
+              <span class="tmpl-badge green">Auto-Active</span>
+            </div>
+            <div class="tmpl-body">
+              <div class="tmpl-preview">"Dear [Patient Name], it's been 14 days since your visit at Laskar Health Clinic. Time for your follow-up! Please call us or reply to book. — Dr. Laskar"</div>
+              <div class="tmpl-footer">
+                <p class="tmpl-trigger">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  Triggers 14 days after last visit
+                </p>
+                <button class="tmpl-send-btn" onclick="sendTemplate('follow-up')">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                  Send to Due Patients
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="tmpl-card">
+            <div class="tmpl-head">
+              <p class="tmpl-title">Medication Reminder</p>
+              <span class="tmpl-badge blue">Manual</span>
+            </div>
+            <div class="tmpl-body">
+              <div class="tmpl-preview">"Hi [Patient Name], a gentle reminder to take your prescribed medication regularly. Consistency is key to your recovery! — Dr. Laskar, Laskar Health Clinic"</div>
+              <div class="tmpl-footer">
+                <p class="tmpl-trigger">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  Send manually to selected patients
+                </p>
+                <button class="tmpl-send-btn" onclick="sendTemplate('medication')">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                  Send Now
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="tmpl-card">
+            <div class="tmpl-head">
+              <p class="tmpl-title">Review Request</p>
+              <span class="tmpl-badge amber">Auto · 2h post-visit</span>
+            </div>
+            <div class="tmpl-body">
+              <div class="tmpl-preview">"Thank you for visiting Laskar Health Clinic, [Patient Name]! If you're happy with your care, we'd love a quick Google review. It helps other patients find us. [Link]"</div>
+              <div class="tmpl-footer">
+                <p class="tmpl-trigger">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  Triggers 2 hours after completed visit
+                </p>
+                <button class="tmpl-send-btn" onclick="sendTemplate('review')">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                  Send to Today's Patients
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="ph">
+            <div class="pt" data-i18n="quick_actions">Quick Actions — Recent Patients</div>
+          </div>
+          <div id="quick-list"></div>
+        </div>
+      </div>
+
+      <!-- ── ANALYTICS ── -->
+      <div id="v-analytics" class="view">
+        <div class="sh">
+          <div>
+            <h1 class="st" data-i18n="ana_title">Reports &amp; Analytics</h1>
+            <p class="ss" data-i18n="ana_sub">Last 30 days · Updated just now</p>
+          </div>
+        </div>
+        <div class="mg" id="ana-metrics"></div>
+        <div class="two-col">
+          <div class="panel">
+            <div class="ph">
+              <div class="pt" data-i18n="auto_breakdown">Automation Breakdown</div>
+              <span class="pb pb-b" data-i18n="thirty_days">30 days</span>
+            </div>
+            <div id="auto-stats"></div>
+          </div>
+          <div class="panel">
+            <div class="ph">
+              <div class="pt" data-i18n="health_summary">Patient Health Summary</div>
+              <span class="pb pb-g" data-i18n="current">Current</span>
+            </div>
+            <div id="pat-stats"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── MISSED CALL RECOVERY ── -->
+      <div id="v-missed-calls" class="view">
+        <div class="sh">
+          <div>
+            <h1 class="st">Missed Call Recovery</h1>
+            <p class="ss">Auto-send WhatsApp to missed callers · Convert calls to bookings</p>
+          </div>
+          <span class="pb pb-g" style="align-self:flex-start;padding:6px 11px;font-size:10.5px">&#9679; Recovery Active</span>
+        </div>
+
+        <div class="mcr-mg">
+          <div class="mcr-mc">
+            <p class="mcr-mc-lbl">Missed Calls</p>
+            <p class="mcr-mc-val">38</p>
+            <p class="mcr-mc-sub">This month</p>
+          </div>
+          <div class="mcr-mc">
+            <p class="mcr-mc-lbl">Recovered</p>
+            <p class="mcr-mc-val" style="color:var(--green)">24</p>
+            <p class="mcr-mc-sub">Bookings made</p>
+          </div>
+          <div class="mcr-mc">
+            <p class="mcr-mc-lbl">Recovery Rate</p>
+            <p class="mcr-mc-val" style="color:var(--blue)">63%</p>
+            <p class="mcr-mc-sub">&#x2191; from 41%</p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="ph">
+            <div class="pt">Recovery Workflow</div>
+          </div>
+          <div class="mc-flow">
+            <div class="mc-flow-step">
+              <div class="mc-flow-ic red">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.42 19.42 0 0 1 4.43 9.68a2 2 0 0 1 2-2.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L10.68 13.31z"/><line x1="23" y1="1" x2="1" y2="23"/></svg>
+              </div>
+              <p class="mc-flow-lbl">Missed Call Detected</p>
+            </div>
+            <div class="mc-flow-arrow">&#x2192;</div>
+            <div class="mc-flow-step">
+              <div class="mc-flow-ic amber">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              </div>
+              <p class="mc-flow-lbl">WhatsApp Sent Instantly</p>
+            </div>
+            <div class="mc-flow-arrow">&#x2192;</div>
+            <div class="mc-flow-step">
+              <div class="mc-flow-ic green">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/></svg>
+              </div>
+              <p class="mc-flow-lbl">Appointment Booked</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="ph">
+            <div class="pt">Recent Missed Calls</div>
+            <span class="pb pb-r">5 pending</span>
+          </div>
+          <div>
+            <div class="mcr-row">
+              <div>
+                <p class="mcr-name">+91 98456 77890</p>
+                <p class="mcr-time">Today, 10:42 AM · 2 missed calls</p>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span class="mcr-status mcr-pending">WhatsApp Pending</span>
+                <button class="tmpl-send-btn" style="font-size:10px;padding:5px 9px" onclick="alert('WhatsApp sent to +91 98456 77890')">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                  Send
+                </button>
+              </div>
+            </div>
+            <div class="mcr-row">
+              <div>
+                <p class="mcr-name">Priya Sengupta</p>
+                <p class="mcr-time">Today, 09:15 AM · Known patient</p>
+              </div>
+              <span class="mcr-status mcr-sent">WA Sent</span>
+            </div>
+            <div class="mcr-row">
+              <div>
+                <p class="mcr-name">+91 70015 33214</p>
+                <p class="mcr-time">Yesterday, 04:30 PM · 1 missed call</p>
+              </div>
+              <span class="mcr-status mcr-booked">&#x2713; Booked</span>
+            </div>
+            <div class="mcr-row">
+              <div>
+                <p class="mcr-name">Ruma Das</p>
+                <p class="mcr-time">Yesterday, 02:10 PM · Known patient</p>
+              </div>
+              <span class="mcr-status mcr-booked">&#x2713; Booked</span>
+            </div>
+            <div class="mcr-row">
+              <div>
+                <p class="mcr-name">+91 90023 11009</p>
+                <p class="mcr-time">Yesterday, 11:50 AM · 3 missed calls</p>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span class="mcr-status mcr-pending">Pending</span>
+                <button class="tmpl-send-btn" style="font-size:10px;padding:5px 9px" onclick="alert('WhatsApp sent!')">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                  Send
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── BOOK APPOINTMENT ── -->
+      <div id="v-book" class="view">
+        <div class="sh" style="margin-bottom:14px">
+          <div>
+            <h1 class="st">Book Appointment</h1>
+            <p class="ss">Patient-facing booking page · Mobile-first · Under 30 seconds</p>
+          </div>
+          <button class="book-link-btn" onclick="copyBookingLink()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            Copy Booking Link
+          </button>
+        </div>
+
+        <div class="book-page">
+          <div class="book-hero">
+            <p class="book-hero-title" id="book-doc-name">Dr. Mousham Laskar</p>
+            <p class="book-hero-sub">General Physician &amp; Internal Medicine<br>Laskar Health Clinic, Salt Lake, Kolkata</p>
+          </div>
+
+          <div id="book-step1" class="slot-section on">
+            <div class="panel" style="margin-bottom:14px">
+              <div class="ph">
+                <div class="pt">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  Today — Friday, 22 May 2026
+                </div>
+                <span class="pb pb-g">8 slots open</span>
+              </div>
+              <div style="padding:14px">
+                <div class="book-slots">
+                  <button class="slot-btn taken">09:00 AM</button>
+                  <button class="slot-btn taken">09:30 AM</button>
+                  <button class="slot-btn" onclick="selectSlot(this,'10:00 AM')">10:00 AM</button>
+                  <button class="slot-btn taken">10:30 AM</button>
+                  <button class="slot-btn" onclick="selectSlot(this,'11:00 AM')">11:00 AM</button>
+                  <button class="slot-btn" onclick="selectSlot(this,'11:30 AM')">11:30 AM</button>
+                  <button class="slot-btn" onclick="selectSlot(this,'12:00 PM')">12:00 PM</button>
+                  <button class="slot-btn" onclick="selectSlot(this,'02:00 PM')">02:00 PM</button>
+                  <button class="slot-btn" onclick="selectSlot(this,'02:30 PM')">02:30 PM</button>
+                  <button class="slot-btn" onclick="selectSlot(this,'03:00 PM')">03:00 PM</button>
+                  <button class="slot-btn" onclick="selectSlot(this,'04:00 PM')">04:00 PM</button>
+                  <button class="slot-btn taken">04:30 PM</button>
+                </div>
+                <p style="font-size:10.5px;color:var(--text-tertiary);margin-top:10px">
+                  <span style="text-decoration:line-through;opacity:.5">Strikethrough</span> = Fully Booked
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div id="book-step2" class="slot-section">
+            <div class="book-confirm-bar">
+              <div class="book-selected-slot">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span id="selected-slot-label">Selected: —</span>
+                <button onclick="goBackToSlots()" style="margin-left:auto;font-size:10px;color:var(--blue);background:none;border:none;cursor:pointer;font-weight:600">Change</button>
+              </div>
+              <div class="book-form" id="book-form">
+                <div>
+                  <label class="flbl">Your Name <span style="color:var(--red)">*</span></label>
+                  <input type="text" class="finput" id="book-name" placeholder="Full name" autocomplete="name"/>
+                </div>
+                <div>
+                  <label class="flbl">Mobile Number <span style="color:var(--red)">*</span></label>
+                  <input type="tel" class="finput" id="book-phone" placeholder="+91 or +880 number" autocomplete="tel" inputmode="tel"/>
+                </div>
+                <button class="msub" onclick="confirmBooking()" style="margin-top:4px">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Confirm Appointment
+                </button>
+                <p style="font-size:10px;color:var(--text-tertiary);text-align:center;line-height:1.5">You will receive a WhatsApp confirmation</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="book-success" id="book-success">
+            <div class="book-success-ic">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <p class="book-success-title">Appointment Confirmed!</p>
+            <p class="book-success-sub" id="book-success-msg">Your appointment has been booked. A WhatsApp confirmation will be sent shortly.</p>
+            <button class="add-btn" onclick="resetBooking()" style="margin-top:6px">Book Another</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SETTINGS ── -->
+      <div id="v-settings" class="view">
+        <div class="sh">
+          <div>
+            <h1 class="st" data-i18n="nav_settings">Settings</h1>
+            <p class="ss">Clinic profile, integrations &amp; preferences</p>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="ph">
+            <div class="pt">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              Clinic Profile
+            </div>
+          </div>
+          <div class="settings-row">
+            <div>
+              <p class="settings-row-lbl">Clinic Name</p>
+              <p class="settings-row-sub" id="stg-clinic-name">Laskar Health Clinic, Salt Lake, Kolkata</p>
+            </div>
+            <button class="book-link-btn" style="font-size:11px;padding:6px 10px;min-height:32px">Edit</button>
+          </div>
+          <div class="settings-row">
+            <div>
+              <p class="settings-row-lbl">Doctor Name</p>
+              <p class="settings-row-sub" id="stg-doc-name">Dr. Mousham Laskar</p>
+            </div>
+            <button class="book-link-btn" style="font-size:11px;padding:6px 10px;min-height:32px">Edit</button>
+          </div>
+          <div class="settings-row">
+            <div>
+              <p class="settings-row-lbl">Registration</p>
+              <p class="settings-row-sub" id="stg-doc-reg">NMC / WBMCO Registered</p>
+            </div>
+            <button class="book-link-btn" style="font-size:11px;padding:6px 10px;min-height:32px">Edit</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="ph">
+            <div class="pt">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              WhatsApp Integration
+            </div>
+            <span class="pb pb-g">Connected</span>
+          </div>
+          <div class="settings-row">
+            <div>
+              <p class="settings-row-lbl">WhatsApp Business Number</p>
+              <p class="settings-row-sub">+91 98300 00000</p>
+            </div>
+            <button class="book-link-btn" style="font-size:11px;padding:6px 10px;min-height:32px">Change</button>
+          </div>
+          <div class="settings-row">
+            <div>
+              <p class="settings-row-lbl">Auto-Reply Engine</p>
+              <p class="settings-row-sub">Responds to patient queries automatically</p>
+            </div>
+            <button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')" aria-label="Toggle auto-reply">
+              <span class="tknob"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="ph">
+            <div class="pt">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+              Display &amp; Language
+            </div>
+          </div>
+          <div class="settings-row">
+            <div>
+              <p class="settings-row-lbl">Theme</p>
+              <p class="settings-row-sub" id="stg-theme-lbl">Light Mode</p>
+            </div>
+            <button class="book-link-btn" style="font-size:11px;padding:6px 10px;min-height:32px" onclick="toggleTheme()">Toggle</button>
+          </div>
+          <div class="settings-row">
+            <div>
+              <p class="settings-row-lbl">Language</p>
+              <p class="settings-row-sub">English / &#x09AC;&#x09BE;&#x0982;&#x09B2;&#x09BE;</p>
+            </div>
+            <button class="book-link-btn" style="font-size:11px;padding:6px 10px;min-height:32px" onclick="openLangModal()">Change</button>
+          </div>
+          <div class="settings-row">
+            <div>
+              <p class="settings-row-lbl">Workspace</p>
+              <p class="settings-row-sub" id="stg-workspace">India (INR &#x20B9; · +91)</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="ph">
+            <div class="pt">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Compliance &amp; Security
+            </div>
+            <span class="pb pb-b">Verified</span>
+          </div>
+          <div class="settings-row">
+            <div>
+              <p class="settings-row-lbl">HIPAA Compliance</p>
+              <p class="settings-row-sub">All patient data encrypted at rest and in transit</p>
+            </div>
+            <span class="pb pb-g">Active</span>
+          </div>
+          <div class="settings-row">
+            <div>
+              <p class="settings-row-lbl">SOC 2 Type II</p>
+              <p class="settings-row-sub">Security audit certified · Last reviewed Jan 2026</p>
+            </div>
+            <span class="pb pb-g">Certified</span>
+          </div>
+          <div class="settings-row">
+            <div>
+              <p class="settings-row-lbl">ISO 27001</p>
+              <p class="settings-row-sub">Information security management standard</p>
+            </div>
+            <span class="pb pb-g">Certified</span>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bnav" id="bnav">
+    <button class="bn on" onclick="navMob('dashboard',this)" data-t="dashboard">
+      <div class="bn-ico">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <span data-i18n="bn_home">Home</span>
+    </button>
+    <button class="bn" onclick="navMob('patients',this)" data-t="patients">
+      <div class="bn-ico">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      </div>
+      <span data-i18n="bn_patients">Patients</span>
+    </button>
+    <button class="bn-fab" onclick="openModal('add-modal')" aria-label="New appointment">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <button class="bn" onclick="navMob('whatsapp',this)" data-t="whatsapp">
+      <div class="bn-ico">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      </div>
+      <span data-i18n="bn_whatsapp">WhatsApp</span>
+    </button>
+    <button class="bn" onclick="navMob('analytics',this)" data-t="analytics">
+      <div class="bn-ico">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      </div>
+      <span data-i18n="bn_reports">Reports</span>
+    </button>
+  </nav>
+</div><!-- /#app -->
+</div><!-- /#app-shell -->
+
+<!-- WA MODAL -->
+<div class="mod-ov" id="wa-modal">
+  <div class="modal">
+    <div class="mh">
+      <div style="display:flex;align-items:center;gap:9px">
+        <div class="mic">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        </div>
+        <div>
+          <p class="mtitle" data-i18n="wa_modal_title">Send WhatsApp Message</p>
+          <p style="color:var(--text-tertiary);font-size:10px;margin-top:1px" id="wa-sub">Patient</p>
+        </div>
+      </div>
+      <button class="mclose" onclick="closeModal('wa-modal')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="mb">
+      <div>
+        <label class="flbl" data-i18n="phone_number">Phone Number</label>
+        <div class="prow">
+          <div class="ppfx" id="wa-dial">+91</div>
+          <div class="finput" id="wa-phone" style="flex:1;display:flex;align-items:center;font-size:13px;color:var(--text-secondary)"></div>
+        </div>
+      </div>
+      <div>
+        <label class="flbl" data-i18n="message">Message</label>
+        <textarea class="ftextarea" id="wa-msg" rows="5"></textarea>
+      </div>
+      <button class="msub" data-i18n="send_wa">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Send via WhatsApp
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD APPOINTMENT MODAL -->
+<div class="mod-ov" id="add-modal">
+  <div class="modal">
+    <div class="mh">
+      <div style="display:flex;align-items:center;gap:9px">
+        <div class="mic" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <p class="mtitle" data-i18n="new_appointment">New Appointment</p>
+      </div>
+      <button class="mclose" onclick="closeModal('add-modal')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="mb">
+      <div><label class="flbl" data-i18n="patient_name">Patient Name</label><input type="text" class="finput" data-i18n-placeholder="full_name" placeholder="Full name"/></div>
+      <div><label class="flbl" data-i18n="phone_number">Phone Number</label><input type="tel" class="finput" id="add-phone" placeholder="+91 number"/></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+        <div><label class="flbl" data-i18n="date">Date</label><input type="date" class="finput"/></div>
+        <div><label class="flbl" data-i18n="time">Time</label><input type="time" class="finput"/></div>
+      </div>
+      <div><label class="flbl" data-i18n="reason_for_visit">Reason for Visit</label><input type="text" class="finput" data-i18n-placeholder="chief_complaint" placeholder="Chief complaint or condition"/></div>
+      <button class="msub" onclick="closeModal('add-modal')" data-i18n="confirm_appointment">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Confirm Appointment
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- QUICK ADD PATIENT MODAL -->
+<div class="mod-ov" id="quick-patient-modal">
+  <div class="modal">
+    <div class="mh">
+      <div style="display:flex;align-items:center;gap:9px">
+        <div class="mic" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+        </div>
+        <div>
+          <p class="mtitle">Quick Add Patient</p>
+          <p style="color:var(--text-tertiary);font-size:10px;margin-top:1px">Takes less than 10 seconds</p>
+        </div>
+      </div>
+      <button class="mclose" onclick="closeModal('quick-patient-modal')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="mb">
+      <div>
+        <label class="flbl">Patient Name <span style="color:var(--red)">*</span></label>
+        <input type="text" class="finput" id="qp-name" placeholder="Full name" autocomplete="name" autocapitalize="words"/>
+      </div>
+      <div>
+        <label class="flbl">Mobile Number <span style="color:var(--red)">*</span></label>
+        <div class="prow">
+          <div class="ppfx" id="qp-dial">+91</div>
+          <input type="tel" class="finput" id="qp-phone" placeholder="Mobile number" style="flex:1" inputmode="numeric" autocomplete="tel"/>
+        </div>
+        <p class="qp-hint">That's all you need to register a patient</p>
+      </div>
+      <div class="optional-fields">
+        <button class="optional-toggle" onclick="toggleOptional()" type="button" id="opt-toggle-btn">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" id="opt-toggle-ic"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add optional details
+        </button>
+        <div class="opt-fields-wrap" id="opt-fields">
+          <div><label class="flbl">Age</label><input type="number" class="finput" placeholder="e.g. 42" inputmode="numeric" min="0" max="120"/></div>
+          <div><label class="flbl">Gender</label>
+            <select class="finput" style="color:var(--text-primary)">
+              <option value="">Select</option>
+              <option>Male</option><option>Female</option><option>Other</option>
+            </select>
+          </div>
+          <div><label class="flbl">Chief Complaint</label><input type="text" class="finput" placeholder="e.g. Fever, Cough..."/></div>
+        </div>
+      </div>
+      <button class="msub" onclick="quickAddPatient()" style="background:var(--green);box-shadow:0 2px 8px rgba(18,151,106,.2)">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Add Patient
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- LANGUAGE SELECTION MODAL -->
+<div class="lang-modal-ov" id="lang-modal" onclick="handleLangOverlayClick(event)">
+  <div class="lang-modal">
+    <div class="lm-head">
+      <p class="lm-title" data-i18n="lang_modal_title">Select Language</p>
+      <p class="lm-sub" data-i18n="lang_modal_sub">Choose your preferred display language</p>
+    </div>
+    <div class="lm-opts">
+      <button class="lang-opt active" id="lang-opt-en" onclick="setLang('en')">
+        <div>
+          <p class="lang-info-name">English</p>
+          <p class="lang-info-native" style="font-family:'DM Sans',sans-serif">English (Default)</p>
+        </div>
+        <svg class="lang-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+      <button class="lang-opt" id="lang-opt-bn" onclick="setLang('bn')">
+        <div>
+          <p class="lang-info-name">&#x09AC;&#x09BE;&#x0982;&#x09B2;&#x09BE;</p>
+          <p class="lang-info-native">Bengali / &#x09AC;&#x09BE;&#x0982;&#x09B2;&#x09BE;</p>
+        </div>
+        <svg class="lang-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+    </div>
+    <button class="lm-close" onclick="closeLangModal()">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <span data-i18n="close">Close</span>
+    </button>
+  </div>
+</div>
+
+<script>
+/* ══ SUPABASE CLIENT ══ */
+const SUPABASE_URL = 'https://qquyqejqrxfhtmidmgkb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxdXlxZWpxcnhmaHRtaWRtZ2tiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NzA1MTIsImV4cCI6MjA5NjM0NjUxMn0.b7TgPU6ZzhC3-ahx-j0BRiRpJ9geyEMkePpV7KFyoZI';
+const _supa = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let _clinicId = null;
+
+/* ══════════════════════════════════════════════
+   TRANSLATIONS
+══════════════════════════════════════════════ */
+const T={
+  en:{
+    tagline:"Clinic Operating System",
+    online_status:"Online · Clinic Active",
+    nav_main:"Main",nav_dashboard:"Dashboard",nav_patients:"Patients & Appointments",
+    nav_whatsapp:"WhatsApp Engine",nav_reports:"Reports",nav_setup:"Setup",
+    nav_settings:"Settings",sign_out:"Sign Out",
+    date_label:"Friday, 22 May 2026",
+    ctx_market:"Market:",live:"Live",
+    dash_greeting:"Good morning, Dr. Laskar",
+    dash_subtitle:"Clinic overview · Friday, 22 May 2026",
+    onboard_title:"Complete your clinic setup (3 of 5)",
+    onboard_sub:"Connect WhatsApp, add your first patients, and enable automated reminders to get started.",
+    onboard_steps:"3 / 5 complete",
+    queue_title:"Today's Queue",alerts_title:"Follow-up Alerts",alerts_window:"14-day window",
+    patients_title:"Patient Directory",new_appointment:"New Appointment",
+    wa_title:"WhatsApp & Retention",wa_sub:"Automate patient communications and follow-ups",
+    engine_live:"◉ Engine Live",quick_actions:"Quick Actions — Recent Patients",
+    ana_title:"Reports & Analytics",ana_sub:"Last 30 days · Updated just now",
+    auto_breakdown:"Automation Breakdown",thirty_days:"30 days",
+    health_summary:"Patient Health Summary",current:"Current",
+    wa_modal_title:"Send WhatsApp Message",phone_number:"Phone Number",
+    message:"Message",send_wa:"Send via WhatsApp",
+    patient_name:"Patient Name",full_name:"Full name",
+    date:"Date",time:"Time",reason_for_visit:"Reason for Visit",
+    chief_complaint:"Chief complaint or condition",
+    confirm_appointment:"Confirm Appointment",
+    th_patient:"Patient",th_phone:"Phone",th_last_visit:"Last Visit",
+    th_visits:"Visits",th_status:"Status",
+    bn_home:"Home",bn_patients:"Patients",bn_whatsapp:"WhatsApp",bn_reports:"Reports",
+    lang_modal_title:"Select Language",lang_modal_sub:"Choose your preferred display language",
+    close:"Close",
+    send_reminder:"Send Reminder",
+    metric_total_patients:"Total Patients",
+    metric_appts:"Today's Appointments",
+    metric_daily_progress:"Daily Progress",
+    metric_waiting:"Currently Waiting",
+    metric_wa_reminders:"WA Reminders Sent",
+    metric_unconfirmed:"Unconfirmed Apts.",
+    metric_all_time:"All time",metric_scheduled:"Scheduled",
+    metric_last30:"Last 30 days",metric_this_month:"This month",
+    metric_seen_of:"Seen today",metric_in_queue:"Active in queue",
+    metric_sent_today:"Sent today",metric_pending_followup:"Pending follow-ups",
+    metric_sent:"Messages Sent",metric_returning:"Returning Patients",
+    metric_reviews:"Google Reviews",metric_success:"Automation Success",
+    metric_sent_sub:"Last 30 days",metric_revisits:"Confirmed revisits",
+    metric_generated:"Generated this month",metric_delivery:"Delivery rate",
+    auto_confirmations:"Confirmations Sent",auto_reminders:"14-Day Reminders",
+    auto_followup:"Follow-Up Messages",auto_review_req:"Review Requests",
+    pat_active:"Active",pat_atrisk:"At Risk",pat_inactive:"Inactive",
+    quick_send_reminder:"Send Reminder",quick_followup:"Follow-Up",
+    quick_confirm:"Confirm Appt",quick_review:"Ask Review",
+    theme_dark:"Dark Mode",theme_light:"Light Mode",
+    status_checked_in:"Checked In",status_waiting:"Waiting",
+    status_in_progress:"In Progress",status_missed:"Missed",
+    workspace_lbl:"Workspace",ws_india:"🇮🇳 India",ws_bd:"🇧🇩 Bangladesh",
+  },
+  bn:{
+    tagline:"ক্লিনিক অপারেটিং সিস্টেম",
+    online_status:"অনলাইন · ক্লিনিক চালু",
+    nav_main:"প্রধান",nav_dashboard:"ড্যাশবোর্ড",nav_patients:"রোগী ও অ্যাপয়েন্টমেন্ট",
+    nav_whatsapp:"হোয়াটসঅ্যাপ ইঞ্জিন",nav_reports:"রিপোর্ট",nav_setup:"সেটআপ",
+    nav_settings:"সেটিংস",sign_out:"সাইন আউট",
+    date_label:"শুক্রবার, ২২ মে ২০২৬",
+    ctx_market:"বাজার:",live:"লাইভ",
+    dash_greeting:"শুভ সকাল, ডা. লস্কর",
+    dash_subtitle:"ক্লিনিক সারসংক্ষেপ · শুক্রবার, ২২ মে ২০২৬",
+    onboard_title:"ক্লিনিক সেটআপ সম্পন্ন করুন (৫টির মধ্যে ৩টি)",
+    onboard_sub:"হোয়াটসঅ্যাপ সংযুক্ত করুন, প্রথম রোগী যোগ করুন এবং স্বয়ংক্রিয় রিমাইন্ডার চালু করুন।",
+    onboard_steps:"৫ এর মধ্যে ৩ সম্পন্ন",
+    queue_title:"আজকের সারি",alerts_title:"ফলো-আপ সতর্কতা",alerts_window:"১৪ দিনের উইন্ডো",
+    patients_title:"রোগীর তালিকা",new_appointment:"নতুন অ্যাপয়েন্টমেন্ট",
+    wa_title:"হোয়াটসঅ্যাপ ও রিটেনশন",wa_sub:"রোগীদের যোগাযোগ ও ফলো-আপ স্বয়ংক্রিয় করুন",
+    engine_live:"◉ ইঞ্জিন চালু",quick_actions:"দ্রুত পদক্ষেপ — সাম্প্রতিক রোগী",
+    ana_title:"রিপোর্ট ও বিশ্লেষণ",ana_sub:"শেষ ৩০ দিন · এইমাত্র আপডেট হয়েছে",
+    auto_breakdown:"অটোমেশন বিভাজন",thirty_days:"৩০ দিন",
+    health_summary:"রোগীর স্বাস্থ্য সারসংক্ষেপ",current:"বর্তমান",
+    wa_modal_title:"হোয়াটসঅ্যাপ বার্তা পাঠান",phone_number:"ফোন নম্বর",
+    message:"বার্তা",send_wa:"হোয়াটসঅ্যাপে পাঠান",
+    patient_name:"রোগীর নাম",full_name:"পুরো নাম",
+    date:"তারিখ",time:"সময়",reason_for_visit:"ভিজিটের কারণ",
+    chief_complaint:"প্রধান অভিযোগ বা অবস্থা",
+    confirm_appointment:"অ্যাপয়েন্টমেন্ট নিশ্চিত করুন",
+    th_patient:"রোগী",th_phone:"ফোন",th_last_visit:"শেষ ভিজিট",
+    th_visits:"ভিজিট",th_status:"অবস্থা",
+    bn_home:"হোম",bn_patients:"রোগী",bn_whatsapp:"হোয়াটসঅ্যাপ",bn_reports:"রিপোর্ট",
+    lang_modal_title:"ভাষা নির্বাচন করুন",lang_modal_sub:"আপনার পছন্দের ভাষা বেছে নিন",
+    close:"বন্ধ করুন",
+    send_reminder:"রিমাইন্ডার পাঠান",
+    metric_total_patients:"মোট রোগী",
+    metric_appts:"আজকের অ্যাপয়েন্টমেন্ট",
+    metric_daily_progress:"দৈনিক অগ্রগতি",
+    metric_waiting:"বর্তমানে অপেক্ষায়",
+    metric_wa_reminders:"WA রিমাইন্ডার পাঠানো",
+    metric_unconfirmed:"অনিশ্চিত অ্যাপট.",
+    metric_all_time:"সর্বকালীন",metric_scheduled:"নির্ধারিত",
+    metric_last30:"শেষ ৩০ দিন",metric_this_month:"এই মাস",
+    metric_seen_of:"আজ দেখা হয়েছে",metric_in_queue:"সারিতে সক্রিয়",
+    metric_sent_today:"আজ পাঠানো",metric_pending_followup:"মুলতুবি ফলো-আপ",
+    metric_sent:"বার্তা পাঠানো হয়েছে",metric_returning:"ফিরে আসা রোগী",
+    metric_reviews:"গুগল রিভিউ",metric_success:"অটোমেশন সাফল্য",
+    metric_sent_sub:"শেষ ৩০ দিন",metric_revisits:"নিশ্চিত পুনর্ভিজিট",
+    metric_generated:"এই মাসে তৈরি",metric_delivery:"ডেলিভারি হার",
+    auto_confirmations:"নিশ্চিতকরণ পাঠানো",auto_reminders:"১৪ দিনের রিমাইন্ডার",
+    auto_followup:"ফলো-আপ বার্তা",auto_review_req:"রিভিউ অনুরোধ",
+    pat_active:"সক্রিয়",pat_atrisk:"ঝুঁকিতে",pat_inactive:"নিষ্ক্রিয়",
+    quick_send_reminder:"রিমাইন্ডার পাঠান",quick_followup:"ফলো-আপ",
+    quick_confirm:"অ্যাপট. নিশ্চিত",quick_review:"রিভিউ চাই",
+    theme_dark:"ডার্ক মোড",theme_light:"লাইট মোড",
+    status_checked_in:"চেক-ইন",status_waiting:"অপেক্ষায়",
+    status_in_progress:"চলছে",status_missed:"মিস হয়েছে",
+    workspace_lbl:"ওয়ার্কস্পেস",ws_india:"🇮🇳 ভারত",ws_bd:"🇧🇩 বাংলাদেশ",
+  }
+};
+
+/* ══════════════════════════════════════════════
+   DATA
+══════════════════════════════════════════════ */
+const DB={
+  india:{
+    doc:{name:"Dr. Mousham Laskar",av:"M",reg:"NMC / WBMCO Registered",spec:"General Physician & Internal Medicine",clinic:"Laskar Health Clinic, Salt Lake, Kolkata"},
+    cur:{sym:"₹",code:"INR",dial:"+91"},
+    metrics:{patients:1248,appts:18,missed:"9.4%"},
+    actionMetrics:{seen:12,totalAppts:18,waiting:3,waSentToday:24,pendingFollowups:5,unconfirmed:4},
+    ana:{sent:342,returning:87,reviews:54,success:"94.2%"},
+    queue:[
+      {id:1,name:"Farhana Rahman",time:"09:00 AM",status:"checked-in",token:"T-01"},
+      {id:2,name:"Amit Chakraborti",time:"09:30 AM",status:"waiting",token:"T-02"},
+      {id:3,name:"Priya Sengupta",time:"10:00 AM",status:"waiting",token:"T-03"},
+      {id:4,name:"Rafiqul Islam",time:"10:30 AM",status:"in-progress",token:"T-04"},
+      {id:5,name:"Sneha Mukherjee",time:"11:00 AM",status:"waiting",token:"T-05"},
+      {id:6,name:"Bikash Dey",time:"11:30 AM",status:"missed",token:"T-06"},
+    ],
+    alerts:[
+      {id:1,name:"Farhana Rahman",phone:"+91 98300 11223",lastVisit:"4 May 2025",due:"22 May 2025",condition:"Hypertension Follow-up"},
+      {id:2,name:"Amit Chakraborti",phone:"+91 99100 44556",lastVisit:"2 May 2025",due:"20 May 2025",condition:"Diabetes Review"},
+      {id:3,name:"Ruma Das",phone:"+91 70010 77889",lastVisit:"5 May 2025",due:"24 May 2025",condition:"Post-Op Check"},
+    ],
+    patients:[
+      {id:1,name:"Farhana Rahman",phone:"+91 98300 11223",lastVisit:"04 May 2025",status:"Active",visits:7},
+      {id:2,name:"Amit Chakraborti",phone:"+91 99100 44556",lastVisit:"02 May 2025",status:"Active",visits:12},
+      {id:3,name:"Priya Sengupta",phone:"+91 81230 55678",lastVisit:"28 Apr 2025",status:"Active",visits:3},
+      {id:4,name:"Rafiqul Islam",phone:"+91 91760 98012",lastVisit:"20 Apr 2025",status:"At Risk",visits:5},
+      {id:5,name:"Sneha Mukherjee",phone:"+91 70010 12345",lastVisit:"15 Apr 2025",status:"Inactive",visits:1},
+      {id:6,name:"Bikash Dey",phone:"+91 83400 67890",lastVisit:"10 Apr 2025",status:"Active",visits:9},
+      {id:7,name:"Ruma Das",phone:"+91 70010 77889",lastVisit:"05 May 2025",status:"Active",visits:4},
+    ]
+  },
+  bd:{
+    doc:{name:"Dr. Mousham Laskar",av:"M",reg:"BM&DC Registered",spec:"General Physician & Internal Medicine",clinic:"Laskar Health Centre, Gulshan, Dhaka"},
+    cur:{sym:"৳",code:"BDT",dial:"+880"},
+    metrics:{patients:934,appts:14,missed:"11.2%"},
+    actionMetrics:{seen:8,totalAppts:14,waiting:2,waSentToday:17,pendingFollowups:3,unconfirmed:3},
+    ana:{sent:218,returning:61,reviews:39,success:"91.7%"},
+    queue:[
+      {id:1,name:"Tanzil Ahmed",time:"09:00 AM",status:"checked-in",token:"T-01"},
+      {id:2,name:"Nasrin Akter",time:"09:30 AM",status:"waiting",token:"T-02"},
+      {id:3,name:"Kamal Hossain",time:"10:00 AM",status:"in-progress",token:"T-03"},
+      {id:4,name:"Shireen Begum",time:"10:30 AM",status:"waiting",token:"T-04"},
+      {id:5,name:"Rezaul Karim",time:"11:00 AM",status:"missed",token:"T-05"},
+    ],
+    alerts:[
+      {id:1,name:"Tanzil Ahmed",phone:"+880 1711 223344",lastVisit:"3 May 2025",due:"22 May 2025",condition:"Cardiac Follow-up"},
+      {id:2,name:"Nasrin Akter",phone:"+880 1812 556677",lastVisit:"4 May 2025",due:"23 May 2025",condition:"Thyroid Review"},
+      {id:3,name:"Kamal Hossain",phone:"+880 1913 889900",lastVisit:"6 May 2025",due:"25 May 2025",condition:"Diabetes Management"},
+    ],
+    patients:[
+      {id:1,name:"Tanzil Ahmed",phone:"+880 1711 223344",lastVisit:"03 May 2025",status:"Active",visits:8},
+      {id:2,name:"Nasrin Akter",phone:"+880 1812 556677",lastVisit:"04 May 2025",status:"Active",visits:5},
+      {id:3,name:"Kamal Hossain",phone:"+880 1913 889900",lastVisit:"06 May 2025",status:"Active",visits:11},
+      {id:4,name:"Shireen Begum",phone:"+880 1614 112233",lastVisit:"22 Apr 2025",status:"At Risk",visits:2},
+      {id:5,name:"Rezaul Karim",phone:"+880 1515 445566",lastVisit:"18 Apr 2025",status:"Inactive",visits:1},
+      {id:6,name:"Mitu Khanam",phone:"+880 1716 778899",lastVisit:"30 Apr 2025",status:"Active",visits:6},
+    ]
+  }
+};
+
+const AUTOS=[
+  {label_en:"Appointment Confirmation",label_bn:"অ্যাপয়েন্টমেন্ট নিশ্চিতকরণ",desc_en:"Sent 24h before scheduled visit",desc_bn:"নির্ধারিত ভিজিটের ২৪ ঘণ্টা আগে পাঠানো হয়",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,on:true},
+  {label_en:"14-Day Return Reminder",label_bn:"১৪ দিনের রিটার্ন রিমাইন্ডার",desc_en:"Auto-reminds patients 14 days post-visit",desc_bn:"ভিজিটের ১৪ দিন পর রোগীদের স্বয়ংক্রিয়ভাবে মনে করিয়ে দেয়",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,on:true},
+  {label_en:"48-Hour Follow-Up",label_bn:"৪৮ ঘণ্টার ফলো-আপ",desc_en:"Check-in message 2 days after appointment",desc_bn:"অ্যাপয়েন্টমেন্টের ২ দিন পর চেক-ইন বার্তা",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,on:true},
+  {label_en:"Missed Appointment Recovery",label_bn:"মিস অ্যাপয়েন্টমেন্ট পুনরুদ্ধার",desc_en:"Smart recovery flow for missed visits",desc_bn:"মিস হওয়া ভিজিটের জন্য স্মার্ট রিকভারি প্রবাহ",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5.01"/></svg>`,on:true},
+  {label_en:"Google Review Request",label_bn:"গুগল রিভিউ অনুরোধ",desc_en:"Asks for review 2h after completed appointment",desc_bn:"অ্যাপয়েন্টমেন্টের ২ ঘণ্টা পর রিভিউ চায়",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,on:false},
+  {label_en:"WhatsApp Broadcast",label_bn:"হোয়াটসঅ্যাপ ব্রডকাস্ট",desc_en:"Send health campaigns to patient segments",desc_bn:"রোগীদের বিভাগে স্বাস্থ্য প্রচারণা পাঠান",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,on:false},
+  {label_en:"AI Reception Assistant",label_bn:"এআই রিসেপশন সহকারী",desc_en:"Answers common patient questions automatically",desc_bn:"সাধারণ রোগীর প্রশ্নের স্বয়ংক্রিয় উত্তর দেয়",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,on:false},
+];
+
+const TABS_KEYS={dashboard:"nav_dashboard",patients:"nav_patients",whatsapp:"nav_whatsapp",analytics:"nav_reports","missed-calls":"nav_dashboard",book:"nav_dashboard",settings:"nav_settings"};
+let mkt="india";
+let currentLang="en";
+let currentTheme="light";
+
+function t(key){return(T[currentLang]||T.en)[key]||(T.en[key]||key)}
+
+function applyTranslations(){
+  document.querySelectorAll("[data-i18n]").forEach(el=>{
+    const k=el.getAttribute("data-i18n");
+    const txt=t(k);
+    if(txt)el.textContent=txt;
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{
+    const k=el.getAttribute("data-i18n-placeholder");
+    const txt=t(k);
+    if(txt)el.placeholder=txt;
+  });
+  const si=document.getElementById("search-inp");
+  if(si)si.placeholder=currentLang==="bn"?"নাম বা ফোন নম্বর দিয়ে খুঁজুন…":"Search by name or phone…";
+  const stgClinic=document.getElementById("stg-clinic-name");
+  if(stgClinic)stgClinic.textContent=DB[mkt].doc.clinic;
+  const stgDoc=document.getElementById("stg-doc-name");
+  if(stgDoc)stgDoc.textContent=DB[mkt].doc.name;
+  const stgReg=document.getElementById("stg-doc-reg");
+  if(stgReg)stgReg.textContent=DB[mkt].doc.reg;
+  const stgWs=document.getElementById("stg-workspace");
+  if(stgWs)stgWs.textContent=mkt==="india"?"India (INR ₹ · +91)":"Bangladesh (BDT ৳ · +880)";
+  const stgTheme=document.getElementById("stg-theme-lbl");
+  if(stgTheme)stgTheme.textContent=currentTheme==="dark"?t("theme_light"):t("theme_dark");
+}
+
+function chipQ(s){
+  const statusKey={"checked-in":"status_checked_in","waiting":"status_waiting","in-progress":"status_in_progress","missed":"status_missed"};
+  const cls={"checked-in":"ch-in","waiting":"ch-wait","in-progress":"ch-prog","missed":"ch-miss"};
+  return`<span class="chip ${cls[s]||'ch-wait'}">${t(statusKey[s]||'status_waiting')}</span>`;
+}
+function chipP(s){
+  const statusKey={"Active":"pat_active","At Risk":"pat_atrisk","Inactive":"pat_inactive"};
+  const cls={"Active":"ch-act","At Risk":"ch-risk","Inactive":"ch-inact"};
+  return`<span class="chip ${cls[s]||'ch-wait'}">${t(statusKey[s]||'pat_active')}</span>`;
+}
+
+const WA_SVG=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`;
+
+function renderDash(){
+  const d=DB[mkt];
+  const am=d.actionMetrics;
+  const cards=[
+    {lbl:t("metric_total_patients"),val:Number(d.metrics.patients).toLocaleString(),sub:t("metric_all_time"),trend:`<span class="up">↑ 3.2%</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>`},
+    {lbl:t("metric_daily_progress"),val:`${am.seen}<span style="font-size:16px;color:var(--text-tertiary);font-family:'DM Sans',sans-serif;font-weight:500"> / ${am.totalAppts}</span>`,sub:t("metric_seen_of"),trend:`<span class="up">↑ on track</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polyline points="20 6 9 17 4 12"/></svg>`,raw:true},
+    {lbl:t("metric_waiting"),val:am.waiting,sub:t("metric_in_queue"),trend:am.waiting>3?`<span class="dn">↑ busy</span>`:`<span class="up">◉ normal</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`},
+    {lbl:t("metric_wa_reminders"),val:am.waSentToday,sub:t("metric_sent_today"),trend:`<span class="up">↑ auto</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`},
+  ];
+  document.getElementById("dash-metrics").innerHTML=cards.map(c=>`
+    <div class="mc">
+      <div class="mc-top"><p class="mc-lbl">${c.lbl}</p><div class="mc-icon">${c.ic}</div></div>
+      <p class="mc-val">${c.val}</p>
+      <p class="mc-sub">${c.sub} · ${c.trend}</p>
+    </div>`).join("");
+
+  const q=d.queue;
+  document.getElementById("q-count").textContent=`${q.length} ${currentLang==="bn"?"রোগী":"patients"}`;
+  document.getElementById("queue-list").innerHTML=q.map(p=>`
+    <div class="qrow">
+      <div style="display:flex;align-items:center;gap:9px;min-width:0;flex:1">
+        <div class="token">${p.token}</div>
+        <div style="min-width:0">
+          <p class="qname" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</p>
+          <p class="qtime">
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            ${p.time}
+          </p>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:7px">
+        ${chipQ(p.status)}
+        <button class="wa-icon-btn" onclick='openWA(${JSON.stringify(p)})' title="${t('send_reminder')}">${WA_SVG}</button>
+      </div>
+    </div>`).join("");
+
+  const al=d.alerts;
+  document.getElementById("alerts-list").innerHTML=al.map(p=>`
+    <div class="arow">
+      <div class="ai">
+        <div style="min-width:0;flex:1">
+          <p class="aname">${p.name}</p>
+          <p class="acond">${p.condition}</p>
+          <p class="adue">${currentLang==="bn"?"নির্ধারিত":"Due"} <span class="dv">${p.due}</span></p>
+        </div>
+        <button class="remind" onclick='openWA(${JSON.stringify(p)})'>${WA_SVG} ${t("send_reminder")}</button>
+      </div>
+    </div>`).join("");
+}
+
+function renderPats(){
+  const q=(document.getElementById("search-inp")||{}).value||"";
+  const all=DB[mkt].patients;
+  const pats=all.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||p.phone.includes(q));
+  const countTxt=currentLang==="bn"?`${all.length} জন নিবন্ধিত রোগী`:`${all.length} registered patients`;
+  document.getElementById("pat-count").textContent=countTxt;
+  if(!pats.length){
+    const emptyTxt=currentLang==="bn"?"কোনো রোগী পাওয়া যায়নি":"No patients found";
+    const emptySub=currentLang==="bn"?"ভিন্ন নাম বা নম্বর দিয়ে চেষ্টা করুন।":"Try a different name or phone number.";
+    document.getElementById("pat-table").innerHTML=`<div class="empty"><div class="empty-ic">🔍</div><p class="empty-t">${emptyTxt}</p><p class="empty-s">${emptySub}</p></div>`;
+    return;
+  }
+  document.getElementById("pat-table").innerHTML=pats.map(p=>`
+    <div class="trow">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0">
+        <div class="pav">${p.name.charAt(0)}</div>
+        <div style="min-width:0">
+          <p class="pname" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</p>
+          <p class="pphone col-phone" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.phone}</p>
+        </div>
+      </div>
+      <p style="color:var(--text-secondary);font-size:10.5px;white-space:nowrap" class="col-date">${p.lastVisit}</p>
+      <p class="pvisits col-visits">${p.visits}</p>
+      <div style="display:flex;justify-content:center" class="col-status">${chipP(p.status)}</div>
+      <div style="display:flex;justify-content:flex-end">
+        <button class="wa-btn" onclick='openWA(${JSON.stringify(p)})' title="${t('send_reminder')} — WhatsApp">${WA_SVG}</button>
+      </div>
+    </div>`).join("");
+}
+
+function renderWA(){
+  const isBn=currentLang==="bn";
+  document.getElementById("auto-list").innerHTML=AUTOS.map((a,i)=>`
+    <div class="auto-row">
+      <div style="display:flex;align-items:center;gap:11px;flex:1;min-width:0">
+        <div class="auto-ic">${a.icon}</div>
+        <div style="min-width:0">
+          <p class="auto-lbl">${isBn?(a.label_bn||a.label_en):a.label_en}</p>
+          <p class="auto-desc">${isBn?(a.desc_bn||a.desc_en):a.desc_en}</p>
+        </div>
+      </div>
+      <button class="toggle ${a.on?'on':'off'}" onclick="toggleAuto(${i})" aria-label="${a.on?'Disable':'Enable'} ${a.label_en}">
+        <span class="tknob"></span>
+      </button>
+    </div>`).join("");
+
+  const pats=DB[mkt].patients.slice(0,5);
+  const acts=[t("quick_send_reminder"),t("quick_followup"),t("quick_confirm"),t("quick_review")];
+  document.getElementById("quick-list").innerHTML=pats.map(p=>`
+    <div class="qr">
+      <div class="qr-inner">
+        <div style="display:flex;align-items:center;gap:9px">
+          <div class="qav">${p.name.charAt(0)}</div>
+          <div><p class="qrname">${p.name}</p><p class="qrphone">${p.phone}</p></div>
+        </div>
+        <div class="qbtns">
+          ${acts.map(b=>`<button class="qbtn" onclick='openWA(${JSON.stringify(p)})'>${b}</button>`).join("")}
+        </div>
+      </div>
+    </div>`).join("");
+}
+
+function renderAna(){
+  const a=DB[mkt].ana;
+  const cards=[
+    {lbl:t("metric_sent"),val:a.sent,sub:t("metric_sent_sub"),trend:`<span class="up">↑ 12.4%</span>`},
+    {lbl:t("metric_returning"),val:a.returning,sub:t("metric_revisits"),trend:`<span class="up">↑ 7.1%</span>`},
+    {lbl:t("metric_reviews"),val:a.reviews,sub:t("metric_generated"),trend:`<span class="up">↑ 22.3%</span>`},
+    {lbl:t("metric_success"),val:a.success,sub:t("metric_delivery"),trend:`<span class="up">↑ 1.8%</span>`},
+  ];
+  document.getElementById("ana-metrics").innerHTML=cards.map(c=>`
+    <div class="mc">
+      <div class="mc-top"><p class="mc-lbl">${c.lbl}</p></div>
+      <p class="mc-val">${c.val}</p>
+      <p class="mc-sub">${c.sub} · ${c.trend}</p>
+    </div>`).join("");
+
+  const bars=[
+    {lbl:t("auto_confirmations"),val:Math.round(a.sent*.38),pct:"38%"},
+    {lbl:t("auto_reminders"),val:Math.round(a.sent*.31),pct:"31%"},
+    {lbl:t("auto_followup"),val:Math.round(a.sent*.21),pct:"21%"},
+    {lbl:t("auto_review_req"),val:Math.round(a.sent*.10),pct:"10%"},
+  ];
+  document.getElementById("auto-stats").innerHTML=bars.map(b=>`
+    <div class="abar-row">
+      <div class="abar-top"><span class="abar-lbl">${b.lbl}</span><span class="abar-val">${b.val}</span></div>
+      <div class="abar-bg"><div class="abar-fill" style="width:${b.pct}"></div></div>
+    </div>`).join("");
+
+  const pats=DB[mkt].patients;
+  const active=pats.filter(p=>p.status==="Active").length;
+  const atRisk=pats.filter(p=>p.status==="At Risk").length;
+  const inactive=pats.filter(p=>p.status==="Inactive").length;
+  const total=pats.length;
+  document.getElementById("pat-stats").innerHTML=[
+    {lbl:t("pat_active"),count:active,color:"var(--green)",pct:Math.round((active/total)*100)},
+    {lbl:t("pat_atrisk"),count:atRisk,color:"var(--amber)",pct:Math.round((atRisk/total)*100)},
+    {lbl:t("pat_inactive"),count:inactive,color:"var(--red)",pct:Math.round((inactive/total)*100)},
+  ].map(s=>`
+    <div class="pstat-row">
+      <div class="pstat-top">
+        <div class="pstat-l"><span class="dot" style="background:${s.color}"></span><span class="pstat-lbl">${s.lbl}</span></div>
+        <span class="pstat-count">${s.count} <span class="pstat-tot">/ ${total}</span></span>
+      </div>
+      <div class="abar-bg"><div class="abar-fill" style="width:${s.pct}%;background:${s.color}"></div></div>
+    </div>`).join("");
+}
+
+function renderAll(){
+  const d=DB[mkt];
+  document.getElementById("doc-av").textContent=d.doc.av;
+  document.getElementById("doc-name").textContent=d.doc.name;
+  document.getElementById("doc-reg").textContent=d.doc.reg;
+  document.getElementById("doc-spec").textContent=d.doc.spec;
+  document.getElementById("ctx-mkt").textContent=mkt==="india"?"India (INR ₹ · +91)":"Bangladesh (BDT ৳ · +880)";
+  document.getElementById("ctx-clinic").textContent=d.doc.clinic;
+  document.getElementById("add-phone").placeholder=`${d.cur.dial} number`;
+  const bookDocEl=document.getElementById("book-doc-name");
+  if(bookDocEl)bookDocEl.textContent=d.doc.name;
+  const qpDialEl=document.getElementById("qp-dial");
+  if(qpDialEl)qpDialEl.textContent=d.cur.dial;
+  applyTranslations();
+  renderDash();renderPats();renderWA();renderAna();renderSettings();
+}
+
+function renderSettings(){
+  const d=DB[mkt];
+  const cn=document.getElementById("stg-clinic-name");
+  const dn=document.getElementById("stg-doc-name");
+  const dr=document.getElementById("stg-doc-reg");
+  const ws=document.getElementById("stg-workspace");
+  if(cn)cn.textContent=d.doc.clinic;
+  if(dn)dn.textContent=d.doc.name;
+  if(dr)dr.textContent=d.doc.reg;
+  if(ws)ws.textContent=mkt==="india"?"India (INR ₹ · +91)":"Bangladesh (BDT ৳ · +880)";
+}
+
+function toggleAuto(i){AUTOS[i].on=!AUTOS[i].on;renderWA()}
+
+function dismissOnboard(){
+  const banner=document.getElementById("onboard-banner");
+  if(banner){banner.style.display="none";}
+  try{localStorage.setItem("aura_onboard_dismissed","1")}catch(e){}
+}
+
+const MOON_SVG=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+const SUN_SVG_S=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+const SUN_SVG=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+
+function updateThemeUI(){
+  const isDark=currentTheme==="dark";
+  document.getElementById("sb-theme-ic").innerHTML=isDark?SUN_SVG_S:MOON_SVG;
+  document.getElementById("sb-theme-lbl").textContent=isDark?t("theme_light"):t("theme_dark");
+  document.getElementById("hdr-theme-ic").innerHTML=isDark?SUN_SVG:MOON_SVG;
+  document.getElementById("meta-theme").content=isDark?"#171B24":"#ffffff";
+  const stgTheme=document.getElementById("stg-theme-lbl");
+  if(stgTheme)stgTheme.textContent=isDark?t("theme_light"):t("theme_dark");
+}
+
+function toggleTheme(){
+  currentTheme=currentTheme==="light"?"dark":"light";
+  document.documentElement.setAttribute("data-theme",currentTheme);
+  updateThemeUI();
+  try{localStorage.setItem("aura_theme",currentTheme)}catch(e){}
+}
+
+function updateLangUI(){
+  const isBn=currentLang==="bn";
+  const lbl=isBn?"BN":"EN";
+  document.getElementById("sb-lang-lbl").textContent=lbl;
+  document.getElementById("hdr-lang-lbl").textContent=lbl;
+  document.getElementById("lang-opt-en").classList.toggle("active",!isBn);
+  document.getElementById("lang-opt-bn").classList.toggle("active",isBn);
+  document.documentElement.lang=isBn?"bn":"en";
+  document.documentElement.setAttribute("data-lang",currentLang);
+}
+
+function setLang(lang){
+  currentLang=lang;
+  updateLangUI();
+  renderAll();
+  closeLangModal();
+  try{localStorage.setItem("aura_lang",lang)}catch(e){}
+}
+
+function openLangModal(){document.getElementById("lang-modal").classList.add("open")}
+function closeLangModal(){document.getElementById("lang-modal").classList.remove("open")}
+function handleLangOverlayClick(e){if(e.target===document.getElementById("lang-modal"))closeLangModal()}
+
+/* ── NAV ── */
+function nav(id,btn){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
+  const target=document.getElementById("v-"+id);
+  if(target)target.classList.add("on");
+  document.querySelectorAll(".nb").forEach(b=>b.classList.remove("on"));
+  if(btn)btn.classList.add("on");
+  const titleEl=document.getElementById("tab-title");
+  const tabKey=TABS_KEYS[id]||"nav_dashboard";
+  titleEl.setAttribute("data-i18n",tabKey);
+  titleEl.textContent=t(tabKey);
+  document.querySelectorAll(".bn").forEach(b=>b.classList.toggle("on",b.dataset.t===id));
+  closeSidebar();
+  window.scrollTo(0,0);
+}
+function navMob(id,btn){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
+  const target=document.getElementById("v-"+id);
+  if(target)target.classList.add("on");
+  document.querySelectorAll(".bn").forEach(b=>b.classList.remove("on"));
+  if(btn)btn.classList.add("on");
+  const titleEl=document.getElementById("tab-title");
+  const tabKey=TABS_KEYS[id]||"nav_dashboard";
+  titleEl.setAttribute("data-i18n",tabKey);
+  titleEl.textContent=t(tabKey);
+  document.querySelectorAll(".nb").forEach(b=>{
+    b.classList.remove("on");
+    const oc=b.getAttribute("onclick")||"";
+    if(oc.includes("'"+id+"'"))b.classList.add("on");
+  });
+  window.scrollTo(0,0);
+}
+
+function setMkt(m,btn){
+  mkt=m;
+  document.getElementById("ws-india").classList.toggle("active",m==="india");
+  document.getElementById("ws-bd").classList.toggle("active",m==="bd");
+  renderAll();
+}
+
+function toggleSidebar(){
+  const s=document.getElementById("sidebar");
+  const o=document.getElementById("overlay");
+  const isOpen=s.classList.toggle("open");
+  o.classList.toggle("on",isOpen);
+}
+function closeSidebar(){
+  document.getElementById("sidebar").classList.remove("open");
+  document.getElementById("overlay").classList.remove("on");
+}
+window.addEventListener("resize",()=>{if(window.innerWidth>=1024)closeSidebar()});
+
+function openModal(id){document.getElementById(id).classList.add("open")}
+function closeModal(id){document.getElementById(id).classList.remove("open")}
+document.querySelectorAll(".mod-ov").forEach(o=>{
+  o.addEventListener("click",e=>{if(e.target===o)o.classList.remove("open")});
+});
+window.addEventListener("popstate",()=>{
+  document.querySelectorAll(".mod-ov.open").forEach(m=>m.classList.remove("open"));
+  closeLangModal();
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){
+    document.querySelectorAll(".mod-ov.open").forEach(m=>m.classList.remove("open"));
+    closeLangModal();closeSidebar();
+  }
+});
+
+function openWA(p){
+  document.getElementById("wa-sub").textContent=p.name;
+  const dial=DB[mkt].cur.dial;
+  document.getElementById("wa-dial").textContent=dial;
+  const rawPhone=(p.phone||"").replace(/^\+91\s?|^\+880\s?/,"").trim();
+  document.getElementById("wa-phone").textContent=rawPhone;
+  const d=DB[mkt];
+  const isBn=currentLang==="bn";
+  document.getElementById("wa-msg").value=isBn
+    ?`প্রিয় ${p.name},\n\nআপনার ফলো-আপ অ্যাপয়েন্টমেন্টের সময় হয়েছে। অনুগ্রহ করে যোগাযোগ করুন।\n\nধন্যবাদ,\n${d.doc.name}`
+    :`Dear ${p.name},\n\nThis is a friendly reminder from ${d.doc.clinic}. It's time for your follow-up appointment. Please contact us to schedule.\n\nBest regards,\n${d.doc.name}`;
+  openModal("wa-modal");
+}
+
+/* ══ AUTH ══ */
+let authSelectedCountry='india';
+
+function switchAuthTab(tab){
+  document.getElementById('auth-tab-login').classList.toggle('active',tab==='login');
+  document.getElementById('auth-tab-signup').classList.toggle('active',tab==='signup');
+  document.getElementById('auth-panel-login').classList.toggle('on',tab==='login');
+  document.getElementById('auth-panel-signup').classList.toggle('on',tab==='signup');
+  document.getElementById('auth-login-error').classList.remove('show');
+  document.getElementById('auth-signup-error').classList.remove('show');
+}
+
+function selectAuthCountry(c){
+  authSelectedCountry=c;
+  document.getElementById('auth-country-india').classList.toggle('selected',c==='india');
+  document.getElementById('auth-country-bd').classList.toggle('selected',c==='bd');
+  document.getElementById('auth-dial').textContent=c==='india'?'+91':'+880';
+}
+
+function _goToDashboard(){
+  document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('app-shell').classList.add('authenticated');
+  renderAll();
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.getElementById('v-dashboard').classList.add('on');
+  document.querySelectorAll('.nb').forEach(b=>{
+    b.classList.toggle('on',(b.getAttribute('onclick')||'').includes("'dashboard'"));
+  });
+  document.querySelectorAll('.bn').forEach(b=>b.classList.toggle('on',b.dataset.t==='dashboard'));
+  document.getElementById('tab-title').textContent=t('nav_dashboard');
+  window.scrollTo(0,0);
+}
+
+async function handleLogin(){
+  const email=(document.getElementById('auth-login-email').value||'').trim();
+  const pass=(document.getElementById('auth-login-pass').value||'').trim();
+  const err=document.getElementById('auth-login-error');
+  if(!email||!pass){err.textContent='Please enter your email and password.';err.classList.add('show');return;}
+  err.classList.remove('show');
+  const btn=document.querySelector('#auth-panel-login .msub');
+  if(btn){btn.textContent='Signing in…';btn.disabled=true;}
+  try{
+    const {data,error}=await _supa.auth.signInWithPassword({email,password:pass});
+    if(error){err.textContent=error.message||'Invalid email or password.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Sign In';btn.disabled=false;}return;}
+    await _loadClinicAndGo(data.user);
+  }catch(e){err.textContent='Network error. Please try again.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Sign In';btn.disabled=false;}}
+}
+
+async function handleSignup(){
+  const clinic=(document.getElementById('auth-clinic-name').value||'').trim();
+  const doctor=(document.getElementById('auth-doctor-name').value||'').trim();
+  const mobile=(document.getElementById('auth-mobile').value||'').trim();
+  const email=(document.getElementById('auth-signup-email').value||'').trim();
+  const pass=(document.getElementById('auth-signup-pass').value||'').trim();
+  const err=document.getElementById('auth-signup-error');
+  if(!clinic||!doctor||!mobile||!email||!pass||pass.length<6){
+    err.textContent=pass.length>0&&pass.length<6?'Password must be at least 6 characters.':'Please fill in all required fields.';
+    err.classList.add('show');return;
+  }
+  err.classList.remove('show');
+  const btn=document.querySelector('#auth-panel-signup .msub');
+  if(btn){btn.textContent='Creating account…';btn.disabled=true;}
+  try{
+    const {data,error}=await _supa.auth.signUp({email,password:pass});
+    if(error){err.textContent=error.message||'Signup failed. Please try again.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Create Account';btn.disabled=false;}return;}
+    if(!data.user){err.textContent='Check your email to confirm your account, then sign in.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Create Account';btn.disabled=false;}switchAuthTab('login');return;}
+    const {data:clinicRow,error:clinicErr}=await _supa.from('clinics').insert({
+      owner_id:data.user.id,name:clinic,doctor_name:doctor,
+      registration:'',specialty:'General Physician',country:authSelectedCountry,
+      whatsapp_number:authSelectedCountry==='india'?'+91'+mobile:'+880'+mobile
+    }).select().single();
+    if(!clinicErr&&clinicRow){
+      _clinicId=clinicRow.id;
+      await _supa.from('profiles').upsert({id:data.user.id,full_name:doctor,email,mobile,clinic_id:clinicRow.id});
+    }
+    setMkt(authSelectedCountry,null);
+    DB[authSelectedCountry].doc.name=doctor;
+    DB[authSelectedCountry].doc.clinic=clinic;
+    _goToDashboard();
+  }catch(e){err.textContent='Network error. Please try again.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Create Account';btn.disabled=false;}}
+}
+
+function handleForgotPassword(){
+  const email=(document.getElementById('auth-login-email').value||'').trim();
+  if(!email){alert('Please enter your email address first, then click Forgot Password.');return;}
+  showToast('Password reset link sent to '+email);
+}
+
+async function _loadClinicAndGo(user){
+  try{
+    const {data:profile}=await _supa.from('profiles').select('clinic_id,full_name').eq('id',user.id).single();
+    if(profile&&profile.clinic_id){
+      _clinicId=profile.clinic_id;
+      const {data:clinic}=await _supa.from('clinics').select('*').eq('id',_clinicId).single();
+      if(clinic){
+        const m=clinic.country==='bd'?'bd':'india';
+        setMkt(m,null);
+        DB[m].doc.name=clinic.doctor_name||DB[m].doc.name;
+        DB[m].doc.clinic=clinic.name||DB[m].doc.clinic;
+      }
+    }
+  }catch(e){}
+  _goToDashboard();
+}
+async function handleLogout(){
+  try{await _supa.auth.signOut();}catch(e){}
+  _clinicId=null;
+  document.getElementById('app-shell').classList.remove('authenticated');
+  document.getElementById('auth-screen').classList.remove('hidden');
+  document.getElementById('auth-login-email').value='';
+  document.getElementById('auth-login-pass').value='';
+  document.getElementById('auth-login-error').classList.remove('show');
+  switchAuthTab('login');
+}
+
+/* ══ INIT ══ */
+(function init(){
+  try{
+    const savedTheme=localStorage.getItem("aura_theme");
+    if(savedTheme==="dark"||savedTheme==="light"){
+      currentTheme=savedTheme;
+      document.documentElement.setAttribute("data-theme",currentTheme);
+    }
+    const savedLang=localStorage.getItem("aura_lang");
+    if(savedLang==="bn"||savedLang==="en"){
+      currentLang=savedLang;
+      document.documentElement.setAttribute("data-lang",currentLang);
+      document.documentElement.lang=currentLang==="bn"?"bn":"en";
+    }
+    if(localStorage.getItem("aura_onboard_dismissed")==="1"){
+      const b=document.getElementById("onboard-banner");
+      if(b)b.style.display="none";
+    }
+  }catch(e){}
+   updateThemeUI();
+  updateLangUI();
+  _supa.auth.getSession().then(({data:{session}})=>{
+    if(session&&session.user)_loadClinicAndGo(session.user);
+  }).catch(()=>{});
+  _supa.auth.onAuthStateChange((event,session)=>{
+    if(event==='SIGNED_OUT'){
+      document.getElementById('app-shell').classList.remove('authenticated');
+      document.getElementById('auth-screen').classList.remove('hidden');
+    }
+  });
+})();
+
+/* ══ BOOKING PAGE ══ */
+let selectedSlot=null;
+function selectSlot(btn,time){
+  document.querySelectorAll(".slot-btn").forEach(b=>b.classList.remove("selected"));
+  btn.classList.add("selected");
+  selectedSlot=time;
+  document.getElementById("selected-slot-label").textContent="Selected: "+time;
+  document.getElementById("book-step1").classList.remove("on");
+  document.getElementById("book-step2").classList.add("on");
+  setTimeout(()=>{const n=document.getElementById("book-name");if(n)n.focus();},120);
+}
+function goBackToSlots(){
+  document.getElementById("book-step2").classList.remove("on");
+  document.getElementById("book-step1").classList.add("on");
+  selectedSlot=null;
+}
+async function confirmBooking(){
+  const name=(document.getElementById("book-name")||{}).value||"";
+  const phone=(document.getElementById("book-phone")||{}).value||"";
+  if(!name.trim()||!phone.trim()){alert("Please enter your name and mobile number.");return;}
+  document.getElementById("book-step2").classList.remove("on");
+  document.getElementById("book-step1").classList.remove("on");
+  const msgEl=document.getElementById("book-success-msg");
+  if(msgEl)msgEl.textContent=name+" — your appointment at "+selectedSlot+" is confirmed! You will receive a WhatsApp confirmation shortly.";
+  document.getElementById("book-success").classList.add("on");
+  if(_clinicId&&selectedSlot){
+    try{
+      const today=new Date().toISOString().split('T')[0];
+      await _supa.from('appointments').insert({
+        clinic_id:_clinicId,patient_name:name.trim(),patient_phone:phone.trim(),
+        appointment_date:today,appointment_time:selectedSlot,
+        status:'Waiting',source:'dashboard'
+      });
+    }catch(e){}
+  }
+}
+function resetBooking(){
+  document.getElementById("book-success").classList.remove("on");
+  document.getElementById("book-step1").classList.add("on");
+  document.querySelectorAll(".slot-btn").forEach(b=>b.classList.remove("selected"));
+  const n=document.getElementById("book-name");const p=document.getElementById("book-phone");
+  if(n)n.value="";if(p)p.value="";
+  selectedSlot=null;
+}
+function copyBookingLink(){
+ const base=window.location.href.replace(/index\.html.*$/,"").replace(/\?.*$/,"");
+  const link=base+"book.html";
+  try{navigator.clipboard.writeText(link);alert("Booking link copied!\n"+link);}
+  catch(e){alert("Booking link:\n"+link);}
+}
+
+/* ══ QUICK ADD PATIENT ══ */
+function toggleOptional(){
+  const wrap=document.getElementById("opt-fields");
+  const ic=document.getElementById("opt-toggle-ic");
+  const open=wrap.classList.toggle("open");
+  if(ic)ic.innerHTML=open?'<line x1="5" y1="12" x2="19" y2="12"/>'
+    :'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>';
+}
+async function quickAddPatient(){
+  const name=(document.getElementById("qp-name")||{}).value||"";
+  const phone=(document.getElementById("qp-phone")||{}).value||"";
+  if(!name.trim()||!phone.trim()){alert("Name and mobile number are required.");return;}
+  const dial=DB[mkt].cur.dial;
+  const fullPhone=phone.startsWith("+")?phone:dial+" "+phone;
+  const newPat={id:Date.now(),name:name.trim(),phone:fullPhone,lastVisit:"—",status:"Active",visits:0};
+  DB[mkt].patients.unshift(newPat);
+  DB[mkt].metrics.patients+=1;
+  closeModal("quick-patient-modal");
+  const n=document.getElementById("qp-name");const p=document.getElementById("qp-phone");
+  if(n)n.value="";if(p)p.value="";
+  document.getElementById("opt-fields").classList.remove("open");
+  renderPats();renderDash();
+  showToast("Patient added: "+name.trim());
+  if(_clinicId){
+    try{
+      await _supa.from('patients').insert({clinic_id:_clinicId,name:name.trim(),phone:fullPhone,status:'Active',visit_count:0});
+    }catch(e){}
+  }
+}
+
+/* ══ TOAST ══ */
+function showToast(msg){
+  let t=document.getElementById("aura-toast");
+  if(!t){
+    t=document.createElement("div");t.id="aura-toast";
+    t.style.cssText="position:fixed;bottom:calc(var(--bnav-h,68px) + 16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--text-primary);color:var(--bg);padding:10px 18px;border-radius:8px;font-size:12.5px;font-weight:600;z-index:9999;box-shadow:0 4px 18px rgba(0,0,0,.2);white-space:nowrap;transition:opacity .3s ease";
+    document.body.appendChild(t);
+  }
+  t.textContent=msg;t.style.opacity="1";t.style.display="block";
+  clearTimeout(t._to);t._to=setTimeout(()=>{t.style.opacity="0";setTimeout(()=>{t.style.display="none"},300)},2400);
+}
+
+/* ══ FOLLOW-UP TEMPLATES ══ */
+function sendTemplate(type){
+  const msgs={"follow-up":"14-day follow-up reminder sent to 3 patients due for a visit!","medication":"Medication reminder sent to selected patients.","review":"Review request sent to today's 6 completed patients!"};
+  showToast(msgs[type]||"Message sent!");
+}
+</script>
+</body>
+</html>
