@@ -2713,11 +2713,22 @@ async function handleLogout(){
   }catch(e){}
    updateThemeUI();
   updateLangUI();
-  _supa.auth.getSession().then(({data:{session}})=>{
-    if(session&&session.user)_loadClinicAndGo(session.user);
-  }).catch(()=>{});
-  _supa.auth.onAuthStateChange((event,session)=>{
+  /* ── Auth state: single source of truth ── */
+  var _authHandled=false;
+  _supa.auth.onAuthStateChange(function(event,session){
+    if(event==='SIGNED_IN'||event==='TOKEN_REFRESHED'||event==='INITIAL_SESSION'){
+      if(session&&session.user){
+        /* avoid double-running on rapid successive events */
+        if(!_authHandled||event==='TOKEN_REFRESHED'){
+          _authHandled=true;
+          _clinicId=null; /* reset so _loadClinicAndGo re-fetches cleanly */
+          _loadClinicAndGo(session.user);
+        }
+      }
+    }
     if(event==='SIGNED_OUT'){
+      _authHandled=false;
+      _clinicId=null;
       document.getElementById('app-shell').classList.remove('authenticated');
       document.getElementById('auth-screen').classList.remove('hidden');
     }
