@@ -2673,12 +2673,29 @@ function handleForgotPassword(){
 /* ── Recover _clinicId from live session if null ── */
 async function _ensureClinicId(){
   if(_clinicId)return _clinicId;
+
+  /* Step 1: confirm session exists */
   var sr=await _supa.auth.getSession();
   var sess=sr&&sr.data?sr.data.session:null;
-  if(!sess||!sess.user)return null;
-  var pr=await _supa.from('profiles').select('clinic_id').eq('id',sess.user.id).single();
-  if(pr.data&&pr.data.clinic_id)_clinicId=pr.data.clinic_id;
-  return _clinicId||null;
+  if(!sess||!sess.user){showToast("No active session — please sign in.");return null;}
+  var uid=sess.user.id;
+
+  /* Step 2: try profile row */
+  var pr=await _supa.from('profiles').select('clinic_id').eq('id',uid).single();
+  if(pr.data&&pr.data.clinic_id){_clinicId=pr.data.clinic_id;return _clinicId;}
+
+  /* Step 3: profile missing or clinic_id null — look up clinic by owner_id (self-heal) */
+  var cr=await _supa.from('clinics').select('id').eq('owner_id',uid).limit(1);
+  if(cr.data&&cr.data.length>0){
+    _clinicId=cr.data[0].id;
+    /* repair profile so this path is not needed next time */
+    await _supa.from('profiles').upsert({id:uid,clinic_id:_clinicId});
+    return _clinicId;
+  }
+
+  /* Step 4: genuinely no clinic found */
+  showToast("Clinic not found for this account. Please contact support.");
+  return null;
 }
 
 async function _loadClinicAndGo(user){
@@ -2882,7 +2899,7 @@ async function quickAddPatient(){
   const phone=(document.getElementById("qp-phone")||{}).value||"";
   if(!name.trim()||!phone.trim()){showToast("Name and mobile number are required.");return;}
   const cid=await _ensureClinicId();
-  if(!cid){showToast("Session expired — please sign out and sign in again.");return;}
+  if(!cid){return;} /* _ensureClinicId already showed a descriptive toast */
   const dial=DB[mkt].cur.dial;
   const fullPhone=phone.startsWith("+")?phone:dial+" "+phone;
   closeModal("quick-patient-modal");
@@ -2891,7 +2908,7 @@ async function quickAddPatient(){
   document.getElementById("opt-fields").classList.remove("open");
   showToast("Saving…");
   const ins=await _supa.from('patients').insert({
-    clinic_id:_clinicId,
+    clinic_id:cid,
     name:name.trim(),
     phone:fullPhone,
     status:'Active',
