@@ -2739,6 +2739,7 @@ async function _loadClinicAndGo(user){
   }
   _goToDashboard();
   fetchPatients();
+  fetchAppointments();
 }
 async function handleLogout(){
   try{await _supa.auth.signOut();}catch(e){}
@@ -2833,12 +2834,12 @@ async function confirmBooking(){
 
   /* find or create patient */
   var patientId=null;
-  var lookupRes=await _supa.from('patients').select('id').eq('clinic_id',_clinicId).eq('phone',fullPhone).limit(1);
+  var lookupRes=await _supa.from('patients').select('id').eq('clinic_id',cid).eq('phone',fullPhone).limit(1);
   if(lookupRes.error){_showBookingError("ERROR patient lookup: "+lookupRes.error.message);return;}
   if(lookupRes.data&&lookupRes.data.length>0){
     patientId=lookupRes.data[0].id;
   }else{
-    var newPatRes=await _supa.from('patients').insert({clinic_id:_clinicId,name:name.trim(),phone:fullPhone,status:'Active',visit_count:0}).select('id').single();
+    var newPatRes=await _supa.from('patients').insert({clinic_id:cid,name:name.trim(),phone:fullPhone,status:'Active',visit_count:0}).select('id').single();
     if(newPatRes.error){_showBookingError("ERROR patient create: "+newPatRes.error.message);return;}
     if(newPatRes.data)patientId=newPatRes.data.id;
   }
@@ -2846,7 +2847,7 @@ async function confirmBooking(){
 
   /* insert appointment */
   var apptRes=await _supa.from('appointments').insert({
-    clinic_id:_clinicId,
+    clinic_id:cid,
     patient_id:patientId,
     patient_name:name.trim(),
     patient_phone:fullPhone,
@@ -2858,7 +2859,9 @@ async function confirmBooking(){
   });
   if(apptRes.error){_showBookingError("ERROR appt insert: "+apptRes.error.message+" | code:"+apptRes.error.code+" | details:"+apptRes.error.details);return;}
 
-  /* success */
+  /* success — refresh UI from Supabase */
+  await fetchAppointments();
+  await fetchPatients();
   var errEl=document.getElementById('_booking-err');
   if(errEl)errEl.style.display='none';
   document.getElementById("book-step2").classList.remove("on");
@@ -2884,7 +2887,7 @@ function copyBookingLink(){
 
 /* ══ FETCH PATIENTS FROM SUPABASE ══ */
 async function fetchPatients(){
-  if(!_clinicId){showToast("Not connected — sign in to load patients.");return;}
+  if(!_clinicId)return;
   const res=await _supa.from('patients')
     .select('id,name,phone,last_visit,status,visit_count,created_at')
     .eq('clinic_id',_clinicId)
@@ -2900,6 +2903,30 @@ async function fetchPatients(){
   }));
   DB[mkt].metrics.patients=DB[mkt].patients.length;
   renderPats();
+  renderDash();
+}
+
+/* ══ FETCH APPOINTMENTS FROM SUPABASE ══ */
+async function fetchAppointments(){
+  if(!_clinicId)return;
+  const today=new Date().toISOString().split('T')[0];
+  const res=await _supa.from('appointments')
+    .select('appointment_id,patient_name,appointment_time,status,reason')
+    .eq('clinic_id',_clinicId)
+    .eq('appointment_date',today)
+    .order('appointment_time',{ascending:true});
+  if(res.error){showToast("Could not load appointments: "+res.error.message);return;}
+  const appts=res.data||[];
+  /* replace queue with live data */
+  DB[mkt].queue=appts.map(function(a,i){
+    var s=a.status||'Waiting';
+    var mapped=s==='Seen'||s==='Done'?'checked-in':s==='In Progress'?'in-progress':s==='Missed'?'missed':'waiting';
+    return{id:a.appointment_id,name:a.patient_name||'Unknown',time:a.appointment_time||'',status:mapped,token:'T-'+(i+1<10?'0'+(i+1):(i+1))};
+  });
+  /* update action metrics from real counts */
+  DB[mkt].actionMetrics.totalAppts=appts.length;
+  DB[mkt].actionMetrics.seen=appts.filter(function(a){return a.status==='Seen'||a.status==='Done';}).length;
+  DB[mkt].actionMetrics.waiting=appts.filter(function(a){return a.status==='Waiting';}).length;
   renderDash();
 }
 
