@@ -2846,7 +2846,7 @@ async function confirmBooking(){
   if(!patientId){_showBookingError("ERROR: patient_id is null after lookup/create.");return;}
 
   /* insert appointment */
-  var apptRes=await _supa.from('appointments').insert({
+  var apptPayload={
     clinic_id:cid,
     patient_id:patientId,
     patient_name:name.trim(),
@@ -2856,8 +2856,16 @@ async function confirmBooking(){
     reason:reason,
     status:'Waiting',
     source:'dashboard'
-  });
-  if(apptRes.error){_showBookingError("ERROR appt insert: "+apptRes.error.message+" | code:"+apptRes.error.code+" | details:"+apptRes.error.details);return;}
+  };
+  var apptRes=await _supa.from('appointments').insert(apptPayload);
+  /* always show full raw result so we can see exactly what Supabase returned */
+  var apptDebug='APPT INSERT RESULT: status='+apptRes.status
+    +' | error='+(apptRes.error?JSON.stringify(apptRes.error):'null')
+    +' | data='+(apptRes.data?JSON.stringify(apptRes.data):'null')
+    +' | payload='+JSON.stringify(apptPayload);
+  if(apptRes.error){_showBookingError(apptDebug);return;}
+  /* success — show debug briefly then proceed */
+  showToast(apptDebug.substring(0,120));
 
   /* success — refresh UI from Supabase */
   await fetchAppointments();
@@ -2910,20 +2918,21 @@ async function fetchPatients(){
 async function fetchAppointments(){
   if(!_clinicId)return;
   const today=new Date().toISOString().split('T')[0];
+  /* use select('*') to avoid hardcoding column names that may differ in Supabase */
   const res=await _supa.from('appointments')
-    .select('appointment_id,patient_name,appointment_time,status,reason')
+    .select('*')
     .eq('clinic_id',_clinicId)
     .eq('appointment_date',today)
     .order('appointment_time',{ascending:true});
   if(res.error){showToast("Could not load appointments: "+res.error.message);return;}
   const appts=res.data||[];
-  /* replace queue with live data */
+  /* defensive key resolution: handle both 'id' and 'appointment_id' */
   DB[mkt].queue=appts.map(function(a,i){
+    var rowId=a.appointment_id||a.id||i;
     var s=a.status||'Waiting';
     var mapped=s==='Seen'||s==='Done'?'checked-in':s==='In Progress'?'in-progress':s==='Missed'?'missed':'waiting';
-    return{id:a.appointment_id,name:a.patient_name||'Unknown',time:a.appointment_time||'',status:mapped,token:'T-'+(i+1<10?'0'+(i+1):(i+1))};
+    return{id:rowId,name:a.patient_name||'Unknown',time:a.appointment_time||'',status:mapped,token:'T-'+(i+1<10?'0'+(i+1):(i+1))};
   });
-  /* update action metrics from real counts */
   DB[mkt].actionMetrics.totalAppts=appts.length;
   DB[mkt].actionMetrics.seen=appts.filter(function(a){return a.status==='Seen'||a.status==='Done';}).length;
   DB[mkt].actionMetrics.waiting=appts.filter(function(a){return a.status==='Waiting';}).length;
