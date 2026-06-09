@@ -2679,23 +2679,40 @@ async function _ensureClinicId(){
   var sess=sr&&sr.data?sr.data.session:null;
   if(!sess||!sess.user){showToast("No active session — please sign in.");return null;}
   var uid=sess.user.id;
+  var userEmail=sess.user.email||'';
 
-  /* Step 2: try profile row */
-  var pr=await _supa.from('profiles').select('clinic_id').eq('id',uid).single();
+  /* Step 2: try profile row — keep full_name for auto-create fallback */
+  var pr=await _supa.from('profiles').select('clinic_id,full_name').eq('id',uid).single();
   if(pr.data&&pr.data.clinic_id){_clinicId=pr.data.clinic_id;return _clinicId;}
+  var doctorName=(pr.data&&pr.data.full_name)||userEmail.split('@')[0]||'Doctor';
 
-  /* Step 3: profile missing or clinic_id null — look up clinic by owner_id (self-heal) */
+  /* Step 3: no clinic_id in profile — look up clinic by owner_id */
   var cr=await _supa.from('clinics').select('id').eq('owner_id',uid).limit(1);
   if(cr.data&&cr.data.length>0){
     _clinicId=cr.data[0].id;
-    /* repair profile so this path is not needed next time */
     await _supa.from('profiles').upsert({id:uid,clinic_id:_clinicId});
     return _clinicId;
   }
 
-  /* Step 4: genuinely no clinic found */
-  showToast("Clinic not found for this account. Please contact support.");
-  return null;
+  /* Step 4: no clinic at all — auto-create one so this account is always functional */
+  showToast("Setting up your clinic…");
+  var newClinic=await _supa.from('clinics').insert({
+    owner_id:uid,
+    name:doctorName+"'s Clinic",
+    doctor_name:doctorName,
+    registration:'',
+    specialty:'General Physician',
+    country:'india',
+    whatsapp_number:''
+  }).select('id').single();
+  if(newClinic.error||!newClinic.data){
+    showToast("Could not create clinic: "+(newClinic.error?newClinic.error.message:'unknown error'));
+    return null;
+  }
+  _clinicId=newClinic.data.id;
+  await _supa.from('profiles').upsert({id:uid,clinic_id:_clinicId});
+  showToast("Clinic created. You can update your clinic name in Settings.");
+  return _clinicId;
 }
 
 async function _loadClinicAndGo(user){
