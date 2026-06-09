@@ -2015,8 +2015,11 @@ main.content{
 /* ══ SUPABASE CLIENT ══ */
 const SUPABASE_URL = 'https://qquyqejqrxfhtmidmgkb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxdXlxZWpxcnhmaHRtaWRtZ2tiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NzA1MTIsImV4cCI6MjA5NjM0NjUxMn0.b7TgPU6ZzhC3-ahx-j0BRiRpJ9geyEMkePpV7KFyoZI';
-const _supa = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const _supa = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}
+});
 let _clinicId = null;
+var _setupInProgress = false; /* true while signup is inserting clinic rows */
 
 /* ══════════════════════════════════════════════
    TRANSLATIONS
@@ -2618,7 +2621,8 @@ async function handleLogin(){
   try{
     const {data,error}=await _supa.auth.signInWithPassword({email,password:pass});
     if(error){err.textContent=error.message||'Invalid email or password.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Sign In';btn.disabled=false;}return;}
-    await _loadClinicAndGo(data.user);
+    /* onAuthStateChange SIGNED_IN will call _loadClinicAndGo — don't call it here too */
+    if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Sign In';btn.disabled=false;}
   }catch(e){err.textContent='Network error. Please try again.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Sign In';btn.disabled=false;}}
 }
 
@@ -2640,6 +2644,8 @@ async function handleSignup(){
     const {data,error}=await _supa.auth.signUp({email,password:pass});
     if(error){err.textContent=error.message||'Signup failed. Please try again.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Create Account';btn.disabled=false;}return;}
     if(!data.user||!data.session){err.textContent='Check your email to confirm your account, then sign in.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Create Account';btn.disabled=false;}switchAuthTab('login');return;}
+    /* block onAuthStateChange from running _loadClinicAndGo until clinic row is inserted */
+    _setupInProgress=true;
     const {data:clinicRow,error:clinicErr}=await _supa.from('clinics').insert({
       owner_id:data.user.id,name:clinic,doctor_name:doctor,
       registration:'',specialty:'General Physician',country:authSelectedCountry,
@@ -2649,10 +2655,12 @@ async function handleSignup(){
       _clinicId=clinicRow.id;
       await _supa.from('profiles').upsert({id:data.user.id,full_name:doctor,email,mobile,clinic_id:clinicRow.id});
     }
+    _setupInProgress=false;
     setMkt(authSelectedCountry,null);
     DB[authSelectedCountry].doc.name=doctor;
     DB[authSelectedCountry].doc.clinic=clinic;
     _goToDashboard();
+    fetchPatients();
   }catch(e){err.textContent='Network error. Please try again.';err.classList.add('show');if(btn){btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Create Account';btn.disabled=false;}}
 }
 
@@ -2731,21 +2739,16 @@ async function handleLogout(){
    updateThemeUI();
   updateLangUI();
   /* ── Auth state: single source of truth ── */
-  var _authHandled=false;
   _supa.auth.onAuthStateChange(function(event,session){
     if(event==='SIGNED_IN'||event==='TOKEN_REFRESHED'||event==='INITIAL_SESSION'){
       if(session&&session.user){
-        /* avoid double-running on rapid successive events */
-        if(!_authHandled||event==='TOKEN_REFRESHED'){
-          _authHandled=true;
-          _clinicId=null; /* reset so _loadClinicAndGo re-fetches cleanly */
-          _loadClinicAndGo(session.user);
-        }
+        if(_setupInProgress){return;} /* signup is mid-insert; it will call _goToDashboard itself */
+        _loadClinicAndGo(session.user);
       }
     }
     if(event==='SIGNED_OUT'){
-      _authHandled=false;
       _clinicId=null;
+      _setupInProgress=false;
       document.getElementById('app-shell').classList.remove('authenticated');
       document.getElementById('auth-screen').classList.remove('hidden');
     }
