@@ -2818,33 +2818,41 @@ function _showBookingError(msg){
   el.style.display='block';
 }
 async function confirmBooking(){
+  _showBookingError("STEP 1: confirmBooking started");
   var name=(document.getElementById("book-name")||{}).value||"";
   var phone=(document.getElementById("book-phone")||{}).value||"";
   var reason=((document.getElementById("book-reason")||{}).value||"").trim()||"General Consultation";
-  if(!name.trim()||!phone.trim()){_showBookingError("Please enter your name and mobile number.");return;}
+  if(!name.trim()||!phone.trim()){_showBookingError("STEP 1 STOP: name or phone empty. name='"+name+"' phone='"+phone+"'");return;}
 
-  /* ensure session + clinic_id are ready before any DB work */
+  _showBookingError("STEP 2: checking clinic...");
   var cid=await _ensureClinicId();
-  if(!cid){_showBookingError("ERROR: Not signed in or clinic not found. Please sign in again.");return;}
-  if(!selectedSlot){_showBookingError("ERROR: No slot selected.");return;}
+  if(!cid){_showBookingError("STEP 2 STOP: ensureClinicId returned null");return;}
+  _showBookingError("STEP 2 OK: cid="+cid);
+
+  if(!selectedSlot){_showBookingError("STEP 2 STOP: no slot selected");return;}
 
   var today=new Date().toISOString().split('T')[0];
   var dial=DB[mkt].cur.dial;
   var fullPhone=phone.trim().startsWith("+")?phone.trim():dial+" "+phone.trim();
 
   /* find or create patient */
+  _showBookingError("STEP 3: looking up patient phone="+fullPhone);
   var patientId=null;
   var lookupRes=await _supa.from('patients').select('id').eq('clinic_id',cid).eq('phone',fullPhone).limit(1);
-  if(lookupRes.error){_showBookingError("ERROR patient lookup: "+lookupRes.error.message);return;}
+  if(lookupRes.error){_showBookingError("STEP 3 STOP: patient lookup error: "+lookupRes.error.message);return;}
   if(lookupRes.data&&lookupRes.data.length>0){
     patientId=lookupRes.data[0].id;
+    _showBookingError("STEP 3 OK: existing patient id="+patientId);
   }else{
+    _showBookingError("STEP 3: patient not found, creating...");
     var newPatRes=await _supa.from('patients').insert({clinic_id:cid,name:name.trim(),phone:fullPhone,status:'Active',visit_count:0}).select('id').single();
-    if(newPatRes.error){_showBookingError("ERROR patient create: "+newPatRes.error.message);return;}
+    if(newPatRes.error){_showBookingError("STEP 3 STOP: patient create error: "+newPatRes.error.message);return;}
     if(newPatRes.data)patientId=newPatRes.data.id;
+    _showBookingError("STEP 3 OK: new patient id="+patientId);
   }
-  if(!patientId){_showBookingError("ERROR: patient_id is null after lookup/create.");return;}
+  if(!patientId){_showBookingError("STEP 3 STOP: patientId null after lookup/create");return;}
 
+  _showBookingError("STEP 4: attempting appointment insert. slot="+selectedSlot+" date="+today);
   /* insert appointment */
   var apptPayload={
     clinic_id:cid,
