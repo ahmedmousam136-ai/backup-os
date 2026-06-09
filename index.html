@@ -2693,7 +2693,6 @@ async function handleLogout(){
 
 /* ══ INIT ══ */
 (function init(){
-  alert("BUILD 8 LOADED");
   try{
     const savedTheme=localStorage.getItem("aura_theme");
     if(savedTheme==="dark"||savedTheme==="light"){
@@ -2740,24 +2739,35 @@ function goBackToSlots(){
   document.getElementById("book-step1").classList.add("on");
   selectedSlot=null;
 }
+function _showBookingError(msg){
+  var el=document.getElementById('_booking-err');
+  if(!el){
+    el=document.createElement('div');
+    el.id='_booking-err';
+    el.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:99999;background:#c62828;color:#fff;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;max-width:90vw;word-break:break-word;box-shadow:0 4px 18px rgba(0,0,0,.3)';
+    document.body.appendChild(el);
+  }
+  el.textContent=msg;
+  el.style.display='block';
+}
 async function confirmBooking(){
   var name=(document.getElementById("book-name")||{}).value||"";
   var phone=(document.getElementById("book-phone")||{}).value||"";
   var reason=((document.getElementById("book-reason")||{}).value||"").trim()||"General Consultation";
-  if(!name.trim()||!phone.trim()){alert("Please enter your name and mobile number.");return;}
+  if(!name.trim()||!phone.trim()){_showBookingError("Please enter your name and mobile number.");return;}
 
   /* heal _clinicId if session restored but clinic load failed */
   if(!_clinicId){
     var sessionRes=await _supa.auth.getSession();
     var session=sessionRes.data?sessionRes.data.session:null;
-    if(!session||!session.user){alert("Not logged in. Please sign in again.");return;}
+    if(!session||!session.user){_showBookingError("ERROR: Not logged in. Please sign in again.");return;}
     var profRes2=await _supa.from('profiles').select('clinic_id').eq('id',session.user.id).single();
     var prof2=profRes2.data;
-    if(!prof2||!prof2.clinic_id){alert("Profile has no clinic_id. Contact support.");return;}
+    if(!prof2||!prof2.clinic_id){_showBookingError("ERROR: Profile has no clinic_id. profErr="+JSON.stringify(profRes2.error));return;}
     _clinicId=prof2.clinic_id;
   }
-  if(!_clinicId){alert("clinic_id still null. Please sign out and sign in again.");return;}
-  if(!selectedSlot){alert("No slot selected.");return;}
+  if(!_clinicId){_showBookingError("ERROR: clinic_id still null after session reload.");return;}
+  if(!selectedSlot){_showBookingError("ERROR: No slot selected.");return;}
 
   var today=new Date().toISOString().split('T')[0];
   var dial=DB[mkt].cur.dial;
@@ -2766,15 +2776,15 @@ async function confirmBooking(){
   /* find or create patient */
   var patientId=null;
   var lookupRes=await _supa.from('patients').select('id').eq('clinic_id',_clinicId).eq('phone',fullPhone).limit(1);
-  if(lookupRes.error){alert("Patient lookup error: "+lookupRes.error.message);return;}
+  if(lookupRes.error){_showBookingError("ERROR patient lookup: "+lookupRes.error.message);return;}
   if(lookupRes.data&&lookupRes.data.length>0){
     patientId=lookupRes.data[0].id;
   }else{
     var newPatRes=await _supa.from('patients').insert({clinic_id:_clinicId,name:name.trim(),phone:fullPhone,status:'Active',visit_count:0}).select('id').single();
-    if(newPatRes.error){alert("Patient create error: "+newPatRes.error.message);return;}
+    if(newPatRes.error){_showBookingError("ERROR patient create: "+newPatRes.error.message);return;}
     if(newPatRes.data)patientId=newPatRes.data.id;
   }
-  if(!patientId){alert("Could not obtain patient_id. Appointment not saved.");return;}
+  if(!patientId){_showBookingError("ERROR: patient_id is null after lookup/create.");return;}
 
   /* insert appointment */
   var apptRes=await _supa.from('appointments').insert({
@@ -2788,9 +2798,11 @@ async function confirmBooking(){
     status:'Waiting',
     source:'dashboard'
   });
-  if(apptRes.error){alert("Appointment save failed: "+apptRes.error.message+" | "+apptRes.error.details+" | code:"+apptRes.error.code);return;}
+  if(apptRes.error){_showBookingError("ERROR appt insert: "+apptRes.error.message+" | code:"+apptRes.error.code+" | details:"+apptRes.error.details);return;}
 
   /* success */
+  var errEl=document.getElementById('_booking-err');
+  if(errEl)errEl.style.display='none';
   document.getElementById("book-step2").classList.remove("on");
   document.getElementById("book-step1").classList.remove("on");
   var msgEl=document.getElementById("book-success-msg");
