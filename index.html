@@ -1274,6 +1274,7 @@ main.content{
           <div>
             <h1 class="st" data-i18n="dash_greeting">Good morning, Dr. Laskar</h1>
             <p class="ss" data-i18n="dash_subtitle">Clinic overview · Friday, 22 May 2026</p>
+            <span style="display:inline-block;margin-top:4px;padding:2px 8px;background:#e53935;color:#fff;font-size:10px;font-weight:700;border-radius:4px;letter-spacing:.5px">BUILD 8</span>
           </div>
           <button class="add-btn" onclick="openModal('add-modal')">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -2692,6 +2693,7 @@ async function handleLogout(){
 
 /* ══ INIT ══ */
 (function init(){
+  alert("BUILD 8 LOADED");
   try{
     const savedTheme=localStorage.getItem("aura_theme");
     if(savedTheme==="dark"||savedTheme==="light"){
