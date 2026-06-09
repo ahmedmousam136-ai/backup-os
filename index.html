@@ -2679,6 +2679,7 @@ async function _loadClinicAndGo(user){
     }
   }catch(e){}
   _goToDashboard();
+  fetchPatients();
 }
 async function handleLogout(){
   try{await _supa.auth.signOut();}catch(e){}
@@ -2824,6 +2825,27 @@ function copyBookingLink(){
   catch(e){alert("Booking link:\n"+link);}
 }
 
+/* ══ FETCH PATIENTS FROM SUPABASE ══ */
+async function fetchPatients(){
+  if(!_clinicId){showToast("Not connected — sign in to load patients.");return;}
+  const res=await _supa.from('patients')
+    .select('id,name,phone,last_visit,status,visit_count,created_at')
+    .eq('clinic_id',_clinicId)
+    .order('created_at',{ascending:false});
+  if(res.error){showToast("Could not load patients: "+res.error.message);return;}
+  DB[mkt].patients=(res.data||[]).map(p=>({
+    id:p.id,
+    name:p.name||'',
+    phone:p.phone||'',
+    lastVisit:p.last_visit||'—',
+    status:p.status||'Active',
+    visits:p.visit_count||0
+  }));
+  DB[mkt].metrics.patients=DB[mkt].patients.length;
+  renderPats();
+  renderDash();
+}
+
 /* ══ QUICK ADD PATIENT ══ */
 function toggleOptional(){
   const wrap=document.getElementById("opt-fields");
@@ -2835,23 +2857,25 @@ function toggleOptional(){
 async function quickAddPatient(){
   const name=(document.getElementById("qp-name")||{}).value||"";
   const phone=(document.getElementById("qp-phone")||{}).value||"";
-  if(!name.trim()||!phone.trim()){alert("Name and mobile number are required.");return;}
+  if(!name.trim()||!phone.trim()){showToast("Name and mobile number are required.");return;}
+  if(!_clinicId){showToast("Error: not connected. Please sign in again.");return;}
   const dial=DB[mkt].cur.dial;
   const fullPhone=phone.startsWith("+")?phone:dial+" "+phone;
-  const newPat={id:Date.now(),name:name.trim(),phone:fullPhone,lastVisit:"—",status:"Active",visits:0};
-  DB[mkt].patients.unshift(newPat);
-  DB[mkt].metrics.patients+=1;
   closeModal("quick-patient-modal");
   const n=document.getElementById("qp-name");const p=document.getElementById("qp-phone");
   if(n)n.value="";if(p)p.value="";
   document.getElementById("opt-fields").classList.remove("open");
-  renderPats();renderDash();
+  showToast("Saving…");
+  const ins=await _supa.from('patients').insert({
+    clinic_id:_clinicId,
+    name:name.trim(),
+    phone:fullPhone,
+    status:'Active',
+    visit_count:0
+  });
+  if(ins.error){showToast("Save failed: "+ins.error.message);return;}
+  await fetchPatients();
   showToast("Patient added: "+name.trim());
-  if(_clinicId){
-    try{
-      await _supa.from('patients').insert({clinic_id:_clinicId,name:name.trim(),phone:fullPhone,status:'Active',visit_count:0});
-    }catch(e){}
-  }
 }
 
 /* ══ TOAST ══ */
