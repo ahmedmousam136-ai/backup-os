@@ -2982,18 +2982,19 @@ async function quickAddPatient(){
 
 /* ══ ADD APPOINTMENT FROM DASHBOARD MODAL ══ */
 async function addAppointment(){
+  showToast('confirmBooking started');
   var name=(document.getElementById('add-name')||{}).value||'';
   var phone=(document.getElementById('add-phone')||{}).value||'';
   var date=(document.getElementById('add-date')||{}).value||'';
   var time=(document.getElementById('add-time')||{}).value||'';
   var reason=((document.getElementById('add-reason')||{}).value||'').trim()||'General Consultation';
-  if(!name.trim()||!phone.trim()){showToast('Name and phone are required.');return;}
-  if(!date||!time){showToast('Date and time are required.');return;}
+  if(!name.trim()||!phone.trim()){showToast('STOP: name='+name+' phone='+phone);return;}
+  if(!date||!time){showToast('STOP: date='+date+' time='+time);return;}
   var cid=await _ensureClinicId();
-  if(!cid){showToast('Not connected — please sign in again.');return;}
+  showToast('clinic id='+cid);
+  if(!cid){showToast('STOP: no clinic id');return;}
   var dial=DB[mkt].cur.dial;
   var fullPhone=phone.trim().startsWith('+')?phone.trim():dial+' '+phone.trim();
-  showToast('Saving appointment…');
   /* find or create patient */
   var patientId=null;
   var lk=await _supa.from('patients').select('id').eq('clinic_id',cid).eq('phone',fullPhone).limit(1);
@@ -3001,10 +3002,11 @@ async function addAppointment(){
     patientId=lk.data[0].id;
   }else{
     var np=await _supa.from('patients').insert({clinic_id:cid,name:name.trim(),phone:fullPhone,status:'Active',visit_count:0}).select('id').single();
-    if(np.error){showToast('Patient create error: '+np.error.message);return;}
+    if(np.error){showToast('STOP patient: '+np.error.message);return;}
     if(np.data)patientId=np.data.id;
   }
-  if(!patientId){showToast('Could not resolve patient.');return;}
+  if(!patientId){showToast('STOP: patientId null');return;}
+  showToast('attempting appointment insert patientId='+patientId);
   var ins=await _supa.from('appointments').insert({
     clinic_id:cid,
     patient_id:patientId,
@@ -3016,7 +3018,8 @@ async function addAppointment(){
     status:'Waiting',
     source:'dashboard'
   });
-  if(ins.error){showToast('Appointment error: '+ins.error.message+' | '+ins.error.details);return;}
+  if(ins.error){showToast('appointment insert failed: '+ins.error.message+' code='+ins.error.code+' details='+ins.error.details);return;}
+  showToast('appointment insert success');
   closeModal('add-modal');
   document.getElementById('add-name').value='';
   document.getElementById('add-phone').value='';
@@ -3025,7 +3028,6 @@ async function addAppointment(){
   document.getElementById('add-reason').value='';
   await fetchAppointments();
   await fetchPatients();
-  showToast('Appointment saved for '+name.trim());
 }
 
 /* ══ TOAST ══ */
