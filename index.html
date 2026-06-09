@@ -2741,44 +2741,71 @@ async function confirmBooking(){
   const phone=(document.getElementById("book-phone")||{}).value||"";
   const reason=((document.getElementById("book-reason")||{}).value||"").trim()||"General Consultation";
   if(!name.trim()||!phone.trim()){alert("Please enter your name and mobile number.");return;}
-  document.getElementById("book-step2").classList.remove("on");
-  document.getElementById("book-step1").classList.remove("on");
-  const msgEl=document.getElementById("book-success-msg");
-  if(msgEl)msgEl.textContent=name+" — your appointment at "+selectedSlot+" is confirmed! You will receive a WhatsApp confirmation shortly.";
-  document.getElementById("book-success").classList.add("on");
-  if(_clinicId&&selectedSlot){
-    try{
-      const today=new Date().toISOString().split('T')[0];
-      const dial=DB[mkt].cur.dial;
-      const fullPhone=phone.trim().startsWith("+")?phone.trim():dial+" "+phone.trim();
-      // find or create patient — use .limit(1) instead of .maybeSingle() for compatibility
-      let patientId=null;
-      const {data:rows}=await _supa.from('patients')
-        .select('id').eq('clinic_id',_clinicId).eq('phone',fullPhone).limit(1);
-      if(rows&&rows.length>0){
-        patientId=rows[0].id;
-      }else{
-        const {data:newPat,error:patErr}=await _supa.from('patients')
-          .insert({clinic_id:_clinicId,name:name.trim(),phone:fullPhone,status:'Active',visit_count:0})
-          .select('id').single();
-        if(patErr){showToast('Could not save patient: '+patErr.message);return;}
-        if(newPat)patientId=newPat.id;
-      }
-      if(!patientId){showToast('Patient ID missing — appointment not saved.');return;}
-      const {error:apptErr}=await _supa.from('appointments').insert({
-        clinic_id:_clinicId,
-        patient_id:patientId,
-        patient_name:name.trim(),
-        patient_phone:fullPhone,
-        appointment_date:today,
-        appointment_time:selectedSlot,
-        reason:reason,
-        status:'Waiting',
-        source:'dashboard'
-      });
-      if(apptErr)showToast('Appointment error: '+apptErr.message);
-    }catch(e){showToast('Unexpected error: '+e.message);}
-  }
+
+  // ── guard: must be logged in with a clinic and a slot selected ──
+  if(!_clinicId){alert("BOOKING ERROR: clinic_id is null.\nYou are not logged in or clinic was not loaded.");return;}
+  if(!selectedSlot){alert("BOOKING ERROR: no slot selected.");return;}
+
+  const today=new Date().toISOString().split('T')[0];
+  const dial=DB[mkt].cur.dial;
+  const fullPhone=phone.trim().startsWith("+")?phone.trim():dial+" "+phone.trim();
+
+  // ── find or create patient ──
+  let patientId=null;
+  try{
+    const {data:rows,error:lookupErr}=await _supa.from('patients')
+      .select('id').eq('clinic_id',_clinicId).eq('phone',fullPhone).limit(1);
+    if(lookupErr){alert("Patient lookup failed:\n"+lookupErr.message);return;}
+    if(rows&&rows.length>0){
+      patientId=rows[0].id;
+    }else{
+      const {data:newPat,error:patErr}=await _supa.from('patients')
+        .insert({clinic_id:_clinicId,name:name.trim(),phone:fullPhone,status:'Active',visit_count:0})
+        .select('id').single();
+      if(patErr){alert("Patient creation failed:\n"+patErr.message);return;}
+      if(newPat)patientId=newPat.id;
+    }
+  }catch(e){alert("Patient error:\n"+e.message);return;}
+
+  // ── validate every required field before insert ──
+  const missing=[];
+  if(!_clinicId) missing.push("clinic_id");
+  if(!patientId) missing.push("patient_id");
+  if(!name.trim()) missing.push("patient_name");
+  if(!fullPhone) missing.push("patient_phone");
+  if(!today) missing.push("appointment_date");
+  if(!selectedSlot) missing.push("appointment_time");
+  if(!reason) missing.push("reason");
+  if(missing.length>0){alert("MISSING FIELDS — appointment not saved:\n"+missing.join(", "));return;}
+
+  // ── show payload before insert ──
+  const payload={
+    clinic_id:_clinicId,
+    patient_id:patientId,
+    patient_name:name.trim(),
+    patient_phone:fullPhone,
+    appointment_date:today,
+    appointment_time:selectedSlot,
+    reason:reason,
+    status:"Waiting",
+    source:"dashboard"
+  };
+  alert("INSERTING APPOINTMENT:\n"+JSON.stringify(payload,null,2));
+
+  // ── insert ──
+  try{
+    const {error:apptErr}=await _supa.from('appointments').insert(payload);
+    if(apptErr){
+      alert("APPOINTMENT INSERT FAILED:\nMessage: "+apptErr.message+"\nDetails: "+apptErr.details+"\nHint: "+apptErr.hint+"\nCode: "+apptErr.code);
+      return;
+    }
+    // success — show confirmation screen
+    document.getElementById("book-step2").classList.remove("on");
+    document.getElementById("book-step1").classList.remove("on");
+    const msgEl=document.getElementById("book-success-msg");
+    if(msgEl)msgEl.textContent=name+" — your appointment at "+selectedSlot+" is confirmed! You will receive a WhatsApp confirmation shortly.";
+    document.getElementById("book-success").classList.add("on");
+  }catch(e){alert("UNEXPECTED ERROR:\n"+e.message);}
 }
 function resetBooking(){
   document.getElementById("book-success").classList.remove("on");
