@@ -2739,7 +2739,7 @@ function goBackToSlots(){
 async function confirmBooking(){
   const name=(document.getElementById("book-name")||{}).value||"";
   const phone=(document.getElementById("book-phone")||{}).value||"";
-  const reason=(document.getElementById("book-reason")||{}).value||"General Consultation";
+  const reason=((document.getElementById("book-reason")||{}).value||"").trim()||"General Consultation";
   if(!name.trim()||!phone.trim()){alert("Please enter your name and mobile number.");return;}
   document.getElementById("book-step2").classList.remove("on");
   document.getElementById("book-step1").classList.remove("on");
@@ -2751,30 +2751,33 @@ async function confirmBooking(){
       const today=new Date().toISOString().split('T')[0];
       const dial=DB[mkt].cur.dial;
       const fullPhone=phone.trim().startsWith("+")?phone.trim():dial+" "+phone.trim();
-      // find or create patient to get a valid patient_id
+      // find or create patient — use .limit(1) instead of .maybeSingle() for compatibility
       let patientId=null;
-      const {data:existing}=await _supa.from('patients')
-        .select('id').eq('clinic_id',_clinicId).eq('phone',fullPhone).maybeSingle();
-      if(existing){
-        patientId=existing.id;
+      const {data:rows}=await _supa.from('patients')
+        .select('id').eq('clinic_id',_clinicId).eq('phone',fullPhone).limit(1);
+      if(rows&&rows.length>0){
+        patientId=rows[0].id;
       }else{
-        const {data:newPat}=await _supa.from('patients')
+        const {data:newPat,error:patErr}=await _supa.from('patients')
           .insert({clinic_id:_clinicId,name:name.trim(),phone:fullPhone,status:'Active',visit_count:0})
           .select('id').single();
+        if(patErr){showToast('Could not save patient: '+patErr.message);return;}
         if(newPat)patientId=newPat.id;
       }
-      await _supa.from('appointments').insert({
+      if(!patientId){showToast('Patient ID missing — appointment not saved.');return;}
+      const {error:apptErr}=await _supa.from('appointments').insert({
         clinic_id:_clinicId,
         patient_id:patientId,
         patient_name:name.trim(),
         patient_phone:fullPhone,
         appointment_date:today,
         appointment_time:selectedSlot,
-        reason:reason.trim()||'General Consultation',
+        reason:reason,
         status:'Waiting',
         source:'dashboard'
       });
-    }catch(e){}
+      if(apptErr)showToast('Appointment error: '+apptErr.message);
+    }catch(e){showToast('Unexpected error: '+e.message);}
   }
 }
 function resetBooking(){
