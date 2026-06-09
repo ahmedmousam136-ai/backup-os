@@ -2742,8 +2742,25 @@ async function confirmBooking(){
   const reason=((document.getElementById("book-reason")||{}).value||"").trim()||"General Consultation";
   if(!name.trim()||!phone.trim()){alert("Please enter your name and mobile number.");return;}
 
-  // ── guard: must be logged in with a clinic and a slot selected ──
-  if(!_clinicId){alert("BOOKING ERROR: clinic_id is null.\nYou are not logged in or clinic was not loaded.");return;}
+  // ── if _clinicId not loaded yet, re-fetch from live session ──
+  if(!_clinicId){
+    try{
+      const {data:{session}}=await _supa.auth.getSession();
+      if(session&&session.user){
+        const {data:profile,error:profErr}=await _supa.from('profiles')
+          .select('clinic_id').eq('id',session.user.id).single();
+        if(profErr){alert("BOOKING ERROR: could not load profile.\n"+profErr.message);return;}
+        if(profile&&profile.clinic_id){
+          _clinicId=profile.clinic_id;
+        }else{
+          alert("BOOKING ERROR: profile has no clinic_id.\nProfile row: "+JSON.stringify(profile));return;
+        }
+      }else{
+        alert("BOOKING ERROR: no active session. Please log in again.");return;
+      }
+    }catch(e){alert("BOOKING ERROR: session fetch failed.\n"+e.message);return;}
+  }
+  if(!_clinicId){alert("BOOKING ERROR: clinic_id still null after reload attempt.");return;}
   if(!selectedSlot){alert("BOOKING ERROR: no slot selected.");return;}
 
   const today=new Date().toISOString().split('T')[0];
