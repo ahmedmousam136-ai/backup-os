@@ -1182,10 +1182,6 @@ main.content{
         <span>Missed Call Recovery</span>
         <span class="nb-badge">5</span>
       </button>
-      <button class="nb" onclick="nav('book',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg></span>
-        <span>Book Appointment</span>
-      </button>
       <p class="nav-sec" data-i18n="nav_setup">Setup</p>
       <button class="nb" onclick="nav('settings',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></span>
@@ -1380,6 +1376,24 @@ main.content{
             </span>
           </div>
           <div id="pat-table"></div>
+        </div>
+
+        <!-- Appointments sub-section -->
+        <div class="sh" style="margin-top:20px">
+          <div>
+            <h2 class="st" style="font-size:17px">Appointments</h2>
+            <p class="ss" id="appt-count">Loading…</p>
+          </div>
+        </div>
+        <div class="tw">
+          <div class="thead">
+            <span>Patient</span>
+            <span class="col-date">Date</span>
+            <span class="col-date">Time</span>
+            <span class="col-status cen">Status</span>
+            <span>Reason</span>
+          </div>
+          <div id="appt-table"></div>
         </div>
       </div>
 
@@ -1608,8 +1622,8 @@ main.content{
         </div>
       </div>
 
-      <!-- ── BOOK APPOINTMENT ── -->
-      <div id="v-book" class="view">
+      <!-- ── BOOK APPOINTMENT (removed — use New Appointment modal instead) ── -->
+      <div id="v-book" class="view" style="display:none!important">
         <div class="sh" style="margin-bottom:14px">
           <div>
             <h1 class="st">Book Appointment</h1>
@@ -2818,43 +2832,32 @@ function _showBookingError(msg){
   el.style.display='block';
 }
 async function confirmBooking(){
-  _showBookingError("STEP 1: confirmBooking started");
   var name=(document.getElementById("book-name")||{}).value||"";
   var phone=(document.getElementById("book-phone")||{}).value||"";
   var reason=((document.getElementById("book-reason")||{}).value||"").trim()||"General Consultation";
-  if(!name.trim()||!phone.trim()){_showBookingError("STEP 1 STOP: name or phone empty. name='"+name+"' phone='"+phone+"'");return;}
-
-  _showBookingError("STEP 2: checking clinic...");
+  if(!name.trim()||!phone.trim()){_showBookingError("Please enter your name and mobile number.");return;}
   var cid=await _ensureClinicId();
-  if(!cid){_showBookingError("STEP 2 STOP: ensureClinicId returned null");return;}
-  _showBookingError("STEP 2 OK: cid="+cid);
-
-  if(!selectedSlot){_showBookingError("STEP 2 STOP: no slot selected");return;}
+  if(!cid){_showBookingError("Not signed in or clinic not found. Please sign in again.");return;}
+  if(!selectedSlot){_showBookingError("No slot selected.");return;}
 
   var today=new Date().toISOString().split('T')[0];
   var dial=DB[mkt].cur.dial;
   var fullPhone=phone.trim().startsWith("+")?phone.trim():dial+" "+phone.trim();
 
   /* find or create patient */
-  _showBookingError("STEP 3: looking up patient phone="+fullPhone);
   var patientId=null;
   var lookupRes=await _supa.from('patients').select('id').eq('clinic_id',cid).eq('phone',fullPhone).limit(1);
-  if(lookupRes.error){_showBookingError("STEP 3 STOP: patient lookup error: "+lookupRes.error.message);return;}
+  if(lookupRes.error){_showBookingError("Patient lookup error: "+lookupRes.error.message);return;}
   if(lookupRes.data&&lookupRes.data.length>0){
     patientId=lookupRes.data[0].id;
-    _showBookingError("STEP 3 OK: existing patient id="+patientId);
   }else{
-    _showBookingError("STEP 3: patient not found, creating...");
     var newPatRes=await _supa.from('patients').insert({clinic_id:cid,name:name.trim(),phone:fullPhone,status:'Active',visit_count:0}).select('id').single();
-    if(newPatRes.error){_showBookingError("STEP 3 STOP: patient create error: "+newPatRes.error.message);return;}
+    if(newPatRes.error){_showBookingError("Patient create error: "+newPatRes.error.message);return;}
     if(newPatRes.data)patientId=newPatRes.data.id;
-    _showBookingError("STEP 3 OK: new patient id="+patientId);
   }
-  if(!patientId){_showBookingError("STEP 3 STOP: patientId null after lookup/create");return;}
-
-  _showBookingError("STEP 4: attempting appointment insert. slot="+selectedSlot+" date="+today);
+  if(!patientId){_showBookingError("Could not resolve patient.");return;}
   /* insert appointment */
-  var apptPayload={
+  var apptRes=await _supa.from('appointments').insert({
     clinic_id:cid,
     patient_id:patientId,
     patient_name:name.trim(),
@@ -2863,17 +2866,9 @@ async function confirmBooking(){
     appointment_time:selectedSlot,
     reason:reason,
     status:'Waiting',
-    source:'dashboard'
-  };
-  var apptRes=await _supa.from('appointments').insert(apptPayload);
-  /* always show full raw result so we can see exactly what Supabase returned */
-  var apptDebug='APPT INSERT RESULT: status='+apptRes.status
-    +' | error='+(apptRes.error?JSON.stringify(apptRes.error):'null')
-    +' | data='+(apptRes.data?JSON.stringify(apptRes.data):'null')
-    +' | payload='+JSON.stringify(apptPayload);
-  if(apptRes.error){_showBookingError(apptDebug);return;}
-  /* success — show debug briefly then proceed */
-  showToast(apptDebug.substring(0,120));
+    source:'booking'
+  });
+  if(apptRes.error){_showBookingError("Appointment failed: "+apptRes.error.message);return;}
 
   /* success — refresh UI from Supabase */
   await fetchAppointments();
@@ -2926,25 +2921,47 @@ async function fetchPatients(){
 async function fetchAppointments(){
   if(!_clinicId)return;
   const today=new Date().toISOString().split('T')[0];
-  /* use select('*') to avoid hardcoding column names that may differ in Supabase */
-  const res=await _supa.from('appointments')
+  /* fetch ALL appointments for the list view */
+  const allRes=await _supa.from('appointments')
     .select('*')
     .eq('clinic_id',_clinicId)
-    .eq('appointment_date',today)
-    .order('appointment_time',{ascending:true});
-  if(res.error){showToast("Could not load appointments: "+res.error.message);return;}
-  const appts=res.data||[];
-  /* defensive key resolution: handle both 'id' and 'appointment_id' */
-  DB[mkt].queue=appts.map(function(a,i){
-    var rowId=a.appointment_id||a.id||i;
+    .order('appointment_date',{ascending:false});
+  if(allRes.error){showToast("Could not load appointments: "+allRes.error.message);return;}
+  const all=allRes.data||[];
+  /* today's queue for dashboard */
+  const todayAppts=all.filter(function(a){return a.appointment_date===today;});
+  DB[mkt].queue=todayAppts.map(function(a,i){
     var s=a.status||'Waiting';
     var mapped=s==='Seen'||s==='Done'?'checked-in':s==='In Progress'?'in-progress':s==='Missed'?'missed':'waiting';
-    return{id:rowId,name:a.patient_name||'Unknown',time:a.appointment_time||'',status:mapped,token:'T-'+(i+1<10?'0'+(i+1):(i+1))};
+    return{id:a.id||i,name:a.patient_name||'Unknown',time:a.appointment_time||'',status:mapped,token:'T-'+(i+1<10?'0'+(i+1):(i+1))};
   });
-  DB[mkt].actionMetrics.totalAppts=appts.length;
-  DB[mkt].actionMetrics.seen=appts.filter(function(a){return a.status==='Seen'||a.status==='Done';}).length;
-  DB[mkt].actionMetrics.waiting=appts.filter(function(a){return a.status==='Waiting';}).length;
+  DB[mkt].actionMetrics.totalAppts=todayAppts.length;
+  DB[mkt].actionMetrics.seen=todayAppts.filter(function(a){return a.status==='Seen'||a.status==='Done';}).length;
+  DB[mkt].actionMetrics.waiting=todayAppts.filter(function(a){return a.status==='Waiting';}).length;
   renderDash();
+  /* appointments list for Patients view */
+  renderAppts(all);
+}
+function renderAppts(appts){
+  var el=document.getElementById('appt-table');
+  var cnt=document.getElementById('appt-count');
+  if(!el)return;
+  if(cnt)cnt.textContent=appts.length+' appointment'+(appts.length!==1?'s':'');
+  if(!appts.length){
+    el.innerHTML='<div class="empty"><div class="empty-ic">📅</div><p class="empty-t">No appointments yet</p><p class="empty-s">Use New Appointment to create one.</p></div>';
+    return;
+  }
+  el.innerHTML=appts.map(function(a){
+    var s=a.status||'Waiting';
+    var badge=s==='Seen'||s==='Done'?'pb-g':s==='Missed'?'pb-r':'pb-b';
+    return'<div class="prow" style="grid-template-columns:2fr 1fr 1fr 1fr 2fr">'
+      +'<div class="pname">'+( a.patient_name||'—')+'</div>'
+      +'<div class="plv">'+(a.appointment_date||'—')+'</div>'
+      +'<div class="plv">'+(a.appointment_time||'—')+'</div>'
+      +'<div class="cen"><span class="pb '+badge+'" style="font-size:9.5px;padding:3px 8px">'+s+'</span></div>'
+      +'<div class="plv" style="font-size:11px;color:var(--text-secondary)">'+(a.reason||'—')+'</div>'
+      +'</div>';
+  }).join('');
 }
 
 /* ══ QUICK ADD PATIENT ══ */
@@ -2982,19 +2999,18 @@ async function quickAddPatient(){
 
 /* ══ ADD APPOINTMENT FROM DASHBOARD MODAL ══ */
 async function addAppointment(){
-  showToast('confirmBooking started');
   var name=(document.getElementById('add-name')||{}).value||'';
   var phone=(document.getElementById('add-phone')||{}).value||'';
   var date=(document.getElementById('add-date')||{}).value||'';
   var time=(document.getElementById('add-time')||{}).value||'';
   var reason=((document.getElementById('add-reason')||{}).value||'').trim()||'General Consultation';
-  if(!name.trim()||!phone.trim()){showToast('STOP: name='+name+' phone='+phone);return;}
-  if(!date||!time){showToast('STOP: date='+date+' time='+time);return;}
+  if(!name.trim()||!phone.trim()){showToast('Name and phone are required.');return;}
+  if(!date||!time){showToast('Date and time are required.');return;}
   var cid=await _ensureClinicId();
-  showToast('clinic id='+cid);
-  if(!cid){showToast('STOP: no clinic id');return;}
+  if(!cid){showToast('Not connected — please sign in again.');return;}
   var dial=DB[mkt].cur.dial;
   var fullPhone=phone.trim().startsWith('+')?phone.trim():dial+' '+phone.trim();
+  showToast('Saving…');
   /* find or create patient */
   var patientId=null;
   var lk=await _supa.from('patients').select('id').eq('clinic_id',cid).eq('phone',fullPhone).limit(1);
@@ -3002,11 +3018,10 @@ async function addAppointment(){
     patientId=lk.data[0].id;
   }else{
     var np=await _supa.from('patients').insert({clinic_id:cid,name:name.trim(),phone:fullPhone,status:'Active',visit_count:0}).select('id').single();
-    if(np.error){showToast('STOP patient: '+np.error.message);return;}
+    if(np.error){showToast('Patient error: '+np.error.message);return;}
     if(np.data)patientId=np.data.id;
   }
-  if(!patientId){showToast('STOP: patientId null');return;}
-  showToast('attempting appointment insert patientId='+patientId);
+  if(!patientId){showToast('Could not resolve patient.');return;}
   var ins=await _supa.from('appointments').insert({
     clinic_id:cid,
     patient_id:patientId,
@@ -3018,8 +3033,7 @@ async function addAppointment(){
     status:'Waiting',
     source:'dashboard'
   });
-  if(ins.error){showToast('appointment insert failed: '+ins.error.message+' code='+ins.error.code+' details='+ins.error.details);return;}
-  showToast('appointment insert success');
+  if(ins.error){showToast('Appointment failed: '+ins.error.message);return;}
   closeModal('add-modal');
   document.getElementById('add-name').value='';
   document.getElementById('add-phone').value='';
@@ -3028,6 +3042,7 @@ async function addAppointment(){
   document.getElementById('add-reason').value='';
   await fetchAppointments();
   await fetchPatients();
+  showToast('Appointment saved for '+name.trim());
 }
 
 /* ══ TOAST ══ */
