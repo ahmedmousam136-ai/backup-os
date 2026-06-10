@@ -381,7 +381,10 @@ main.content{
 .ch-wait{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
 .ch-prog{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
 .ch-miss{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.ch-done{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
 .ch-act{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.status-sel{font-size:10px;font-weight:600;border-radius:5px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-primary);padding:3px 6px;cursor:pointer;outline:none;max-width:120px}
+.status-sel:focus{border-color:var(--accent)}
 .ch-risk{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
 .ch-inact{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
 
@@ -2176,58 +2179,22 @@ const DB={
   india:{
     doc:{name:"Dr. Mousham Laskar",av:"M",reg:"NMC / WBMCO Registered",spec:"General Physician & Internal Medicine",clinic:"Laskar Health Clinic, Salt Lake, Kolkata"},
     cur:{sym:"₹",code:"INR",dial:"+91"},
-    metrics:{patients:1248,appts:18,missed:"9.4%"},
-    actionMetrics:{seen:12,totalAppts:18,waiting:3,waSentToday:24,pendingFollowups:5,unconfirmed:4},
-    ana:{sent:342,returning:87,reviews:54,success:"94.2%"},
-    queue:[
-      {id:1,name:"Farhana Rahman",time:"09:00 AM",status:"checked-in",token:"T-01"},
-      {id:2,name:"Amit Chakraborti",time:"09:30 AM",status:"waiting",token:"T-02"},
-      {id:3,name:"Priya Sengupta",time:"10:00 AM",status:"waiting",token:"T-03"},
-      {id:4,name:"Rafiqul Islam",time:"10:30 AM",status:"in-progress",token:"T-04"},
-      {id:5,name:"Sneha Mukherjee",time:"11:00 AM",status:"waiting",token:"T-05"},
-      {id:6,name:"Bikash Dey",time:"11:30 AM",status:"missed",token:"T-06"},
-    ],
-    alerts:[
-      {id:1,name:"Farhana Rahman",phone:"+91 98300 11223",lastVisit:"4 May 2025",due:"22 May 2025",condition:"Hypertension Follow-up"},
-      {id:2,name:"Amit Chakraborti",phone:"+91 99100 44556",lastVisit:"2 May 2025",due:"20 May 2025",condition:"Diabetes Review"},
-      {id:3,name:"Ruma Das",phone:"+91 70010 77889",lastVisit:"5 May 2025",due:"24 May 2025",condition:"Post-Op Check"},
-    ],
-    patients:[
-      {id:1,name:"Farhana Rahman",phone:"+91 98300 11223",lastVisit:"04 May 2025",status:"Active",visits:7},
-      {id:2,name:"Amit Chakraborti",phone:"+91 99100 44556",lastVisit:"02 May 2025",status:"Active",visits:12},
-      {id:3,name:"Priya Sengupta",phone:"+91 81230 55678",lastVisit:"28 Apr 2025",status:"Active",visits:3},
-      {id:4,name:"Rafiqul Islam",phone:"+91 91760 98012",lastVisit:"20 Apr 2025",status:"At Risk",visits:5},
-      {id:5,name:"Sneha Mukherjee",phone:"+91 70010 12345",lastVisit:"15 Apr 2025",status:"Inactive",visits:1},
-      {id:6,name:"Bikash Dey",phone:"+91 83400 67890",lastVisit:"10 Apr 2025",status:"Active",visits:9},
-      {id:7,name:"Ruma Das",phone:"+91 70010 77889",lastVisit:"05 May 2025",status:"Active",visits:4},
-    ]
+    metrics:{patients:0,appts:0,missed:"0%"},
+    actionMetrics:{seen:0,totalAppts:0,waiting:0,waSentToday:0,pendingFollowups:0,unconfirmed:0},
+    ana:{sent:0,returning:0,reviews:0,success:"—"},
+    queue:[],
+    alerts:[],
+    patients:[]
   },
   bd:{
     doc:{name:"Dr. Mousham Laskar",av:"M",reg:"BM&DC Registered",spec:"General Physician & Internal Medicine",clinic:"Laskar Health Centre, Gulshan, Dhaka"},
     cur:{sym:"৳",code:"BDT",dial:"+880"},
-    metrics:{patients:934,appts:14,missed:"11.2%"},
-    actionMetrics:{seen:8,totalAppts:14,waiting:2,waSentToday:17,pendingFollowups:3,unconfirmed:3},
-    ana:{sent:218,returning:61,reviews:39,success:"91.7%"},
-    queue:[
-      {id:1,name:"Tanzil Ahmed",time:"09:00 AM",status:"checked-in",token:"T-01"},
-      {id:2,name:"Nasrin Akter",time:"09:30 AM",status:"waiting",token:"T-02"},
-      {id:3,name:"Kamal Hossain",time:"10:00 AM",status:"in-progress",token:"T-03"},
-      {id:4,name:"Shireen Begum",time:"10:30 AM",status:"waiting",token:"T-04"},
-      {id:5,name:"Rezaul Karim",time:"11:00 AM",status:"missed",token:"T-05"},
-    ],
-    alerts:[
-      {id:1,name:"Tanzil Ahmed",phone:"+880 1711 223344",lastVisit:"3 May 2025",due:"22 May 2025",condition:"Cardiac Follow-up"},
-      {id:2,name:"Nasrin Akter",phone:"+880 1812 556677",lastVisit:"4 May 2025",due:"23 May 2025",condition:"Thyroid Review"},
-      {id:3,name:"Kamal Hossain",phone:"+880 1913 889900",lastVisit:"6 May 2025",due:"25 May 2025",condition:"Diabetes Management"},
-    ],
-    patients:[
-      {id:1,name:"Tanzil Ahmed",phone:"+880 1711 223344",lastVisit:"03 May 2025",status:"Active",visits:8},
-      {id:2,name:"Nasrin Akter",phone:"+880 1812 556677",lastVisit:"04 May 2025",status:"Active",visits:5},
-      {id:3,name:"Kamal Hossain",phone:"+880 1913 889900",lastVisit:"06 May 2025",status:"Active",visits:11},
-      {id:4,name:"Shireen Begum",phone:"+880 1614 112233",lastVisit:"22 Apr 2025",status:"At Risk",visits:2},
-      {id:5,name:"Rezaul Karim",phone:"+880 1515 445566",lastVisit:"18 Apr 2025",status:"Inactive",visits:1},
-      {id:6,name:"Mitu Khanam",phone:"+880 1716 778899",lastVisit:"30 Apr 2025",status:"Active",visits:6},
-    ]
+    metrics:{patients:0,appts:0,missed:"0%"},
+    actionMetrics:{seen:0,totalAppts:0,waiting:0,waSentToday:0,pendingFollowups:0,unconfirmed:0},
+    ana:{sent:0,returning:0,reviews:0,success:"—"},
+    queue:[],
+    alerts:[],
+    patients:[]
   }
 };
 
@@ -2274,9 +2241,19 @@ function applyTranslations(){
 }
 
 function chipQ(s){
-  const statusKey={"checked-in":"status_checked_in","waiting":"status_waiting","in-progress":"status_in_progress","missed":"status_missed"};
-  const cls={"checked-in":"ch-in","waiting":"ch-wait","in-progress":"ch-prog","missed":"ch-miss"};
-  return`<span class="chip ${cls[s]||'ch-wait'}">${t(statusKey[s]||'status_waiting')}</span>`;
+  const cls={"Waiting":"ch-wait","Checked In":"ch-in","In Consultation":"ch-prog","Completed":"ch-done","Cancelled":"ch-miss"};
+  return`<span class="chip ${cls[s]||'ch-wait'}" style="font-size:9.5px">${s||'Waiting'}</span>`;
+}
+var APPT_STATUSES=['Waiting','Checked In','In Consultation','Completed','Cancelled'];
+function statusSelect(id,current,cb){
+  var opts=APPT_STATUSES.map(function(s){return'<option value="'+s+'"'+(s===current?' selected':'')+'>'+s+'</option>';}).join('');
+  return'<select class="status-sel" onchange="'+cb+'(\''+id+'\',this.value)" onclick="event.stopPropagation()" title="Update status">'+opts+'</select>';
+}
+async function updateAppointmentStatus(id,status){
+  if(!id){showToast('Cannot update: missing appointment ID');return;}
+  var r=await _supa.from('appointments').update({status:status}).eq('id',id);
+  if(r.error){showToast('Update failed: '+r.error.message);return;}
+  await fetchAppointments();
 }
 function chipP(s){
   const statusKey={"Active":"pat_active","At Risk":"pat_atrisk","Inactive":"pat_inactive"};
@@ -2317,13 +2294,13 @@ function renderDash(){
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:7px">
-        ${chipQ(p.status)}
+        ${statusSelect(p.id,p.status,'updateAppointmentStatus')}
         <button class="wa-icon-btn" onclick='openWA(${JSON.stringify(p)})' title="${t('send_reminder')}">${WA_SVG}</button>
       </div>
     </div>`).join("");
 
   const al=d.alerts;
-  document.getElementById("alerts-list").innerHTML=al.map(p=>`
+  document.getElementById("alerts-list").innerHTML=al.length?al.map(p=>`
     <div class="arow">
       <div class="ai">
         <div style="min-width:0;flex:1">
@@ -2333,7 +2310,8 @@ function renderDash(){
         </div>
         <button class="remind" onclick='openWA(${JSON.stringify(p)})'>${WA_SVG} ${t("send_reminder")}</button>
       </div>
-    </div>`).join("");
+    </div>`).join("")
+    :'<div class="empty" style="padding:24px 16px"><div class="empty-ic">🔔</div><p class="empty-t">No follow-up alerts</p><p class="empty-s">Alerts will appear when patients are due for a follow-up.</p></div>';
 }
 
 function renderPats(){
@@ -2640,17 +2618,23 @@ function selectAuthCountry(c){
 }
 
 function _goToDashboard(){
-  document.getElementById('auth-screen').classList.add('hidden');
+  var authScreen=document.getElementById('auth-screen');
+  var alreadyIn=authScreen.classList.contains('hidden');
+  authScreen.classList.add('hidden');
   document.getElementById('app-shell').classList.add('authenticated');
   renderAll();
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
-  document.getElementById('v-dashboard').classList.add('on');
-  document.querySelectorAll('.nb').forEach(b=>{
-    b.classList.toggle('on',(b.getAttribute('onclick')||'').includes("'dashboard'"));
-  });
-  document.querySelectorAll('.bn').forEach(b=>b.classList.toggle('on',b.dataset.t==='dashboard'));
-  document.getElementById('tab-title').textContent=t('nav_dashboard');
-  window.scrollTo(0,0);
+  // Only navigate to dashboard if coming from auth screen.
+  // On TOKEN_REFRESHED the auth screen is already hidden — just refresh data, don't hijack the current view.
+  if(!alreadyIn){
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+    document.getElementById('v-dashboard').classList.add('on');
+    document.querySelectorAll('.nb').forEach(b=>{
+      b.classList.toggle('on',(b.getAttribute('onclick')||'').includes("'dashboard'"));
+    });
+    document.querySelectorAll('.bn').forEach(b=>b.classList.toggle('on',b.dataset.t==='dashboard'));
+    document.getElementById('tab-title').textContent=t('nav_dashboard');
+    window.scrollTo(0,0);
+  }
 }
 
 async function handleLogin(){
@@ -2961,12 +2945,11 @@ async function fetchAppointments(){
   const todayAppts=all.filter(function(a){return a.appointment_date===today;});
   DB[mkt].queue=todayAppts.map(function(a,i){
     var s=a.status||'Waiting';
-    var mapped=s==='Seen'||s==='Done'?'checked-in':s==='In Progress'?'in-progress':s==='Missed'?'missed':'waiting';
-    return{id:a.id||i,name:a.patient_name||'Unknown',time:a.appointment_time||'',status:mapped,token:'T-'+(i+1<10?'0'+(i+1):(i+1))};
+    return{id:a.id||a.appointment_id||i,name:a.patient_name||'Unknown',time:a.appointment_time||'',status:s,token:'T-'+(i+1<10?'0'+(i+1):(i+1))};
   });
   DB[mkt].actionMetrics.totalAppts=todayAppts.length;
-  DB[mkt].actionMetrics.seen=todayAppts.filter(function(a){return a.status==='Seen'||a.status==='Done';}).length;
-  DB[mkt].actionMetrics.waiting=todayAppts.filter(function(a){return a.status==='Waiting';}).length;
+  DB[mkt].actionMetrics.seen=todayAppts.filter(function(a){return a.status==='Completed';}).length;
+  DB[mkt].actionMetrics.waiting=todayAppts.filter(function(a){return !a.status||a.status==='Waiting';}).length;
   renderDash();
   /* appointments list for Patients view */
   renderAppts(all);
@@ -2983,12 +2966,12 @@ function renderAppts(appts){
   }
   el.innerHTML=appts.map(function(a){
     var s=a.status||'Waiting';
-    var bc=s==='Seen'||s==='Done'?'pb-g':s==='Missed'?'pb-r':'pb-b';
-    return'<div class="trow" style="grid-template-columns:2fr 1fr 1fr 1fr 2fr">'
+    var aid=a.id||a.appointment_id||'';
+    return'<div class="trow" style="grid-template-columns:2fr 1fr 1fr 1.5fr 1.5fr">'
       +'<div style="font-size:12px;font-weight:600;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(a.patient_name||'—')+'</div>'
       +'<div style="font-size:11px;color:var(--text-secondary)">'+(a.appointment_date||'—')+'</div>'
       +'<div style="font-size:11px;color:var(--text-secondary)">'+(a.appointment_time||'—')+'</div>'
-      +'<div style="display:flex;justify-content:center"><span class="pb '+bc+'" style="font-size:9.5px;padding:3px 8px">'+s+'</span></div>'
+      +'<div style="display:flex;align-items:center">'+statusSelect(aid,s,'updateAppointmentStatus')+'</div>'
       +'<div style="font-size:11px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(a.reason||'—')+'</div>'
       +'</div>';
   }).join('');
