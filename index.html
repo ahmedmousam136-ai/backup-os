@@ -2831,6 +2831,7 @@ async function _loadClinicAndGo(user){
   _goToDashboard();
   fetchPatients();
   fetchAppointments();
+    fetchPrescriptions();
 }
 async function handleLogout(){
   try{await _supa.auth.signOut();}catch(e){}
