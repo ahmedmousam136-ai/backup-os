@@ -1638,7 +1638,73 @@ main.content{
           </div>
         </div>
       </div>
+<!-- ── PRESCRIPTIONS ── -->
+<div id="v-prescriptions" class="view">
+  <div class="sh">
+    <div>
+      <h1 class="st" data-i18n="rx_title">Digital Prescriptions</h1>
+      <p class="ss" data-i18n="rx_sub">Generate PDF · Auto-delivered to patient's WhatsApp</p>
+    </div>
+  </div>
 
+  <div class="panel">
+    <div class="ph">
+      <div class="pt">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span data-i18n="rx_new">New Prescription</span>
+      </div>
+      <span class="pb pb-g">1-Click · Auto WhatsApp</span>
+    </div>
+    <div class="mb" style="padding:16px 17px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label class="flbl">Patient Name <span style="color:var(--red)">*</span></label>
+          <input type="text" class="finput" id="rx-name" placeholder="Full name" autocapitalize="words"/>
+        </div>
+        <div>
+          <label class="flbl">WhatsApp Number <span style="color:var(--red)">*</span></label>
+          <div class="prow">
+            <div class="ppfx" id="rx-dial">+91</div>
+            <input type="tel" class="finput" id="rx-phone" placeholder="Mobile number" style="flex:1" inputmode="numeric"/>
+          </div>
+          <p class="qp-hint" id="rx-phone-hint">Prescription PDF will be sent to this number</p>
+        </div>
+      </div>
+
+      <div>
+        <label class="flbl">Medicines <span style="color:var(--red)">*</span></label>
+        <div id="rx-meds"></div>
+        <button class="optional-toggle" type="button" onclick="addMedRow()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add medicine
+        </button>
+      </div>
+
+      <div>
+        <label class="flbl">Instructions / Advice</label>
+        <textarea class="ftextarea" id="rx-instr" rows="3" placeholder="e.g. Plenty of fluids. Review after 5 days."></textarea>
+      </div>
+
+      <div id="rx-error" class="auth-error" style="display:none"></div>
+
+      <button class="msub" id="rx-generate-btn" onclick="generatePrescription()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Generate Prescription
+      </button>
+      <p style="font-size:10px;color:var(--text-tertiary);text-align:center;line-height:1.5">
+        PDF is created, stored securely, and sent to the patient's WhatsApp automatically — one click, nothing else.
+      </p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="ph">
+      <div class="pt" data-i18n="rx_history">Prescription History</div>
+      <span class="pb pb-b" id="rx-count">0</span>
+    </div>
+    <div id="rx-table"></div>
+  </div>
+</div>
       <!-- ── BOOK APPOINTMENT (removed — use New Appointment modal instead) ── -->
       <div id="v-book" class="view" style="display:none!important">
         <div class="sh" style="margin-bottom:14px">
