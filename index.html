@@ -3377,6 +3377,39 @@ async function fetchPrescriptions(){
   var el=document.getElementById("rx-table"); if(!el)return;
   if(!rows.length){
     el.innerHTML='<div class="empty"><div class="empty-ic">&#128221;</div><p class="empty-t">No prescriptions yet</p><p class="empty-s">Generate your first prescription above.</p></div>';
+    return;
+  }
+  el.innerHTML=rows.map(function(p){
+    var dt=new Date(p.created_at);
+    var when=dt.toLocaleDateString("en-GB")+" - "+dt.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
+    var delivered=p.delivered_at?("Delivered "+new Date(p.delivered_at).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})):"";
+    return '<div class="mcr-row">'+
+      '<div style="min-width:0;flex:1">'+
+        '<p class="mcr-name">'+p.patient_name+' <span style="color:var(--text-tertiary);font-weight:400;font-size:10px">- '+p.patient_phone+'</span></p>'+
+        '<p class="mcr-time">'+when+' - '+p.doctor_name+(delivered?(' - '+delivered):'')+'</p>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end">'+
+        rxStatusChip(p.wa_status)+
+        '<button class="qbtn" onclick="openRxPdf(\''+p.id+'\')">PDF</button>'+
+        (p.wa_status==="Failed"
+          ?'<button class="tmpl-send-btn" style="font-size:10px;padding:5px 9px" onclick="retryRxWA(\''+p.id+'\')">Retry WhatsApp</button>'
+          :'')+
+      '</div>'+
+    '</div>';
+  }).join("");
+}
+async function openRxPdf(id){
+  var r=await _supa.from("prescriptions").select("pdf_path").eq("id",id).single();
+  if(r.error||!r.data){showToast("Not found.");return;}
+  var sig=await _supa.storage.from("prescriptions").createSignedUrl(r.data.pdf_path, 3600);
+  if(sig.error){showToast("Could not open PDF: "+sig.error.message);return;}
+  window.open(sig.data.signedUrl,"_blank");
+}
+(function initRx(){
+  if(document.getElementById("rx-meds")) addMedRow();
+  var _oldSetMkt=setMkt;
+  setMkt=function(m){ _oldSetMkt(m); var d=document.getElementById("rx-dial"); if(d)d.textContent=DB[m].cur.dial; };
+})();
 </script>
 </body>
 </html>
