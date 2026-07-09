@@ -2437,9 +2437,10 @@ function renderPats(){
         <div class="pav">${p.name.charAt(0)}</div>
         <div style="min-width:0">
           <p class="pname" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</p>
-          <p class="pphone col-phone" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.phone}</p>
+          
         </div>
       </div>
+      <p class="pphone col-phone" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.phone}</p>
       <p style="color:var(--text-secondary);font-size:10.5px;white-space:nowrap" class="col-date">${p.lastVisit}</p>
       <p class="pvisits col-visits">${p.visits}</p>
       <div style="display:flex;justify-content:center" class="col-status">${chipP(p.status)}</div>
