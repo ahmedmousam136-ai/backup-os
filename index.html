@@ -1689,6 +1689,14 @@ main.content{
       <div>
         <label class="flbl">Instructions / Advice</label>
         <textarea class="ftextarea" id="rx-instr" rows="3" placeholder="e.g. Plenty of fluids. Review after 5 days."></textarea>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px">
+  <button class="qbtn" type="button" onclick="rxAddInstr('Plenty of fluids and rest.')">Fluids &amp; rest</button>
+  <button class="qbtn" type="button" onclick="rxAddInstr('Take medicines after food.')">After food</button>
+  <button class="qbtn" type="button" onclick="rxAddInstr('Avoid oily and spicy food.')">Avoid oily/spicy</button>
+  <button class="qbtn" type="button" onclick="rxAddInstr('Review after 5 days.')">Review 5 days</button>
+  <button class="qbtn" type="button" onclick="rxAddInstr('Review after 14 days.')">Review 14 days</button>
+  <button class="qbtn" type="button" onclick="rxAddInstr('Come immediately if fever persists beyond 3 days.')">Fever warning</button>
+</div>
       </div>
 <datalist id="rx-med-list">
   <option>Paracetamol 500mg</option><option>Paracetamol 650mg</option>
