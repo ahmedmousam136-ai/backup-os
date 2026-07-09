@@ -3479,6 +3479,12 @@ addMedRow=function(name,dose,dur){
   r.querySelector(".rx-m-dur").setAttribute("list","rx-days-list");
 };
 populateRxPatients();
+  /* fix: attach dropdown lists to rows created before this script ran */
+document.querySelectorAll("#rx-meds .rx-med-row").forEach(function(r){
+  r.querySelector(".rx-m-name").setAttribute("list","rx-med-list");
+  r.querySelector(".rx-m-dose").setAttribute("list","rx-dose-list");
+  r.querySelector(".rx-m-dur").setAttribute("list","rx-days-list");
+});
 </script>
 </body>
 </html>
