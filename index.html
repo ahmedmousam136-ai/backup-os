@@ -3452,15 +3452,18 @@ function populateRxPatients(){
   var pats=DB[mkt].patients||[];
   var cur=sel.value;
   sel.innerHTML='<option value="">— Choose from patient list —</option>'+
-    pats.map(function(p,i){return '<option value="'+i+'">'+p.name+' ('+p.phone+')</option>';}).join("");
+    pats.map(function(p){return '<option value="'+p.id+'">'+p.name+' ('+p.phone+')</option>';}).join("");
   sel.value=cur;
+  if(sel.value!==cur){sel.value="";}
 }
 function rxPickPatient(){
   var sel=document.getElementById("rx-patient");
-  var p=(DB[mkt].patients||[])[sel.value];
-  if(!p)return;
+  var pats=DB[mkt].patients||[];
+  var p=null;
+  for(var i=0;i<pats.length;i++){ if(String(pats[i].id)===String(sel.value)){p=pats[i];break;} }
+  if(!p){document.getElementById("rx-name").value="";document.getElementById("rx-phone").value="";return;}
   document.getElementById("rx-name").value=p.name||"";
-  var ph=(p.phone||"").replace(/^\+91\s?|^\+880\s?/,"");
+  var ph=(p.phone||"").replace(/^\+91\s?|^\+880\s?/,"").replace(/^0+/,"");
   document.getElementById("rx-phone").value=ph;
 }
 function rxAddInstr(txt){
