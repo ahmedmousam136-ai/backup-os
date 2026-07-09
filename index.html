@@ -1656,6 +1656,12 @@ main.content{
       <span class="pb pb-g">1-Click · Auto WhatsApp</span>
     </div>
     <div class="mb" style="padding:16px 17px">
+      <div>
+  <label class="flbl">Select Patient (auto-fills name &amp; number)</label>
+  <select class="finput" id="rx-patient" onchange="rxPickPatient()" style="color:var(--text-primary)">
+    <option value="">— Choose from patient list —</option>
+  </select>
+</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div>
           <label class="flbl">Patient Name <span style="color:var(--red)">*</span></label>
