@@ -3445,6 +3445,40 @@ async function openRxPdf(id){
   var _oldSetMkt=setMkt;
   setMkt=function(m){ _oldSetMkt(m); var d=document.getElementById("rx-dial"); if(d)d.textContent=DB[m].cur.dial; };
 })();
+  /* ── Click-first prescription helpers ─────────────────────── */
+function populateRxPatients(){
+  var sel=document.getElementById("rx-patient");
+  if(!sel)return;
+  var pats=DB[mkt].patients||[];
+  var cur=sel.value;
+  sel.innerHTML='<option value="">— Choose from patient list —</option>'+
+    pats.map(function(p,i){return '<option value="'+i+'">'+p.name+' ('+p.phone+')</option>';}).join("");
+  sel.value=cur;
+}
+function rxPickPatient(){
+  var sel=document.getElementById("rx-patient");
+  var p=(DB[mkt].patients||[])[sel.value];
+  if(!p)return;
+  document.getElementById("rx-name").value=p.name||"";
+  var ph=(p.phone||"").replace(/^\+91\s?|^\+880\s?/,"");
+  document.getElementById("rx-phone").value=ph;
+}
+function rxAddInstr(txt){
+  var t=document.getElementById("rx-instr");
+  t.value=(t.value?t.value.trim()+" ":"")+txt;
+}
+var _oldFetchPatients=fetchPatients;
+fetchPatients=async function(){ await _oldFetchPatients(); populateRxPatients(); };
+var _oldAddMedRow=addMedRow;
+addMedRow=function(name,dose,dur){
+  _oldAddMedRow(name,dose,dur);
+  var rows=document.querySelectorAll("#rx-meds .rx-med-row");
+  var r=rows[rows.length-1]; if(!r)return;
+  r.querySelector(".rx-m-name").setAttribute("list","rx-med-list");
+  r.querySelector(".rx-m-dose").setAttribute("list","rx-dose-list");
+  r.querySelector(".rx-m-dur").setAttribute("list","rx-days-list");
+};
+populateRxPatients();
 </script>
 </body>
 </html>
