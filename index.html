@@ -3485,6 +3485,37 @@ document.querySelectorAll("#rx-meds .rx-med-row").forEach(function(r){
   r.querySelector(".rx-m-dose").setAttribute("list","rx-dose-list");
   r.querySelector(".rx-m-dur").setAttribute("list","rx-days-list");
 });
+  /* ── Specialty-wise medicine sets ─────────────────────────── */
+var RX_MED_SETS={
+ "General":["Paracetamol 500mg","Paracetamol 650mg","Amoxicillin 500mg","Azithromycin 500mg","Cetirizine 10mg","Montelukast 10mg","Pantoprazole 40mg","Omeprazole 20mg","Ibuprofen 400mg","Diclofenac 50mg","ORS Sachet","Domperidone 10mg","Ondansetron 4mg","Vitamin D3 60000 IU","Iron + Folic Acid","Cough Syrup (Dextromethorphan)"],
+ "Diabetes":["Metformin 500mg","Metformin 1000mg","Glimepiride 1mg","Glimepiride 2mg","Sitagliptin 100mg","Vildagliptin 50mg","Empagliflozin 10mg","Dapagliflozin 10mg","Insulin Glargine","Insulin Aspart","Pioglitazone 15mg","Voglibose 0.2mg","Atorvastatin 10mg","Telmisartan 40mg"],
+ "Dermatology":["Cetirizine 10mg","Levocetirizine 5mg","Fluconazole 150mg","Itraconazole 100mg","Terbinafine 250mg","Clobetasol Cream","Mometasone Cream","Ketoconazole Shampoo 2%","Permethrin 5% Cream","Isotretinoin 20mg","Doxycycline 100mg","Calamine Lotion","Moisturizing Lotion (Ceramide)"],
+ "Dental":["Amoxicillin 500mg","Amoxicillin + Clavulanate 625mg","Metronidazole 400mg","Ibuprofen 400mg","Ketorolac 10mg","Paracetamol 650mg","Chlorhexidine Mouthwash 0.2%","Diclofenac 50mg","Lignocaine Gel 2%","Serratiopeptidase 10mg"],
+ "Cardiology":["Amlodipine 5mg","Telmisartan 40mg","Metoprolol 25mg","Atorvastatin 20mg","Rosuvastatin 10mg","Aspirin 75mg","Clopidogrel 75mg","Furosemide 40mg","Ramipril 5mg","Isosorbide Mononitrate 20mg"],
+ "Pediatrics":["Paracetamol Syrup 250mg/5ml","Amoxicillin Syrup","Azithromycin Syrup","Cetirizine Syrup","ORS Sachet","Zinc 20mg","Domperidone Syrup","Salbutamol Syrup","Multivitamin Drops","Albendazole 400mg"],
+ "Gynecology":["Iron + Folic Acid","Folic Acid 5mg","Calcium + Vitamin D3","Doxylamine + Pyridoxine","Progesterone 200mg","Clotrimazole Vaginal Tablet","Tranexamic Acid 500mg","Mefenamic Acid 500mg","Dydrogesterone 10mg"]
+};
+function rxSetSpecialty(sp){
+  var dl=document.getElementById("rx-med-list");
+  if(!dl)return;
+  var meds=(RX_MED_SETS[sp]||[]).concat(sp==="General"?[]:RX_MED_SETS["General"]);
+  dl.innerHTML=meds.map(function(m){return "<option>"+m+"</option>";}).join("");
+  try{localStorage.setItem("aura_rx_spec",sp);}catch(e){}
+}
+(function initRxSpec(){
+  var sel=document.getElementById("rx-patient");
+  if(!sel)return;
+  var wrap=document.createElement("div");
+  wrap.innerHTML='<label class="flbl" style="margin-top:10px">Specialty (medicine list)</label>'+
+    '<select class="finput" id="rx-spec" style="color:var(--text-primary)" onchange="rxSetSpecialty(this.value)">'+
+    Object.keys(RX_MED_SETS).map(function(k){return '<option value="'+k+'">'+k+'</option>';}).join("")+
+    '</select>';
+  sel.parentNode.appendChild(wrap);
+  var saved="General";
+  try{saved=localStorage.getItem("aura_rx_spec")||"General";}catch(e){}
+  document.getElementById("rx-spec").value=saved;
+  rxSetSpecialty(saved);
+})();
 </script>
 </body>
 </html>
