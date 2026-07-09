@@ -1690,7 +1690,28 @@ main.content{
         <label class="flbl">Instructions / Advice</label>
         <textarea class="ftextarea" id="rx-instr" rows="3" placeholder="e.g. Plenty of fluids. Review after 5 days."></textarea>
       </div>
-
+<datalist id="rx-med-list">
+  <option>Paracetamol 500mg</option><option>Paracetamol 650mg</option>
+  <option>Amoxicillin 500mg</option><option>Azithromycin 500mg</option>
+  <option>Cetirizine 10mg</option><option>Montelukast 10mg</option>
+  <option>Pantoprazole 40mg</option><option>Omeprazole 20mg</option>
+  <option>Metformin 500mg</option><option>Metformin 1000mg</option>
+  <option>Amlodipine 5mg</option><option>Telmisartan 40mg</option>
+  <option>Atorvastatin 10mg</option><option>Vitamin D3 60000 IU</option>
+  <option>Calcium + Vitamin D3</option><option>Iron + Folic Acid</option>
+  <option>ORS Sachet</option><option>Domperidone 10mg</option>
+  <option>Ondansetron 4mg</option><option>Ibuprofen 400mg</option>
+  <option>Diclofenac 50mg</option><option>Cough Syrup (Dextromethorphan)</option>
+</datalist>
+<datalist id="rx-dose-list">
+  <option>1-0-1</option><option>1-1-1</option><option>1-0-0</option>
+  <option>0-0-1</option><option>0-1-0</option><option>1-1-1-1</option>
+  <option>SOS</option><option>Once weekly</option>
+</datalist>
+<datalist id="rx-days-list">
+  <option>3</option><option>5</option><option>7</option><option>10</option>
+  <option>14</option><option>15</option><option>30</option><option>90</option>
+</datalist>
       <div id="rx-error" class="auth-error" style="display:none"></div>
 
       <button class="msub" id="rx-generate-btn" onclick="generatePrescription()">
