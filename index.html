@@ -3459,13 +3459,24 @@ function populateRxPatients(){
 }
 function rxPickPatient(){
   var sel=document.getElementById("rx-patient");
+  var nameEl=document.getElementById("rx-name");
+  var phoneEl=document.getElementById("rx-phone");
   var pats=DB[mkt].patients||[];
   var p=null;
   for(var i=0;i<pats.length;i++){ if(String(pats[i].id)===String(sel.value)){p=pats[i];break;} }
-  if(!p){document.getElementById("rx-name").value="";document.getElementById("rx-phone").value="";return;}
-  document.getElementById("rx-name").value=p.name||"";
+  if(!p){
+    nameEl.value=""; phoneEl.value="";
+    nameEl.readOnly=false; phoneEl.readOnly=false;
+    nameEl.style.opacity="1"; phoneEl.style.opacity="1";
+    nameEl.style.pointerEvents=""; phoneEl.style.pointerEvents="";
+    return;
+  }
+  nameEl.value=p.name||"";
   var ph=(p.phone||"").replace(/^\+91\s?|^\+880\s?/,"").replace(/^0+/,"");
-  document.getElementById("rx-phone").value=ph;
+  phoneEl.value=ph;
+  nameEl.readOnly=true; phoneEl.readOnly=true;
+  nameEl.style.opacity="0.7"; phoneEl.style.opacity="0.7";
+  nameEl.style.pointerEvents="none"; phoneEl.style.pointerEvents="none";
 }
 function rxAddInstr(txt){
   var t=document.getElementById("rx-instr");
