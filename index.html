@@ -3563,6 +3563,7 @@ function rxPickPatient(){
     nameEl.readOnly=false; phoneEl.readOnly=false;
     nameEl.style.opacity="1"; phoneEl.style.opacity="1";
     nameEl.style.pointerEvents=""; phoneEl.style.pointerEvents="";
+    if(genderEl)genderEl.value=""; if(weightEl)weightEl.value="";
     loadPatientTimeline();
     return;
   }
