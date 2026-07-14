@@ -3887,6 +3887,26 @@ function renderTlPdf(visits){
 }
 
 populateTimelinePatients();
+  async function stgEditField(field){
+  if(!_clinicId){showToast('Not connected — please sign in again.');return;}
+  var current='', label='', column='';
+  if(field==='clinic'){ current=DB[mkt].doc.clinic; label='clinic name'; column='name'; }
+  else if(field==='doctor'){ current=DB[mkt].doc.name; label='doctor name'; column='doctor_name'; }
+  else if(field==='reg'){ current=DB[mkt].doc.reg; label='registration'; column='registration'; }
+  else return;
+  var val=prompt('Update '+label+':', current);
+  if(val===null)return;
+  val=val.trim();
+  if(!val){showToast('Value cannot be empty.');return;}
+  var patch={}; patch[column]=val;
+  var r=await _supa.from('clinics').update(patch).eq('id',_clinicId);
+  if(r.error){showToast('Update failed: '+r.error.message);return;}
+  if(field==='clinic')DB[mkt].doc.clinic=val;
+  else if(field==='doctor')DB[mkt].doc.name=val;
+  else if(field==='reg')DB[mkt].doc.reg=val;
+  renderAll();
+  showToast('Updated.');
+}
 </script>
 </body>
 </html>
