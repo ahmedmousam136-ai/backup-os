@@ -1782,7 +1782,7 @@ main.content{
     </div>
   </div>
 
-  <div class="panel">
+ <div class="panel">
     <div class="ph">
       <div class="pt" data-i18n="rx_history">Prescription History</div>
       <span class="pb pb-b" id="rx-count">0</span>
@@ -1790,6 +1790,74 @@ main.content{
     <div id="rx-table"></div>
   </div>
 </div>
+
+<!-- ── PATIENT TIMELINE ── -->
+<div id="v-timeline" class="view">
+  <div class="sh">
+    <div>
+      <h1 class="st">Patient Timeline</h1>
+      <p class="ss">Complete medical history · Read automatically from records</p>
+    </div>
+  </div>
+
+  <div>
+    <label class="flbl">Select Patient</label>
+    <select class="finput" id="tl-patient" onchange="loadPatientTimeline()" style="color:var(--text-primary)">
+      <option value="">— Choose a patient —</option>
+    </select>
+  </div>
+
+  <div id="tl-empty" class="empty">
+    <div class="empty-ic">🗂️</div>
+    <p class="empty-t">Select a patient</p>
+    <p class="empty-s">Choose a patient above to view their full medical timeline.</p>
+  </div>
+
+  <div id="tl-content" style="display:none;flex-direction:column;gap:16px">
+    <div class="panel tl-summary-card" id="tl-summary"></div>
+
+    <div class="tl-quickbar" id="tl-quickbar">
+      <button class="tl-qbtn active" onclick="tlShowSection('timeline',this)">Timeline</button>
+      <button class="tl-qbtn" onclick="tlShowSection('diagnosis',this)">Diagnosis</button>
+      <button class="tl-qbtn" onclick="tlShowSection('medicines',this)">Medicines</button>
+      <button class="tl-qbtn" onclick="tlShowSection('followup',this)">Follow-up</button>
+      <button class="tl-qbtn" onclick="tlShowSection('pdf',this)">PDF History</button>
+    </div>
+
+    <div class="tl-section on" id="tl-sec-timeline">
+      <div id="tl-visits-list"></div>
+    </div>
+
+    <div class="tl-section" id="tl-sec-diagnosis">
+      <div class="panel">
+        <div class="ph"><div class="pt">Diagnosis History</div><span class="pb pb-b" id="tl-diag-count">0</span></div>
+        <div id="tl-diagnosis-list"></div>
+      </div>
+    </div>
+
+    <div class="tl-section" id="tl-sec-medicines">
+      <div class="panel">
+        <div class="ph"><div class="pt">Medication History</div><span class="pb pb-b" id="tl-med-count">0</span></div>
+        <div id="tl-meds-list"></div>
+      </div>
+    </div>
+
+    <div class="tl-section" id="tl-sec-followup">
+      <div class="panel">
+        <div class="ph"><div class="pt">Follow-up History</div><span class="pb pb-b" id="tl-fu-count">0</span></div>
+        <div id="tl-followup-list"></div>
+      </div>
+    </div>
+
+    <div class="tl-section" id="tl-sec-pdf">
+      <div class="panel">
+        <div class="ph"><div class="pt">Prescription PDFs</div><span class="pb pb-b" id="tl-pdf-count">0</span></div>
+        <div id="tl-pdf-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
       <!-- ── BOOK APPOINTMENT (removed — use New Appointment modal instead) ── -->
       <div id="v-book" class="view" style="display:none!important">
         <div class="sh" style="margin-bottom:14px">
