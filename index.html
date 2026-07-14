@@ -3529,9 +3529,51 @@ function rxSetSpecialty(sp){
   sel.parentNode.appendChild(wrap);
   var saved="General";
   try{saved=localStorage.getItem("aura_rx_spec")||"General";}catch(e){}
-  document.getElementById("rx-spec").value=saved;
+ document.getElementById("rx-spec").value=saved;
   rxSetSpecialty(saved);
 })();
+
+/* ══════════════════════════════════════════════════════════════
+   ABDM FOUNDATION ARCHITECTURE — silent background layer only.
+   Turns each generated prescription into one permanent Visit
+   Timeline entry. Diagnosis History, Medication History and
+   Follow-up History are then filled in automatically by database
+   triggers (see supabase/2026_07_14_abdm_foundation.sql) — nothing
+   here changes the UI, adds a form, or can block/alter the existing
+   prescription + WhatsApp delivery flow. Every call is best-effort
+   and fails silently so this layer can never break core features.
+   ══════════════════════════════════════════════════════════════ */
+
+async function _auraResolvePatientId(cid, name, phoneDisplay){
+  try{
+    var sel=document.getElementById("rx-patient");
+    if(sel && sel.value) return sel.value;
+    var lk=await _supa.from("patients").select("id").eq("clinic_id",cid).eq("phone",phoneDisplay).limit(1);
+    if(lk.data && lk.data.length>0) return lk.data[0].id;
+    var np=await _supa.from("patients").insert({clinic_id:cid,name:name,phone:phoneDisplay,status:"Active",visit_count:0}).select("id").single();
+    if(np.data) return np.data.id;
+  }catch(e){ /* silent — patient linkage is best-effort background enrichment */ }
+  return null;
+}
+
+async function _auraLogVisit(cid, name, phoneDisplay, doctorName, meds, instr, rxId, st){
+  try{
+    var patientId=await _auraResolvePatientId(cid, name, phoneDisplay);
+    await _supa.from("visits").insert({
+      clinic_id:cid,
+      patient_id:patientId,
+      doctor_name:doctorName,
+      clinical_notes:instr||null,
+      medicines:meds||[],
+      prescription_id:rxId,
+      pdf_path:(st&&st.path)||null,
+      pdf_url:(st&&st.url)||null
+    });
+    /* medication_history rows + linking prescriptions.visit_id back to
+       this visit happen automatically via the aura_visits_after_insert
+       trigger — nothing further needed here. */
+  }catch(e){ /* silent — visit logging must never surface to the doctor or interrupt prescription delivery */ }
+}
 </script>
 </body>
 </html>
