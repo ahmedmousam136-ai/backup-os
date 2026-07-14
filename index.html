@@ -3553,6 +3553,8 @@ function rxPickPatient(){
   var sel=document.getElementById("rx-patient");
   var nameEl=document.getElementById("rx-name");
   var phoneEl=document.getElementById("rx-phone");
+  var genderEl=document.getElementById("rx-gender"); 
+  var weightEl=document.getElementById("rx-weight");
   var pats=DB[mkt].patients||[];
   var p=null;
   for(var i=0;i<pats.length;i++){ if(String(pats[i].id)===String(sel.value)){p=pats[i];break;} }
