@@ -3699,11 +3699,14 @@ function tlFuChip(status){
   return '<span class="chip '+(map[status]||"ch-wait")+'">'+(status||"Scheduled")+'</span>';
 }
 
+var _tlCurrentPatientId=null;
+
 async function loadPatientTimeline(){
   var sel=document.getElementById("rx-patient");
   var pid=sel?sel.value:"";
   var empty=document.getElementById("tl-empty");
   var content=document.getElementById("tl-content");
+  _tlCurrentPatientId=pid||null;
   if(!pid){
     if(empty)empty.style.display="";
     if(content)content.style.display="none";
@@ -3742,10 +3745,11 @@ function renderTlSummary(patRow, visits, diagnoses, meds){
   el.innerHTML=
     '<div class="tl-summary-top">'+
       '<div class="tl-avatar">'+((patRow.name||"?").charAt(0))+'</div>'+
-      '<div>'+
+      '<div style="flex:1;min-width:0">'+
         '<p class="tl-summary-name">'+(patRow.name||"Unknown Patient")+'</p>'+
         '<p class="tl-summary-code">'+(patRow.patient_code||patRow.phone||"")+'</p>'+
       '</div>'+
+      tlConsentBadge(patRow.consent_status)+
     '</div>'+
     '<div class="tl-summary-grid">'+
       '<div class="tl-sitem"><p class="tl-sitem-lbl">Age</p><p class="tl-sitem-val small">Not recorded</p></div>'+
@@ -3757,6 +3761,34 @@ function renderTlSummary(patRow, visits, diagnoses, meds){
       '<div class="tl-sitem"><p class="tl-sitem-lbl">Diagnoses</p><p class="tl-sitem-val">'+diagnoses.length+'</p></div>'+
       '<div class="tl-sitem"><p class="tl-sitem-lbl">Prescriptions</p><p class="tl-sitem-val">'+rxCount+'</p></div>'+
     '</div>';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CONSENT MODULE — the doctor only ever sees one of two words.
+   Granted, Revoked, Pending, versioning, timestamps, and the
+   permanent consent_logs audit trail are all handled by database
+   triggers (see supabase/2026_07_15_consent_management.sql).
+   Revoked patients still read as "Consent Pending" here — from a
+   doctor's point of view there is only "can proceed" vs "cannot yet".
+   ══════════════════════════════════════════════════════════════ */
+
+function tlConsentBadge(status){
+  var granted = status === "Granted";
+  var label = granted ? "Consent Granted" : "Consent Pending";
+  var cls = granted ? "ch-act" : "ch-wait";
+  if(granted){
+    return '<span class="chip '+cls+'" style="flex-shrink:0">'+label+'</span>';
+  }
+  return '<span class="chip '+cls+'" style="flex-shrink:0;cursor:pointer" onclick="tlGrantConsent()" title="Tap once the patient has given consent">'+label+'</span>';
+}
+
+async function tlGrantConsent(){
+  if(!_tlCurrentPatientId)return;
+  if(!confirm("Confirm the patient has given consent for AuraScale to store and manage their medical records?"))return;
+  var r=await _supa.from("patients").update({consent_status:"Granted"}).eq("id",_tlCurrentPatientId);
+  if(r.error){showToast("Could not update consent: "+r.error.message);return;}
+  showToast("Consent recorded.");
+  loadPatientTimeline();
 }
 
 function renderTlVisits(visits){
