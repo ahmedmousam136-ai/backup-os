@@ -3690,8 +3690,213 @@ async function _auraLogVisit(cid, name, phoneDisplay, doctorName, meds, instr, r
     /* medication_history rows + linking prescriptions.visit_id back to
        this visit happen automatically via the aura_visits_after_insert
        trigger — nothing further needed here. */
-  }catch(e){ /* silent — visit logging must never surface to the doctor or interrupt prescription delivery */ }
+ }catch(e){ /* silent — visit logging must never surface to the doctor or interrupt prescription delivery */ }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   PATIENT TIMELINE — read-only UI over the existing ABDM tables
+   (visits, diagnosis_history, medication_history, followup_history).
+   No writes, no schema changes — reads only.
+   ══════════════════════════════════════════════════════════════ */
+
+TABS_KEYS.timeline="nav_timeline";
+T.en.nav_timeline="Patient Timeline";
+T.bn.nav_timeline="রোগীর টাইমলাইন";
+
+function populateTimelinePatients(){
+  var sel=document.getElementById("tl-patient");
+  if(!sel)return;
+  var pats=DB[mkt].patients||[];
+  var cur=sel.value;
+  sel.innerHTML='<option value="">— Choose a patient —</option>'+
+    pats.map(function(p){return '<option value="'+p.id+'">'+p.name+' ('+p.phone+')</option>';}).join("");
+  sel.value=cur;
+  if(sel.value!==cur){sel.value="";}
+}
+var _oldFetchPatients2=fetchPatients;
+fetchPatients=async function(){ await _oldFetchPatients2(); populateTimelinePatients(); };
+
+function tlShowSection(name, btn){
+  document.querySelectorAll(".tl-section").forEach(function(s){s.classList.remove("on");});
+  var target=document.getElementById("tl-sec-"+name);
+  if(target)target.classList.add("on");
+  document.querySelectorAll(".tl-qbtn").forEach(function(b){b.classList.remove("active");});
+  if(btn)btn.classList.add("active");
+}
+
+function tlToggleVisit(id){
+  var card=document.getElementById("tl-visit-"+id);
+  if(card)card.classList.toggle("open");
+}
+
+async function tlOpenPdf(path){
+  if(!path){showToast("No PDF available for this visit.");return;}
+  var sig=await _supa.storage.from("prescriptions").createSignedUrl(path, 3600);
+  if(sig.error){showToast("Could not open PDF: "+sig.error.message);return;}
+  window.open(sig.data.signedUrl,"_blank");
+}
+
+function tlFuChip(status){
+  var map={"Scheduled":"ch-wait","Completed":"ch-done","Missed":"ch-miss","Cancelled":"ch-inact"};
+  return '<span class="chip '+(map[status]||"ch-wait")+'">'+(status||"Scheduled")+'</span>';
+}
+
+async function loadPatientTimeline(){
+  var sel=document.getElementById("tl-patient");
+  var pid=sel?sel.value:"";
+  var empty=document.getElementById("tl-empty");
+  var content=document.getElementById("tl-content");
+  if(!pid){
+    if(empty)empty.style.display="";
+    if(content)content.style.display="none";
+    return;
+  }
+  if(!_clinicId){showToast("Not connected — please sign in again.");return;}
+  if(empty)empty.style.display="none";
+  if(content)content.style.display="flex";
+
+  var patRowRes=await _supa.from("patients").select("*").eq("id",pid).single();
+  var patRow=patRowRes.data||{};
+
+  var visitsRes=await _supa.from("visits").select("*").eq("patient_id",pid).eq("clinic_id",_clinicId).order("created_at",{ascending:false});
+  var diagRes=await _supa.from("diagnosis_history").select("*").eq("patient_id",pid).eq("clinic_id",_clinicId).order("diagnosed_at",{ascending:false});
+  var medRes=await _supa.from("medication_history").select("*").eq("patient_id",pid).eq("clinic_id",_clinicId).order("start_date",{ascending:false});
+  var fuRes=await _supa.from("followup_history").select("*").eq("patient_id",pid).eq("clinic_id",_clinicId).order("created_at",{ascending:false});
+
+  var visits=visitsRes.data||[];
+  var diagnoses=diagRes.data||[];
+  var meds=medRes.data||[];
+  var followups=fuRes.data||[];
+
+  renderTlSummary(patRow, visits, diagnoses, meds);
+  renderTlVisits(visits);
+  renderTlDiagnosis(diagnoses);
+  renderTlMeds(meds);
+  renderTlFollowup(followups);
+  renderTlPdf(visits);
+}
+
+function renderTlSummary(patRow, visits, diagnoses, meds){
+  var el=document.getElementById("tl-summary");
+  if(!el)return;
+  var rxCount=visits.filter(function(v){return v.prescription_id;}).length;
+  var latestVisit=visits[0]?(visits[0].visit_date||"—"):"—";
+  el.innerHTML=
+    '<div class="tl-summary-top">'+
+      '<div class="tl-avatar">'+((patRow.name||"?").charAt(0))+'</div>'+
+      '<div>'+
+        '<p class="tl-summary-name">'+(patRow.name||"Unknown Patient")+'</p>'+
+        '<p class="tl-summary-code">'+(patRow.patient_code||patRow.phone||"")+'</p>'+
+      '</div>'+
+    '</div>'+
+    '<div class="tl-summary-grid">'+
+      '<div class="tl-sitem"><p class="tl-sitem-lbl">Age</p><p class="tl-sitem-val small">Not recorded</p></div>'+
+      '<div class="tl-sitem"><p class="tl-sitem-lbl">Gender</p><p class="tl-sitem-val small">Not recorded</p></div>'+
+      '<div class="tl-sitem"><p class="tl-sitem-lbl">Latest Weight</p><p class="tl-sitem-val small">Not recorded</p></div>'+
+      '<div class="tl-sitem"><p class="tl-sitem-lbl">Latest BP</p><p class="tl-sitem-val small">Not recorded</p></div>'+
+      '<div class="tl-sitem"><p class="tl-sitem-lbl">Latest Visit</p><p class="tl-sitem-val small">'+latestVisit+'</p></div>'+
+      '<div class="tl-sitem"><p class="tl-sitem-lbl">Total Visits</p><p class="tl-sitem-val">'+visits.length+'</p></div>'+
+      '<div class="tl-sitem"><p class="tl-sitem-lbl">Diagnoses</p><p class="tl-sitem-val">'+diagnoses.length+'</p></div>'+
+      '<div class="tl-sitem"><p class="tl-sitem-lbl">Prescriptions</p><p class="tl-sitem-val">'+rxCount+'</p></div>'+
+    '</div>';
+}
+
+function renderTlVisits(visits){
+  var el=document.getElementById("tl-visits-list");
+  if(!el)return;
+  if(!visits.length){
+    el.innerHTML='<div class="empty"><div class="empty-ic">📋</div><p class="empty-t">No visits yet</p><p class="empty-s">Visits are created automatically when a prescription is generated.</p></div>';
+    return;
+  }
+  el.innerHTML=visits.map(function(v){
+    var meds=Array.isArray(v.medicines)?v.medicines:[];
+    var medsChips=meds.map(function(m){return '<span class="tl-med-chip">'+(m.name||"")+(m.dose?(" · "+m.dose):"")+(m.duration?(" · "+m.duration+"d"):"")+'</span>';}).join("");
+    return '<div class="tl-visit-card" id="tl-visit-'+v.id+'">'+
+      '<div class="tl-visit-head" onclick="tlToggleVisit(\''+v.id+'\')">'+
+        '<div class="tl-visit-left">'+
+          '<div class="tl-visit-dot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>'+
+          '<div style="min-width:0">'+
+            '<p class="tl-visit-date">'+(v.visit_date||"—")+'</p>'+
+            '<p class="tl-visit-meta">'+(v.doctor_name||"—")+(v.chief_complaint?(" · "+v.chief_complaint):"")+'</p>'+
+            (v.diagnosis?('<p class="tl-visit-diag">'+v.diagnosis+'</p>'):"")+
+          '</div>'+
+        '</div>'+
+        '<svg class="tl-visit-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="6 9 12 15 18 9"/></svg>'+
+      '</div>'+
+      '<div class="tl-visit-body">'+
+        '<div class="tl-visit-row"><span class="tl-visit-row-lbl">Visit ID</span><span class="tl-visit-row-val">'+(v.visit_code||v.id)+'</span></div>'+
+        (v.clinical_notes?('<div class="tl-visit-row"><span class="tl-visit-row-lbl">Clinical Notes</span><span class="tl-visit-row-val">'+v.clinical_notes+'</span></div>'):"")+
+        (v.follow_up_date?('<div class="tl-visit-row"><span class="tl-visit-row-lbl">Follow-up</span><span class="tl-visit-row-val">'+v.follow_up_date+' · '+(v.follow_up_status||"Scheduled")+'</span></div>'):"")+
+        (medsChips?('<div style="margin-top:8px">'+medsChips+'</div>'):"")+
+        (v.pdf_path?('<button class="qbtn tl-pdf-btn" onclick="tlOpenPdf(\''+v.pdf_path+'\')">View Prescription PDF</button>'):"")+
+      '</div>'+
+    '</div>';
+  }).join("");
+}
+
+function renderTlDiagnosis(diagnoses){
+  var el=document.getElementById("tl-diagnosis-list");
+  var cnt=document.getElementById("tl-diag-count");
+  if(cnt)cnt.textContent=diagnoses.length;
+  if(!el)return;
+  if(!diagnoses.length){
+    el.innerHTML='<div class="empty"><div class="empty-ic">🩺</div><p class="empty-t">No diagnoses recorded</p><p class="empty-s">Diagnoses will appear here once entered on a visit.</p></div>';
+    return;
+  }
+  el.innerHTML=diagnoses.map(function(d){
+    var dt=d.diagnosed_at?new Date(d.diagnosed_at).toLocaleDateString("en-GB"):"—";
+    return '<div class="tl-diag-row"><div><p class="tl-diag-text">'+d.diagnosis+'</p><p class="tl-diag-date">'+dt+(d.doctor_name?(" · "+d.doctor_name):"")+'</p></div></div>';
+  }).join("");
+}
+
+function renderTlMeds(meds){
+  var el=document.getElementById("tl-meds-list");
+  var cnt=document.getElementById("tl-med-count");
+  if(cnt)cnt.textContent=meds.length;
+  if(!el)return;
+  if(!meds.length){
+    el.innerHTML='<div class="empty"><div class="empty-ic">💊</div><p class="empty-t">No medication history</p><p class="empty-s">Medicines will appear here automatically after a prescription.</p></div>';
+    return;
+  }
+  el.innerHTML=meds.map(function(m){
+    return '<div class="tl-med-row">'+
+      '<div><p class="tl-med-name">'+m.medicine+'</p><p class="tl-med-sub">'+(m.dose||"—")+' · '+(m.frequency||"—")+' · '+(m.duration?(m.duration+" days"):"—")+'</p></div>'+
+      '<span class="chip '+(m.status==="Active"?"ch-act":m.status==="Stopped"?"ch-miss":"ch-done")+'">'+(m.status||"Active")+'</span>'+
+    '</div>';
+  }).join("");
+}
+
+function renderTlFollowup(followups){
+  var el=document.getElementById("tl-followup-list");
+  var cnt=document.getElementById("tl-fu-count");
+  if(cnt)cnt.textContent=followups.length;
+  if(!el)return;
+  if(!followups.length){
+    el.innerHTML='<div class="empty"><div class="empty-ic">🔔</div><p class="empty-t">No follow-ups yet</p><p class="empty-s">Follow-ups sync automatically from appointment status changes.</p></div>';
+    return;
+  }
+  el.innerHTML=followups.map(function(f){
+    return '<div class="tl-fu-row"><div><p class="tl-diag-text">'+(f.scheduled_date||"—")+'</p></div>'+tlFuChip(f.status)+'</div>';
+  }).join("");
+}
+
+function renderTlPdf(visits){
+  var el=document.getElementById("tl-pdf-list");
+  var withPdf=visits.filter(function(v){return v.pdf_path;});
+  var cnt=document.getElementById("tl-pdf-count");
+  if(cnt)cnt.textContent=withPdf.length;
+  if(!el)return;
+  if(!withPdf.length){
+    el.innerHTML='<div class="empty"><div class="empty-ic">📄</div><p class="empty-t">No PDFs yet</p><p class="empty-s">Prescription PDFs will appear here after they are generated.</p></div>';
+    return;
+  }
+  el.innerHTML=withPdf.map(function(v){
+    return '<div class="tl-fu-row"><div><p class="tl-diag-text">'+(v.visit_date||"—")+'</p><p class="tl-diag-date">'+(v.doctor_name||"")+'</p></div>'+
+      '<button class="qbtn" onclick="tlOpenPdf(\''+v.pdf_path+'\')">View PDF</button></div>';
+  }).join("");
+}
+
+populateTimelinePatients();
 </script>
 </body>
 </html>
