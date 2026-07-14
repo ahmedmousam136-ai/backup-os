@@ -3356,8 +3356,9 @@ async function generatePrescription(){
     doctor_name:d.name, medicines:meds, instructions:instr,
     pdf_path:st.path, pdf_url:st.url, wa_status:"Pending"
   }).select("id").single();
-  if(ins.error){ rxError("Save failed: "+ins.error.message); btn.disabled=false; btn.textContent="Generate Prescription"; return; }
+if(ins.error){ rxError("Save failed: "+ins.error.message); btn.disabled=false; btn.textContent="Generate Prescription"; return; }
   var rxId=ins.data.id;
+  _auraLogVisit(cid, name, v.display, d.name, meds, instr, rxId, st); /* silent background EMR foundation — never blocks the prescription flow */
   btn.textContent="Sending to WhatsApp…";
   var wa=await sendRxWhatsApp({wa_e164:v.e164, patient_name:name, doctor_name:d.name, clinic_name:d.clinic, pdf_url:st.url});
   if(wa.ok){
