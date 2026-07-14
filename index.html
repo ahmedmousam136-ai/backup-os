@@ -1236,10 +1236,6 @@ main.content{
   <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
   <span data-i18n="nav_rx">Prescriptions</span>
 </button>
-      <button class="nb" onclick="nav('timeline',this)">
-  <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
-  <span data-i18n="nav_timeline">Patient Timeline</span>
-</button>
       <p class="nav-sec" data-i18n="nav_setup">Setup</p>
       <button class="nb" onclick="nav('settings',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></span>
@@ -1782,35 +1778,11 @@ main.content{
     </div>
   </div>
 
- <div class="panel">
-    <div class="ph">
-      <div class="pt" data-i18n="rx_history">Prescription History</div>
-      <span class="pb pb-b" id="rx-count">0</span>
-    </div>
-    <div id="rx-table"></div>
-  </div>
-</div>
-
-<!-- ── PATIENT TIMELINE ── -->
-<div id="v-timeline" class="view">
-  <div class="sh">
-    <div>
-      <h1 class="st">Patient Timeline</h1>
-      <p class="ss">Complete medical history · Read automatically from records</p>
-    </div>
-  </div>
-
-  <div>
-    <label class="flbl">Select Patient</label>
-    <select class="finput" id="tl-patient" onchange="loadPatientTimeline()" style="color:var(--text-primary)">
-      <option value="">— Choose a patient —</option>
-    </select>
-  </div>
-
+ <!-- ── PATIENT TIMELINE (embedded — replaces old Prescription History) ── -->
   <div id="tl-empty" class="empty">
     <div class="empty-ic">🗂️</div>
-    <p class="empty-t">Select a patient</p>
-    <p class="empty-s">Choose a patient above to view their full medical timeline.</p>
+    <p class="empty-t">Select a patient above</p>
+    <p class="empty-s">Their complete medical history — visits, diagnoses, medicines, follow-ups and PDFs — will appear here instantly.</p>
   </div>
 
   <div id="tl-content" style="display:none;flex-direction:column;gap:16px">
@@ -1818,10 +1790,10 @@ main.content{
 
     <div class="tl-quickbar" id="tl-quickbar">
       <button class="tl-qbtn active" onclick="tlShowSection('timeline',this)">Timeline</button>
-      <button class="tl-qbtn" onclick="tlShowSection('diagnosis',this)">Diagnosis</button>
-      <button class="tl-qbtn" onclick="tlShowSection('medicines',this)">Medicines</button>
-      <button class="tl-qbtn" onclick="tlShowSection('followup',this)">Follow-up</button>
+      <button class="tl-qbtn" onclick="tlShowSection('diagnosis',this)">Diagnosis History</button>
+      <button class="tl-qbtn" onclick="tlShowSection('medicines',this)">Medication History</button>
       <button class="tl-qbtn" onclick="tlShowSection('pdf',this)">PDF History</button>
+      <button class="tl-qbtn" onclick="tlShowSection('followup',this)">Follow-up History</button>
     </div>
 
     <div class="tl-section on" id="tl-sec-timeline">
@@ -1842,17 +1814,17 @@ main.content{
       </div>
     </div>
 
-    <div class="tl-section" id="tl-sec-followup">
-      <div class="panel">
-        <div class="ph"><div class="pt">Follow-up History</div><span class="pb pb-b" id="tl-fu-count">0</span></div>
-        <div id="tl-followup-list"></div>
-      </div>
-    </div>
-
     <div class="tl-section" id="tl-sec-pdf">
       <div class="panel">
         <div class="ph"><div class="pt">Prescription PDFs</div><span class="pb pb-b" id="tl-pdf-count">0</span></div>
         <div id="tl-pdf-list"></div>
+      </div>
+    </div>
+
+    <div class="tl-section" id="tl-sec-followup">
+      <div class="panel">
+        <div class="ph"><div class="pt">Follow-up History</div><span class="pb pb-b" id="tl-fu-count">0</span></div>
+        <div id="tl-followup-list"></div>
       </div>
     </div>
   </div>
@@ -3497,6 +3469,7 @@ if(ins.error){ rxError("Save failed: "+ins.error.message); btn.disabled=false; b
   btn.disabled=false;
   btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Generate Prescription';
   fetchPrescriptions();
+  setTimeout(loadPatientTimeline, 700); /* small delay lets the background visit-logging trigger finish writing before we re-read it */
 }
 
 /* ── RETRY: resend only, no new PDF ───────────────────────── */
@@ -3588,6 +3561,7 @@ function rxPickPatient(){
     nameEl.readOnly=false; phoneEl.readOnly=false;
     nameEl.style.opacity="1"; phoneEl.style.opacity="1";
     nameEl.style.pointerEvents=""; phoneEl.style.pointerEvents="";
+    loadPatientTimeline();
     return;
   }
   nameEl.value=p.name||"";
@@ -3596,6 +3570,7 @@ function rxPickPatient(){
   nameEl.readOnly=true; phoneEl.readOnly=true;
   nameEl.style.opacity="0.7"; phoneEl.style.opacity="0.7";
   nameEl.style.pointerEvents="none"; phoneEl.style.pointerEvents="none";
+  loadPatientTimeline();
 }
 function rxAddInstr(txt){
   var t=document.getElementById("rx-instr");
@@ -3699,23 +3674,6 @@ async function _auraLogVisit(cid, name, phoneDisplay, doctorName, meds, instr, r
    No writes, no schema changes — reads only.
    ══════════════════════════════════════════════════════════════ */
 
-TABS_KEYS.timeline="nav_timeline";
-T.en.nav_timeline="Patient Timeline";
-T.bn.nav_timeline="রোগীর টাইমলাইন";
-
-function populateTimelinePatients(){
-  var sel=document.getElementById("tl-patient");
-  if(!sel)return;
-  var pats=DB[mkt].patients||[];
-  var cur=sel.value;
-  sel.innerHTML='<option value="">— Choose a patient —</option>'+
-    pats.map(function(p){return '<option value="'+p.id+'">'+p.name+' ('+p.phone+')</option>';}).join("");
-  sel.value=cur;
-  if(sel.value!==cur){sel.value="";}
-}
-var _oldFetchPatients2=fetchPatients;
-fetchPatients=async function(){ await _oldFetchPatients2(); populateTimelinePatients(); };
-
 function tlShowSection(name, btn){
   document.querySelectorAll(".tl-section").forEach(function(s){s.classList.remove("on");});
   var target=document.getElementById("tl-sec-"+name);
@@ -3742,7 +3700,7 @@ function tlFuChip(status){
 }
 
 async function loadPatientTimeline(){
-  var sel=document.getElementById("tl-patient");
+  var sel=document.getElementById("rx-patient");
   var pid=sel?sel.value:"";
   var empty=document.getElementById("tl-empty");
   var content=document.getElementById("tl-content");
