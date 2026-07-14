@@ -1025,6 +1025,52 @@ main.content{
   .mcr-mc-val{font-size:22px}
 }
 </style>
+<style>
+/* ══ PATIENT TIMELINE (Apple-inspired, additive only) ══ */
+.tl-summary-card{padding:20px}
+.tl-summary-top{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+.tl-avatar{width:52px;height:52px;border-radius:14px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',serif;font-size:22px;flex-shrink:0;box-shadow:0 4px 14px rgba(46,99,212,.3)}
+.tl-summary-name{font-family:'Instrument Serif',serif;font-size:20px;color:var(--text-primary);letter-spacing:-.01em}
+.tl-summary-code{font-size:10.5px;color:var(--text-tertiary);margin-top:2px;font-weight:600;letter-spacing:.04em}
+.tl-summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:900px){.tl-summary-grid{grid-template-columns:repeat(2,1fr)}}
+.tl-sitem{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 13px}
+.tl-sitem-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.09em;font-weight:700;color:var(--text-tertiary);margin-bottom:5px}
+.tl-sitem-val{font-family:'Instrument Serif',serif;font-size:18px;color:var(--text-primary)}
+.tl-sitem-val.small{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600}
+.tl-quickbar{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 4px;-webkit-overflow-scrolling:touch}
+.tl-qbtn{background:var(--surface);border:1px solid var(--border);color:var(--text-secondary);font-size:12px;font-weight:600;padding:9px 15px;border-radius:20px;white-space:nowrap;cursor:pointer;transition:all var(--ease);box-shadow:var(--sh-xs);flex-shrink:0}
+.tl-qbtn:hover{border-color:var(--blue-border);color:var(--blue)}
+.tl-qbtn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.tl-section{display:none;flex-direction:column;gap:12px}
+.tl-section.on{display:flex}
+.tl-visit-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs);transition:box-shadow var(--ease)}
+.tl-visit-card:hover{box-shadow:var(--sh-sm)}
+.tl-visit-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;gap:10px}
+.tl-visit-left{display:flex;align-items:center;gap:12px;min-width:0}
+.tl-visit-dot{width:36px;height:36px;border-radius:10px;background:var(--blue-bg);border:1px solid var(--blue-border);color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tl-visit-date{font-size:12.5px;font-weight:700;color:var(--text-primary)}
+.tl-visit-meta{font-size:10.5px;color:var(--text-tertiary);margin-top:1px}
+.tl-visit-diag{font-size:11px;color:var(--text-secondary);margin-top:2px}
+.tl-visit-chevron{color:var(--text-tertiary);transition:transform var(--ease);flex-shrink:0}
+.tl-visit-card.open .tl-visit-chevron{transform:rotate(180deg)}
+.tl-visit-body{display:none;padding:0 16px 16px;border-top:1px solid var(--border)}
+.tl-visit-card.open .tl-visit-body{display:block;padding-top:14px}
+.tl-visit-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid rgba(228,224,216,.5);font-size:12px}
+[data-theme="dark"] .tl-visit-row{border-bottom-color:rgba(37,42,56,.9)}
+.tl-visit-row:last-of-type{border-bottom:none}
+.tl-visit-row-lbl{color:var(--text-tertiary);font-weight:600;flex-shrink:0}
+.tl-visit-row-val{color:var(--text-primary);text-align:right}
+.tl-med-chip{display:inline-flex;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:4px 9px;font-size:10.5px;color:var(--text-secondary);margin:2px 4px 2px 0}
+.tl-pdf-btn{margin-top:10px;width:100%}
+.tl-diag-row,.tl-med-row,.tl-fu-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid rgba(228,224,216,.55);gap:10px}
+[data-theme="dark"] .tl-diag-row,[data-theme="dark"] .tl-med-row,[data-theme="dark"] .tl-fu-row{border-bottom-color:rgba(37,42,56,.9)}
+.tl-diag-row:last-child,.tl-med-row:last-child,.tl-fu-row:last-child{border-bottom:none}
+.tl-diag-text{font-size:12.5px;font-weight:600;color:var(--text-primary)}
+.tl-diag-date{font-size:10.5px;color:var(--text-tertiary);margin-top:1px}
+.tl-med-name{font-size:12.5px;font-weight:600;color:var(--text-primary)}
+.tl-med-sub{font-size:10.5px;color:var(--text-tertiary);margin-top:1px}
+</style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
