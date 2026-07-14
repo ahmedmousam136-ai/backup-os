@@ -3570,6 +3570,7 @@ function rxPickPatient(){
   nameEl.value=p.name||"";
   var ph=(p.phone||"").replace(/^\+91\s?|^\+880\s?/,"").replace(/^0+/,"");
   phoneEl.value=ph;
+  if(genderEl)genderEl.value=p.gender||""; if(weightEl)weightEl.value=p.weight||"";
   nameEl.readOnly=true; phoneEl.readOnly=true;
   nameEl.style.opacity="0.7"; phoneEl.style.opacity="0.7";
   nameEl.style.pointerEvents="none"; phoneEl.style.pointerEvents="none";
