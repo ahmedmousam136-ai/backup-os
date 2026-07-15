@@ -3609,6 +3609,25 @@ function rxError(msg){
   e.textContent=msg;e.style.display="block";
 }
 
+/* ── Dose shorthand → patient-friendly schedule ─────────────
+   The doctor's numeric dose (1-0-1, 1-1-1, 0-1-0, 1-0-0, 0-0-1, …)
+   is the ONLY thing entered and remains the source of truth. This
+   function is purely a display translation for the PDF — it does
+   not change how the dose is entered, validated, or stored. */
+function _rxTabletWord(n){
+  if(!(n>0))return "Skip";
+  return n===1 ? "1 tablet" : (n+" tablets");
+}
+function parseDoseSchedule(doseStr){
+  var raw=(doseStr||"").trim();
+  var parts=raw.split(/[-–—]/).map(function(p){return p.trim();});
+  if(parts.length===3 && parts.every(function(p){return /^\d+(\.\d+)?$/.test(p);})){
+    var nums=parts.map(Number);
+    return {morning:_rxTabletWord(nums[0]),afternoon:_rxTabletWord(nums[1]),night:_rxTabletWord(nums[2])};
+  }
+  return null; /* not a recognized 3-part numeric shorthand (e.g. "SOS") — fall back to showing the raw dose */
+}
+
 /* ── PDF service (jsPDF) ──────────────────────────────────── */
 function buildRxPdf(data){
   var jsPDF=window.jspdf.jsPDF;
@@ -3637,17 +3656,37 @@ function buildRxPdf(data){
     doc.setFont("helvetica","bold");
     doc.text((i+1)+". "+m.name, x+2, y);
     doc.setFont("helvetica","normal");
-    var extra=[m.dose?("Dose: "+m.dose):"",m.duration?("Duration: "+m.duration+" days"):""].filter(Boolean).join("    ");
-    if(extra){y+=5;doc.setTextColor(100,96,90);doc.text(extra,x+7,y);doc.setTextColor(24,23,15);}
-    /* Patient-friendly timing instruction (from the new dropdown) —
-       shown as its own line so the patient doesn't need to decode
-       the doctor's shorthand dose format to know when to take it. */
-    if(m.timing){
-      y+=5;
-      doc.setTextColor(46,99,212);
-      doc.setFont("helvetica","bold");
-      doc.text("Instruction: "+m.timing, x+7, y);
+    /* Automatic translation of the doctor's numeric dose into a
+       plain-language schedule. Falls back to showing the raw dose
+       if it isn't a recognized 3-part shorthand (e.g. "SOS"). */
+    var sched=parseDoseSchedule(m.dose);
+    if(sched){
+      y+=5.5;
+      doc.setTextColor(100,96,90); doc.setFont("helvetica","bold");
+      doc.text("Schedule:", x+7, y);
       doc.setFont("helvetica","normal");
+      y+=5; doc.text("Morning: "+sched.morning, x+11, y);
+      y+=5; doc.text("Afternoon: "+sched.afternoon, x+11, y);
+      y+=5; doc.text("Night: "+sched.night, x+11, y);
+      doc.setTextColor(24,23,15);
+    }else if(m.dose){
+      y+=5;
+      doc.setTextColor(100,96,90);
+      doc.text("Dose: "+m.dose, x+7, y);
+      doc.setTextColor(24,23,15);
+    }
+    /* Selected timing instruction — the doctor only ever picks this
+       from the dropdown; the wording below is generated for them. */
+    if(m.timing){
+      y+=5.5;
+      doc.setTextColor(46,99,212); doc.setFont("helvetica","bold");
+      doc.text("Take: "+m.timing, x+7, y);
+      doc.setFont("helvetica","normal"); doc.setTextColor(24,23,15);
+    }
+    if(m.duration){
+      y+=5;
+      doc.setTextColor(100,96,90);
+      doc.text("Duration: "+m.duration+" Days", x+7, y);
       doc.setTextColor(24,23,15);
     }
     y+=8;
