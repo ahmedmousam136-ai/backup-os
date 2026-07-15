@@ -2039,6 +2039,24 @@ main.content{
           </div>
         </div>
 
+        <div class="settings-section" id="stg-dupe-section">
+          <div class="ph">
+            <div class="pt">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Duplicate Patients
+            </div>
+            <button class="book-link-btn" style="font-size:11px;padding:6px 10px;min-height:32px" onclick="stgScanDuplicates()">Scan</button>
+          </div>
+          <div id="stg-dupe-list">
+            <div class="settings-row">
+              <div>
+                <p class="settings-row-lbl">No scan run yet</p>
+                <p class="settings-row-sub">Click Scan to find patients with the same phone number saved as separate records (e.g. from before phone-matching was tightened), and merge them into one profile.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="settings-section">
           <div class="ph">
             <div class="pt">
@@ -2170,7 +2188,7 @@ main.content{
 
       <div id="add-existing-summary" class="add-existing-card"></div>
 
-      <div id="add-name-wrap" style="display:none;flex-direction:column;gap:12px">
+      <div id="add-name-wrap" style="display:flex;flex-direction:column;gap:12px">
         <div>
           <label class="flbl" data-i18n="patient_name">Patient Name <span style="color:var(--red)">*</span></label>
           <input type="text" class="finput" id="add-name" data-i18n-placeholder="full_name" placeholder="Full name"/>
@@ -3067,10 +3085,9 @@ async function confirmBooking(){
 
   /* find or create patient */
   var patientId=null;
-  var lookupRes=await _supa.from('patients').select('id').eq('clinic_id',cid).eq('phone',fullPhone).limit(1);
-  if(lookupRes.error){_showBookingError("Patient lookup error: "+lookupRes.error.message);return;}
-  if(lookupRes.data&&lookupRes.data.length>0){
-    patientId=lookupRes.data[0].id;
+  var lookupRes=await findPatientByPhone(cid, fullPhone, phone.trim());
+  if(lookupRes){
+    patientId=lookupRes.id;
   }else{
     var newPatRes=await _supa.from('patients').insert({clinic_id:cid,name:name.trim(),phone:fullPhone,status:'Active',visit_count:0}).select('id').single();
     if(newPatRes.error){_showBookingError("Patient create error: "+newPatRes.error.message);return;}
@@ -3125,7 +3142,9 @@ async function fetchPatients(){
     .eq('clinic_id',_clinicId)
     .order('created_at',{ascending:false});
   if(res.error){showToast("Could not load patients: "+res.error.message);return;}
-  DB[mkt].patients=(res.data||[]).map(p=>({
+  DB[mkt].patients=(res.data||[])
+    .filter(p=>p.status!=='Merged')
+    .map(p=>({
     id:p.id,
     patientCode:p.patient_code||p.id,
     name:p.name||'',
@@ -3197,6 +3216,38 @@ function renderAppts(appts){
    "Add Patient" step for reception — Confirm Appointment always
    creates-or-reuses the patient itself.
    ══════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   PHONE MATCHING — a patient must never be duplicated just because
+   a number was typed/stored with different spacing or with/without
+   the country code. All lookups compare the last 10 digits.
+   ══════════════════════════════════════════════════════════════ */
+function _phoneDigits(phone){
+  return (phone||'').replace(/\D/g,'').replace(/^0+/,'');
+}
+function _phoneKey(phone){
+  var d=_phoneDigits(phone);
+  return d.slice(-10);
+}
+function _samePhone(a,b){
+  var ka=_phoneKey(a),kb=_phoneKey(b);
+  return !!ka && ka.length===10 && ka===kb;
+}
+/* Broad, format-proof patient lookup: tries the fast exact-match query
+   first, then falls back to scanning every patient in the clinic and
+   comparing normalized last-10-digit numbers so legacy records saved
+   with different phone formatting are still found — this is what
+   prevents duplicate patient rows for the same person. */
+async function findPatientByPhone(cid, fullPhoneGuess, rawPhone){
+  var exact=await _supa.from('patients').select('*').eq('clinic_id',cid).eq('phone',fullPhoneGuess).limit(1);
+  if(exact.data&&exact.data.length>0)return exact.data[0];
+  var all=await _supa.from('patients').select('*').eq('clinic_id',cid);
+  if(all.error||!all.data)return null;
+  for(var i=0;i<all.data.length;i++){
+    if(_samePhone(all.data[i].phone, rawPhone))return all.data[i];
+  }
+  return null;
+}
+
 var _addLookupState={status:null,patientId:null,patient:null};
 var _addPhoneTimer=null;
 
@@ -3219,7 +3270,7 @@ function add_resetModal(){
   var reasonEl=document.getElementById('add-reason'); if(reasonEl)reasonEl.value='';
   var badge=document.getElementById('add-phone-badge'); if(badge){badge.className='add-phone-badge';badge.innerHTML='';}
   var existing=document.getElementById('add-existing-summary'); if(existing){existing.style.display='none';existing.innerHTML='';}
-  var nameWrap=document.getElementById('add-name-wrap'); if(nameWrap)nameWrap.style.display='none';
+  var nameWrap=document.getElementById('add-name-wrap'); if(nameWrap)nameWrap.style.display='flex';
   var dial=document.getElementById('add-dial'); if(dial&&DB[mkt])dial.textContent=DB[mkt].cur.dial;
 }
 
@@ -3229,12 +3280,10 @@ function add_onPhoneInput(){
   var digits=val.replace(/\D/g,'');
   var badge=document.getElementById('add-phone-badge');
   var existing=document.getElementById('add-existing-summary');
-  var nameWrap=document.getElementById('add-name-wrap');
   _addLookupState={status:null,patientId:null,patient:null};
   if(digits.length<7){
     if(badge){badge.className='add-phone-badge';badge.innerHTML='';}
     if(existing){existing.style.display='none';existing.innerHTML='';}
-    if(nameWrap)nameWrap.style.display='none';
     return;
   }
   if(badge){badge.className='add-phone-badge searching';badge.innerHTML='Searching…';}
@@ -3245,8 +3294,12 @@ async function add_lookupPhone(){
   var phoneEl=document.getElementById('add-phone');
   var val=phoneEl?phoneEl.value.trim():'';
   if(!val)return;
+  var badge=document.getElementById('add-phone-badge');
   var cid=await _ensureClinicId();
-  if(!cid)return;
+  if(!cid){
+    if(badge){badge.className='add-phone-badge new';badge.innerHTML='⚠️ Could not check records — you can still continue';}
+    return;
+  }
   var dial=DB[mkt].cur.dial;
   var fullPhone=val.startsWith('+')?val:dial+' '+val;
   var badge=document.getElementById('add-phone-badge');
@@ -3254,11 +3307,11 @@ async function add_lookupPhone(){
   var nameWrap=document.getElementById('add-name-wrap');
   var nameHint=document.getElementById('add-name-hint');
   var existing=document.getElementById('add-existing-summary');
-  var lk=await _supa.from('patients').select('*').eq('clinic_id',cid).eq('phone',fullPhone).limit(1);
+  var lk=await findPatientByPhone(cid, fullPhone, val);
   /* guard against a stale response if the receptionist kept typing */
   if((document.getElementById('add-phone')||{}).value.trim()!==val)return;
-  if(lk.data&&lk.data.length>0){
-    var p=lk.data[0];
+  if(lk){
+    var p=lk;
     _addLookupState={status:'existing',patientId:p.id,patient:p};
     if(badge){badge.className='add-phone-badge existing';badge.innerHTML='🟢 Existing Patient';}
     if(nameEl){nameEl.value=p.name||'';nameEl.readOnly=true;nameEl.style.opacity='0.7';}
@@ -3406,9 +3459,9 @@ async function addAppointment(){
      so a duplicate patient is never created either way. */
   var patientId=(_addLookupState.status==='existing')?_addLookupState.patientId:null;
   if(!patientId){
-    var lk=await _supa.from('patients').select('id').eq('clinic_id',cid).eq('phone',fullPhone).limit(1);
-    if(lk.data&&lk.data.length>0){
-      patientId=lk.data[0].id;
+    var lk=await findPatientByPhone(cid, fullPhone, phone.trim());
+    if(lk){
+      patientId=lk.id;
     }else{
       var patRow={clinic_id:cid,name:name.trim(),phone:fullPhone,status:'Active',visit_count:0,gender:gender};
       if(dob)patRow.date_of_birth=dob;
@@ -3879,8 +3932,8 @@ async function _auraResolvePatientId(cid, name, phoneDisplay){
   try{
     var sel=document.getElementById("rx-patient");
     if(sel && sel.value) return sel.value;
-    var lk=await _supa.from("patients").select("id").eq("clinic_id",cid).eq("phone",phoneDisplay).limit(1);
-    if(lk.data && lk.data.length>0) return lk.data[0].id;
+    var lk=await findPatientByPhone(cid, phoneDisplay, phoneDisplay);
+    if(lk) return lk.id;
     var np=await _supa.from("patients").insert({clinic_id:cid,name:name,phone:phoneDisplay,status:"Active",visit_count:0}).select("id").single();
     if(np.data) return np.data.id;
   }catch(e){ /* silent — patient linkage is best-effort background enrichment */ }
@@ -4150,6 +4203,102 @@ async function stgEditField(field){
   else if(field==='reg')DB[mkt].doc.reg=val;
   renderAll();
   showToast('Updated.');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DUPLICATE PATIENTS — finds patient records that share the same
+   phone number (comparing the last 10 digits, so it catches records
+   saved with different spacing/dial-code formatting) and merges them
+   into a single profile: appointments and visits move to the most
+   complete record, missing gender/DOB/age/weight are filled in from
+   the other record(s), visit counts are summed, and the duplicate
+   row is removed (or marked "Merged" if deletion is blocked).
+   ══════════════════════════════════════════════════════════════ */
+function _dupeCompleteness(p){
+  var score=0;
+  if(p.gender)score++;
+  if(p.date_of_birth||p.age)score++;
+  if(p.weight)score++;
+  if(p.name)score++;
+  return score;
+}
+async function stgScanDuplicates(){
+  if(!_clinicId){showToast('Not connected — please sign in again.');return;}
+  var listEl=document.getElementById('stg-dupe-list');
+  if(listEl)listEl.innerHTML='<div class="settings-row"><div><p class="settings-row-lbl">Scanning…</p></div></div>';
+  var res=await _supa.from('patients').select('*').eq('clinic_id',_clinicId).order('created_at',{ascending:true});
+  if(res.error){showToast('Scan failed: '+res.error.message);return;}
+  var all=res.data||[];
+  var groups={};
+  all.forEach(function(p){
+    var key=_phoneKey(p.phone);
+    if(!key)return;
+    if(!groups[key])groups[key]=[];
+    groups[key].push(p);
+  });
+  var dupeGroups=Object.keys(groups).map(function(k){return groups[k];}).filter(function(g){return g.length>1;});
+  window._dupeGroups=dupeGroups;
+  renderDupeGroups(dupeGroups);
+}
+function renderDupeGroups(groups){
+  var listEl=document.getElementById('stg-dupe-list');
+  if(!listEl)return;
+  if(!groups.length){
+    listEl.innerHTML='<div class="settings-row"><div><p class="settings-row-lbl">No duplicates found</p><p class="settings-row-sub">Every patient record has a unique phone number.</p></div></div>';
+    return;
+  }
+  listEl.innerHTML=groups.map(function(g,gi){
+    var primary=g.slice().sort(function(a,b){return _dupeCompleteness(b)-_dupeCompleteness(a);})[0];
+    var names=g.map(function(p){return p.name||'Unnamed';}).join(' · ');
+    return '<div class="settings-row">'+
+      '<div>'+
+        '<p class="settings-row-lbl">'+names+'</p>'+
+        '<p class="settings-row-sub">'+g.length+' records share this phone number · will keep the most complete one ('+(primary.name||'—')+')</p>'+
+      '</div>'+
+      '<button class="book-link-btn" style="font-size:11px;padding:6px 10px;min-height:32px" onclick="stgMergeGroup('+gi+')">Merge</button>'+
+    '</div>';
+  }).join('');
+}
+async function stgMergeGroup(gi){
+  var groups=window._dupeGroups||[];
+  var g=groups[gi];
+  if(!g||g.length<2)return;
+  var primary=g.slice().sort(function(a,b){return _dupeCompleteness(b)-_dupeCompleteness(a);})[0];
+  var dupes=g.filter(function(p){return p.id!==primary.id;});
+  if(!confirm('Merge '+g.length+' records for "'+(primary.name||'this patient')+'" into one? Appointments and visit history from the duplicate record(s) move to the kept record. This cannot be undone.'))return;
+  showToast('Merging…');
+  try{
+    var patch={};
+    dupes.forEach(function(d){
+      if(!primary.gender&&d.gender)patch.gender=d.gender;
+      if(!primary.date_of_birth&&!primary.age){
+        if(d.date_of_birth)patch.date_of_birth=d.date_of_birth;
+        else if(d.age)patch.age=d.age;
+      }
+      if(!primary.weight&&d.weight)patch.weight=d.weight;
+    });
+    var totalVisits=g.reduce(function(sum,p){return sum+(p.visit_count||0);},0);
+    patch.visit_count=totalVisits;
+    if(Object.keys(patch).length)await _supa.from('patients').update(patch).eq('id',primary.id);
+
+    for(var i=0;i<dupes.length;i++){
+      var dId=dupes[i].id;
+      await _supa.from('appointments').update({patient_id:primary.id}).eq('patient_id',dId);
+      await _supa.from('visits').update({patient_id:primary.id}).eq('patient_id',dId);
+      var del=await _supa.from('patients').delete().eq('id',dId);
+      if(del.error){
+        /* fallback: if deletion is blocked (e.g. by a foreign key), mark it
+           clearly so it stops showing up as a live duplicate patient */
+        await _supa.from('patients').update({status:'Merged',name:(dupes[i].name||'')+' (merged)'}).eq('id',dId);
+      }
+    }
+    showToast('Merged into one patient record.');
+    await fetchPatients();
+    await fetchAppointments();
+    stgScanDuplicates();
+  }catch(e){
+    showToast('Merge failed: '+(e.message||e));
+  }
 }
 </script>
 </body>
