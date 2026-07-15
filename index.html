@@ -4065,9 +4065,9 @@ addMedRow=function(name,dose,dur,timing){
   _oldAddMedRow(name,dose,dur,timing);
   var rows=document.querySelectorAll("#rx-meds .rx-med-row");
   var r=rows[rows.length-1]; if(!r)return;
-  r.querySelector(".rx-m-name").setAttribute("list","rx-med-list");
-  r.querySelector(".rx-m-dose").setAttribute("list","rx-dose-list");
-  r.querySelector(".rx-m-dur").setAttribute("list","rx-days-list");
+  attachAuraDropdown(r.querySelector(".rx-m-name"),"rx-med-list");
+  attachAuraDropdown(r.querySelector(".rx-m-dose"),"rx-dose-list");
+  attachAuraDropdown(r.querySelector(".rx-m-dur"),"rx-days-list");
 };
 populateRxPatients();
   /* fix: attach dropdown lists to rows created before this script ran */
