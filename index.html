@@ -3549,6 +3549,81 @@ function sendTemplate(type){
   const msgs={"follow-up":"14-day follow-up reminder sent to 3 patients due for a visit!","medication":"Medication reminder sent to selected patients.","review":"Review request sent to today's 6 completed patients!"};
   showToast(msgs[type]||"Message sent!");
 }/* ══════════════════════════════════════════════════════════════
+   AURA DROPDOWN — replaces the native <input list> datalist popover
+   for Medicine / Dose / Days. Fixes the "dropdown traps focus and
+   blocks the form" bug:
+   - exactly one dropdown open at a time
+   - selecting a value closes it immediately and releases focus
+   - outside click closes it
+   - Escape closes it
+   - opening a new one auto-closes the previous one
+   ══════════════════════════════════════════════════════════════ */
+var _auraDD_active=null; /* {input, menu} of the one dropdown allowed to be open */
+
+function _auraDD_closeActive(){
+  if(!_auraDD_active)return;
+  var m=_auraDD_active.menu;
+  if(m&&m.parentNode)m.parentNode.removeChild(m);
+  _auraDD_active=null;
+}
+function _auraDD_position(menu,input){
+  var r=input.getBoundingClientRect();
+  menu.style.left=r.left+"px";
+  menu.style.top=(r.bottom+2)+"px";
+  menu.style.width=r.width+"px";
+}
+function _auraDD_options(input,datalistId){
+  var q=(input.value||"").trim().toLowerCase();
+  var dl=document.getElementById(datalistId);
+  var all=dl?Array.prototype.slice.call(dl.querySelectorAll("option")).map(function(o){return o.value||o.textContent;}):[];
+  if(!q)return all.slice(0,50);
+  return all.filter(function(v){return v.toLowerCase().indexOf(q)!==-1;}).slice(0,50);
+}
+function _auraDD_open(input,datalistId){
+  if(_auraDD_active&&_auraDD_active.input!==input)_auraDD_closeActive();
+  var opts=_auraDD_options(input,datalistId);
+  if(!opts.length){_auraDD_closeActive();return;}
+
+  var menu=(_auraDD_active&&_auraDD_active.input===input)?_auraDD_active.menu:document.createElement("div");
+  menu.className="aura-dd-menu";
+  menu.innerHTML=opts.map(function(v){return '<div class="aura-dd-opt">'+v.replace(/</g,"&lt;")+'</div>';}).join("");
+  if(!menu.parentNode)document.body.appendChild(menu);
+  _auraDD_position(menu,input);
+  _auraDD_active={input:input,menu:menu};
+
+  Array.prototype.forEach.call(menu.querySelectorAll(".aura-dd-opt"),function(opt){
+    opt.addEventListener("mousedown",function(e){
+      e.preventDefault();
+      input.value=opt.textContent;
+      input.dispatchEvent(new Event("input",{bubbles:true}));
+      _auraDD_closeActive();
+      input.blur();
+    });
+  });
+}
+function attachAuraDropdown(input,datalistId){
+  input.removeAttribute("list");
+  input.setAttribute("autocomplete","off");
+  input.addEventListener("focus",function(){_auraDD_open(input,datalistId);});
+  input.addEventListener("input",function(){_auraDD_open(input,datalistId);});
+  input.addEventListener("keydown",function(e){
+    if(e.key==="Escape"){_auraDD_closeActive();input.blur();}
+    if(e.key==="Enter"||e.key==="Tab"){_auraDD_closeActive();}
+  });
+}
+document.addEventListener("mousedown",function(e){
+  if(!_auraDD_active)return;
+  var m=_auraDD_active.menu,inp=_auraDD_active.input;
+  if(e.target===inp||(m&&m.contains(e.target)))return;
+  _auraDD_closeActive();
+});
+document.addEventListener("keydown",function(e){
+  if(e.key==="Escape")_auraDD_closeActive();
+});
+window.addEventListener("scroll",function(){if(_auraDD_active)_auraDD_closeActive();},true);
+window.addEventListener("resize",function(){if(_auraDD_active)_auraDD_closeActive();});
+
+/* ══════════════════════════════════════════════════════════════
    PRESCRIPTION MODULE — PDF · Storage · Signed URL · Auto WhatsApp
 ══════════════════════════════════════════════════════════════ */
 
