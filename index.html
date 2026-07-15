@@ -1723,6 +1723,19 @@ main.content{
         </div>
       </div>
 
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label class="flbl">Gender / Age</label>
+          <div class="finput" id="rx-gender-age" style="display:flex;align-items:center;color:var(--text-tertiary)">—</div>
+          <p class="qp-hint">From patient record · set once when adding the patient</p>
+        </div>
+        <div>
+          <label class="flbl">Weight (kg)</label>
+          <input type="number" class="finput" id="rx-weight" placeholder="e.g. 68" inputmode="decimal" min="0" step="0.1"/>
+          <p class="qp-hint">Captured fresh for this visit</p>
+        </div>
+      </div>
+
       <div>
         <label class="flbl">Medicines <span style="color:var(--red)">*</span></label>
         <div id="rx-meds"></div>
@@ -1941,21 +1954,21 @@ main.content{
               <p class="settings-row-lbl">Clinic Name</p>
               <p class="settings-row-sub" id="stg-clinic-name">Laskar Health Clinic, Salt Lake, Kolkata</p>
             </div>
-            <button class="book-link-btn" style="font-size:11px;padding:6px 10px;min-height:32px">Edit</button>
+            <button class="book-link-btn" style="font-size:11px;padding:6px 10px;min-height:32px" onclick="stgEditField('clinic')">Edit</button>
           </div>
           <div class="settings-row">
             <div>
               <p class="settings-row-lbl">Doctor Name</p>
               <p class="settings-row-sub" id="stg-doc-name">Dr. Mousham Laskar</p>
             </div>
-            <button class="book-link-btn" style="font-size:11px;padding:6px 10px;min-height:32px">Edit</button>
+            <button class="book-link-btn" style="font-size:11px;padding:6px 10px;min-height:32px" onclick="stgEditField('doctor')">Edit</button>
           </div>
           <div class="settings-row">
             <div>
               <p class="settings-row-lbl">Registration</p>
               <p class="settings-row-sub" id="stg-doc-reg">NMC / WBMCO Registered</p>
             </div>
-            <button class="book-link-btn" style="font-size:11px;padding:6px 10px;min-height:32px">Edit</button>
+            <button class="book-link-btn" style="font-size:11px;padding:6px 10px;min-height:32px" onclick="stgEditField('reg')">Edit</button>
           </div>
         </div>
 
@@ -2185,9 +2198,9 @@ main.content{
           Add optional details
         </button>
         <div class="opt-fields-wrap" id="opt-fields">
-          <div><label class="flbl">Age</label><input type="number" class="finput" placeholder="e.g. 42" inputmode="numeric" min="0" max="120"/></div>
+          <div><label class="flbl">Date of Birth</label><input type="date" class="finput" id="qp-dob" style="color:var(--text-primary)"/></div>
           <div><label class="flbl">Gender</label>
-            <select class="finput" style="color:var(--text-primary)">
+            <select class="finput" id="qp-gender" style="color:var(--text-primary)">
               <option value="">Select</option>
               <option>Male</option><option>Female</option><option>Other</option>
             </select>
@@ -3104,7 +3117,7 @@ function copyBookingLink(){
 async function fetchPatients(){
   if(!_clinicId)return;
   const res=await _supa.from('patients')
-    .select('id,name,phone,last_visit,status,visit_count,created_at')
+    .select('id,name,phone,last_visit,status,visit_count,created_at,gender,weight,date_of_birth')
     .eq('clinic_id',_clinicId)
     .order('created_at',{ascending:false});
   if(res.error){showToast("Could not load patients: "+res.error.message);return;}
@@ -3114,7 +3127,10 @@ async function fetchPatients(){
     phone:p.phone||'',
     lastVisit:p.last_visit||'—',
     status:p.status||'Active',
-    visits:p.visit_count||0
+    visits:p.visit_count||0,
+    gender:p.gender||'',
+    weight:p.weight||'',
+    dob:p.date_of_birth||''
   }));
   DB[mkt].metrics.patients=DB[mkt].patients.length;
   renderPats();
@@ -3179,6 +3195,8 @@ function toggleOptional(){
 async function quickAddPatient(){
   const name=(document.getElementById("qp-name")||{}).value||"";
   const phone=(document.getElementById("qp-phone")||{}).value||"";
+  const dob=(document.getElementById("qp-dob")||{}).value||"";
+  const gender=(document.getElementById("qp-gender")||{}).value||"";
   if(!name.trim()||!phone.trim()){showToast("Name and mobile number are required.");return;}
   const cid=await _ensureClinicId();
   if(!cid){return;} /* _ensureClinicId already showed a descriptive toast */
@@ -3186,16 +3204,20 @@ async function quickAddPatient(){
   const fullPhone=phone.startsWith("+")?phone:dial+" "+phone;
   closeModal("quick-patient-modal");
   const n=document.getElementById("qp-name");const p=document.getElementById("qp-phone");
-  if(n)n.value="";if(p)p.value="";
+  const dobEl=document.getElementById("qp-dob");const genderEl=document.getElementById("qp-gender");
+  if(n)n.value="";if(p)p.value="";if(dobEl)dobEl.value="";if(genderEl)genderEl.value="";
   document.getElementById("opt-fields").classList.remove("open");
   showToast("Saving…");
-  const ins=await _supa.from('patients').insert({
+  const patRow={
     clinic_id:cid,
     name:name.trim(),
     phone:fullPhone,
     status:'Active',
     visit_count:0
-  });
+  };
+  if(dob)patRow.date_of_birth=dob;
+  if(gender)patRow.gender=gender;
+  const ins=await _supa.from('patients').insert(patRow);
   if(ins.error){showToast("Save failed: "+ins.error.message);return;}
   await fetchPatients();
   showToast("Patient added: "+name.trim());
@@ -3358,9 +3380,11 @@ function buildRxPdf(data){
     doc.setFont("helvetica","bold"); doc.text("Advice / Instructions:",x,y);
     doc.setFont("helvetica","normal");
     y+=6;
-    doc.splitTextToSize(data.instructions, W-2*x).forEach(function(line){
-      doc.text(line,x,y); y+=5.5;
-      if(y>270){doc.addPage();y=20;}
+    data.instructions.split("\n").forEach(function(rawLine){
+      doc.splitTextToSize(rawLine, W-2*x).forEach(function(line){
+        doc.text(line,x,y); y+=5.5;
+        if(y>270){doc.addPage();y=20;}
+      });
     });
   }
   doc.setFontSize(8); doc.setTextColor(158,154,147);
@@ -3418,6 +3442,7 @@ async function generatePrescription(){
   var name=(document.getElementById("rx-name").value||"").trim();
   var phoneRaw=(document.getElementById("rx-phone").value||"").trim();
   var instr=(document.getElementById("rx-instr").value||"").trim();
+  var weight=(document.getElementById("rx-weight")||{}).value||"";
   var meds=readMeds();
   var dial=DB[mkt].cur.dial;
   if(!name){rxError("Patient name is required.");return;}
@@ -3448,7 +3473,7 @@ async function generatePrescription(){
   }).select("id").single();
 if(ins.error){ rxError("Save failed: "+ins.error.message); btn.disabled=false; btn.textContent="Generate Prescription"; return; }
   var rxId=ins.data.id;
-  _auraLogVisit(cid, name, v.display, d.name, meds, instr, rxId, st); /* silent background EMR foundation — never blocks the prescription flow */
+  _auraLogVisit(cid, name, v.display, d.name, meds, instr, rxId, st, weight); /* silent background EMR foundation — never blocks the prescription flow */
   btn.textContent="Sending to WhatsApp…";
   var wa=await sendRxWhatsApp({wa_e164:v.e164, patient_name:name, doctor_name:d.name, clinic_name:d.clinic, pdf_url:st.url});
   if(wa.ok){
@@ -3462,8 +3487,6 @@ if(ins.error){ rxError("Save failed: "+ins.error.message); btn.disabled=false; b
     await setRxStatus(rxId,"Failed",wa.error);
     showToast("Prescription generated successfully but WhatsApp delivery failed.");
   }
-  document.getElementById("rx-name").value="";
-  document.getElementById("rx-phone").value="";
   document.getElementById("rx-instr").value="";
   document.getElementById("rx-meds").innerHTML=""; addMedRow();
   btn.disabled=false;
@@ -3553,32 +3576,51 @@ function rxPickPatient(){
   var sel=document.getElementById("rx-patient");
   var nameEl=document.getElementById("rx-name");
   var phoneEl=document.getElementById("rx-phone");
-  var genderEl=document.getElementById("rx-gender"); 
+  var gaEl=document.getElementById("rx-gender-age");
   var weightEl=document.getElementById("rx-weight");
   var pats=DB[mkt].patients||[];
   var p=null;
   for(var i=0;i<pats.length;i++){ if(String(pats[i].id)===String(sel.value)){p=pats[i];break;} }
+  if(weightEl)weightEl.value="";
   if(!p){
     nameEl.value=""; phoneEl.value="";
     nameEl.readOnly=false; phoneEl.readOnly=false;
     nameEl.style.opacity="1"; phoneEl.style.opacity="1";
     nameEl.style.pointerEvents=""; phoneEl.style.pointerEvents="";
-    if(genderEl)genderEl.value=""; if(weightEl)weightEl.value="";
+    if(gaEl)gaEl.textContent="—";
     loadPatientTimeline();
     return;
   }
   nameEl.value=p.name||"";
   var ph=(p.phone||"").replace(/^\+91\s?|^\+880\s?/,"").replace(/^0+/,"");
   phoneEl.value=ph;
-  if(genderEl)genderEl.value=p.gender||""; if(weightEl)weightEl.value=p.weight||"";
   nameEl.readOnly=true; phoneEl.readOnly=true;
   nameEl.style.opacity="0.7"; phoneEl.style.opacity="0.7";
   nameEl.style.pointerEvents="none"; phoneEl.style.pointerEvents="none";
+  if(gaEl){
+    var age=calcAge(p.dob);
+    var parts=[];
+    if(p.gender)parts.push(p.gender);
+    if(age!==null)parts.push(age+" yrs");
+    gaEl.textContent=parts.length?parts.join(" · "):"Not recorded";
+  }
   loadPatientTimeline();
+}
+
+function calcAge(dobStr){
+  if(!dobStr)return null;
+  var dob=new Date(dobStr);
+  if(isNaN(dob.getTime()))return null;
+  var today=new Date();
+  var age=today.getFullYear()-dob.getFullYear();
+  var m=today.getMonth()-dob.getMonth();
+  if(m<0||(m===0&&today.getDate()<dob.getDate()))age--;
+  return age;
 }
 function rxAddInstr(txt){
   var t=document.getElementById("rx-instr");
-  t.value=(t.value?t.value.trim()+" ":"")+txt;
+  var existing=t.value.trim();
+  t.value=(existing?existing+"\n":"")+"• "+txt;
 }
 var _oldFetchPatients=fetchPatients;
 fetchPatients=async function(){ await _oldFetchPatients(); populateRxPatients(); };
@@ -3653,7 +3695,7 @@ async function _auraResolvePatientId(cid, name, phoneDisplay){
   return null;
 }
 
-async function _auraLogVisit(cid, name, phoneDisplay, doctorName, meds, instr, rxId, st){
+async function _auraLogVisit(cid, name, phoneDisplay, doctorName, meds, instr, rxId, st, weight){
   try{
     var patientId=await _auraResolvePatientId(cid, name, phoneDisplay);
     await _supa.from("visits").insert({
@@ -3666,6 +3708,9 @@ async function _auraLogVisit(cid, name, phoneDisplay, doctorName, meds, instr, r
       pdf_path:(st&&st.path)||null,
       pdf_url:(st&&st.url)||null
     });
+    if(patientId && weight){
+      await _supa.from("patients").update({weight:parseFloat(weight)}).eq("id",patientId);
+    }
     /* medication_history rows + linking prescriptions.visit_id back to
        this visit happen automatically via the aura_visits_after_insert
        trigger — nothing further needed here. */
@@ -3746,6 +3791,7 @@ function renderTlSummary(patRow, visits, diagnoses, meds){
   if(!el)return;
   var rxCount=visits.filter(function(v){return v.prescription_id;}).length;
   var latestVisit=visits[0]?(visits[0].visit_date||"—"):"—";
+  var age=calcAge(patRow.date_of_birth);
   el.innerHTML=
     '<div class="tl-summary-top">'+
       '<div class="tl-avatar">'+((patRow.name||"?").charAt(0))+'</div>'+
@@ -3756,9 +3802,9 @@ function renderTlSummary(patRow, visits, diagnoses, meds){
       tlConsentBadge(patRow.consent_status)+
     '</div>'+
     '<div class="tl-summary-grid">'+
-      '<div class="tl-sitem"><p class="tl-sitem-lbl">Age</p><p class="tl-sitem-val small">Not recorded</p></div>'+
-      '<div class="tl-sitem"><p class="tl-sitem-lbl">Gender</p><p class="tl-sitem-val small">Not recorded</p></div>'+
-      '<div class="tl-sitem"><p class="tl-sitem-lbl">Latest Weight</p><p class="tl-sitem-val small">Not recorded</p></div>'+
+      '<div class="tl-sitem"><p class="tl-sitem-lbl">Age</p><p class="tl-sitem-val small">'+(age!==null?(age+" yrs"):"Not recorded")+'</p></div>'+
+      '<div class="tl-sitem"><p class="tl-sitem-lbl">Gender</p><p class="tl-sitem-val small">'+(patRow.gender||"Not recorded")+'</p></div>'+
+      '<div class="tl-sitem"><p class="tl-sitem-lbl">Latest Weight</p><p class="tl-sitem-val small">'+(patRow.weight?(patRow.weight+" kg"):"Not recorded")+'</p></div>'+
       '<div class="tl-sitem"><p class="tl-sitem-lbl">Latest BP</p><p class="tl-sitem-val small">Not recorded</p></div>'+
       '<div class="tl-sitem"><p class="tl-sitem-lbl">Latest Visit</p><p class="tl-sitem-val small">'+latestVisit+'</p></div>'+
       '<div class="tl-sitem"><p class="tl-sitem-lbl">Total Visits</p><p class="tl-sitem-val">'+visits.length+'</p></div>'+
@@ -3890,8 +3936,10 @@ function renderTlPdf(visits){
   }).join("");
 }
 
-populateTimelinePatients();
-  async function stgEditField(field){
+/* ══════════════════════════════════════════════════════════════
+   SETTINGS — Clinic Profile "Edit" buttons
+   ══════════════════════════════════════════════════════════════ */
+async function stgEditField(field){
   if(!_clinicId){showToast('Not connected — please sign in again.');return;}
   var current='', label='', column='';
   if(field==='clinic'){ current=DB[mkt].doc.clinic; label='clinic name'; column='name'; }
@@ -3911,6 +3959,8 @@ populateTimelinePatients();
   renderAll();
   showToast('Updated.');
 }
+
+populateTimelinePatients();
 </script>
 </body>
 </html>
