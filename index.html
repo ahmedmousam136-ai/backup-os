@@ -1085,6 +1085,18 @@ main.content{
 .tl-diag-date{font-size:10.5px;color:var(--text-tertiary);margin-top:1px}
 .tl-med-name{font-size:12.5px;font-weight:600;color:var(--text-primary)}
 .tl-med-sub{font-size:10.5px;color:var(--text-tertiary);margin-top:1px}
+
+/* ══ ABHA (Ayushman Bharat Health Account) — READINESS LAYER ══
+   Schema + UI placeholders only. No live government API calls are
+   made anywhere in this file. Buttons stay disabled until a real
+   ABDM gateway is wired in. Purely additive — no existing class
+   below is modified. ══ */
+.abha-section{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.abha-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.abha-title{font-size:9px;text-transform:uppercase;letter-spacing:.09em;font-weight:700;color:var(--text-tertiary)}
+.abha-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.abha-btn[disabled]{opacity:.45;cursor:not-allowed;pointer-events:none}
+.abha-note{font-size:9.5px;color:var(--text-tertiary);margin-top:6px;line-height:1.5}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -3993,6 +4005,35 @@ function tlFuChip(status){
   return '<span class="chip '+(map[status]||"ch-wait")+'">'+(status||"Scheduled")+'</span>';
 }
 
+/* ══════════════════════════════════════════════════════════════
+   ABHA (Ayushman Bharat Health Account) — READINESS LAYER
+   Reads abha_* columns straight off the existing select('*') patient
+   row in loadPatientTimeline(), so this works whether or not the
+   supabase/2026_07_15_abha_readiness.sql migration has been applied
+   yet — missing columns simply render as "Not Linked" / "Never".
+   Nothing here calls any government/ABDM endpoint.
+   ══════════════════════════════════════════════════════════════ */
+function tlAbhaStatusChip(status){
+  var map={"Verified":"ch-act","Pending":"ch-wait","Failed":"ch-inact","Not Verified":"ch-wait"};
+  var label=status||"Not Verified";
+  return '<span class="chip '+(map[label]||"ch-wait")+'">'+label+'</span>';
+}
+function tlAbhaLinkedChip(linked){
+  return linked?'<span class="chip ch-act">Linked</span>':'<span class="chip ch-wait">Not Linked</span>';
+}
+/* Stubs only — intentionally NOT connected to any live API. The
+   "Link ABHA" / "Verify ABHA" buttons that reference these remain
+   `disabled` in the DOM, so these never actually fire today. They
+   exist so a future ABDM integration only has to fill in the real
+   fetch()/redirect logic here — no new UI, schema, or wiring will
+   be needed at that point. */
+async function openLinkAbha(patientId){
+  showToast("ABHA linking will be available once government ABDM integration is enabled.");
+}
+async function openVerifyAbha(patientId){
+  showToast("ABHA verification will be available once government ABDM integration is enabled.");
+}
+
 var _tlCurrentPatientId=null;
 
 async function loadPatientTimeline(){
@@ -4055,6 +4096,23 @@ function renderTlSummary(patRow, visits, diagnoses, meds){
       '<div class="tl-sitem"><p class="tl-sitem-lbl">Total Visits</p><p class="tl-sitem-val">'+visits.length+'</p></div>'+
       '<div class="tl-sitem"><p class="tl-sitem-lbl">Diagnoses</p><p class="tl-sitem-val">'+diagnoses.length+'</p></div>'+
       '<div class="tl-sitem"><p class="tl-sitem-lbl">Prescriptions</p><p class="tl-sitem-val">'+rxCount+'</p></div>'+
+    '</div>'+
+    '<div class="abha-section">'+
+      '<div class="abha-head">'+
+        '<p class="abha-title">ABHA · Ayushman Bharat Health Account</p>'+
+        tlAbhaLinkedChip(!!patRow.abha_linked)+
+      '</div>'+
+      '<div class="tl-summary-grid">'+
+        '<div class="tl-sitem"><p class="tl-sitem-lbl">ABHA ID</p><p class="tl-sitem-val small">'+(patRow.abha_number||"Not Linked")+'</p></div>'+
+        '<div class="tl-sitem"><p class="tl-sitem-lbl">Health ID (ABHA Address)</p><p class="tl-sitem-val small">'+(patRow.abha_health_id||"Not Linked")+'</p></div>'+
+        '<div class="tl-sitem"><p class="tl-sitem-lbl">Verification Status</p><p class="tl-sitem-val small">'+tlAbhaStatusChip(patRow.abha_verification_status)+'</p></div>'+
+        '<div class="tl-sitem"><p class="tl-sitem-lbl">Last Sync</p><p class="tl-sitem-val small">'+(patRow.abha_last_sync?new Date(patRow.abha_last_sync).toLocaleString("en-GB"):"Never")+'</p></div>'+
+      '</div>'+
+      '<div class="abha-actions">'+
+        '<button class="book-link-btn abha-btn" disabled title="Enabled once government ABDM integration goes live" onclick="openLinkAbha(\''+patRow.id+'\')">Link ABHA</button>'+
+        '<button class="book-link-btn abha-btn" disabled title="Enabled once government ABDM integration goes live" onclick="openVerifyAbha(\''+patRow.id+'\')">Verify ABHA</button>'+
+      '</div>'+
+      '<p class="abha-note">Government ABDM integration pending — these actions activate automatically once enabled. No data leaves AuraScale today.</p>'+
     '</div>';
 }
 
