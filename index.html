@@ -1714,10 +1714,11 @@ main.content{
     </div>
     <div class="mb" style="padding:16px 17px">
       <div>
-  <label class="flbl">Select Patient (auto-fills name &amp; number)</label>
+  <label class="flbl">Select Patient (auto-fills name, number, gender, age, weight &amp; ID)</label>
   <select class="finput" id="rx-patient" onchange="rxPickPatient()" style="color:var(--text-primary)">
     <option value="">— Choose from patient list —</option>
   </select>
+  <p class="qp-hint" id="rx-patient-id-hint">Patient ID: —</p>
 </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div>
@@ -1738,12 +1739,12 @@ main.content{
         <div>
           <label class="flbl">Gender / Age</label>
           <div class="finput" id="rx-gender-age" style="display:flex;align-items:center;color:var(--text-tertiary)">—</div>
-          <p class="qp-hint">From patient record · set once when adding the patient</p>
+          <p class="qp-hint">From patient record · set when confirming the appointment</p>
         </div>
         <div>
           <label class="flbl">Weight (kg)</label>
           <input type="number" class="finput" id="rx-weight" placeholder="e.g. 68" inputmode="decimal" min="0" step="0.1"/>
-          <p class="qp-hint">Captured fresh for this visit</p>
+          <p class="qp-hint">Auto-filled from patient record · editable for this visit</p>
         </div>
       </div>
 
@@ -2041,22 +2042,6 @@ main.content{
         <div class="settings-section">
           <div class="ph">
             <div class="pt">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-              Admin Tools
-            </div>
-          </div>
-          <div class="settings-row">
-            <div>
-              <p class="settings-row-lbl">Manually Add Patient</p>
-              <p class="settings-row-sub">For bulk imports or records without an appointment. Normal reception should use New Appointment — it registers patients automatically.</p>
-            </div>
-            <button class="book-link-btn" style="font-size:11px;padding:6px 10px;min-height:32px" onclick="openModal('quick-patient-modal')">Add Patient</button>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <div class="ph">
-            <div class="pt">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               Compliance &amp; Security
             </div>
@@ -2185,74 +2170,53 @@ main.content{
 
       <div id="add-existing-summary" class="add-existing-card"></div>
 
-      <div id="add-name-wrap" style="display:none">
-        <label class="flbl" data-i18n="patient_name">Patient Name</label>
-        <input type="text" class="finput" id="add-name" data-i18n-placeholder="full_name" placeholder="Full name"/>
-        <p class="qp-hint" id="add-name-hint"></p>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
-        <div><label class="flbl" data-i18n="date">Date</label><input type="date" class="finput" id="add-date"/></div>
-        <div><label class="flbl" data-i18n="time">Time</label><input type="time" class="finput" id="add-time"/></div>
-      </div>
-      <div><label class="flbl" data-i18n="reason_for_visit">Chief Complaint</label><input type="text" class="finput" id="add-reason" data-i18n-placeholder="chief_complaint" placeholder="Chief complaint or condition"/></div>
-      <button class="msub" onclick="addAppointment()" data-i18n="confirm_appointment">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        Confirm Appointment
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- QUICK ADD PATIENT MODAL -->
-<div class="mod-ov" id="quick-patient-modal">
-  <div class="modal">
-    <div class="mh">
-      <div style="display:flex;align-items:center;gap:9px">
-        <div class="mic" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-        </div>
+      <div id="add-name-wrap" style="display:none;flex-direction:column;gap:12px">
         <div>
-          <p class="mtitle">Quick Add Patient <span style="font-weight:600;color:var(--text-tertiary);font-size:10px;text-transform:uppercase;letter-spacing:.04em">· Admin</span></p>
-          <p style="color:var(--text-tertiary);font-size:10px;margin-top:1px">For bulk imports & records without an appointment</p>
+          <label class="flbl" data-i18n="patient_name">Patient Name <span style="color:var(--red)">*</span></label>
+          <input type="text" class="finput" id="add-name" data-i18n-placeholder="full_name" placeholder="Full name"/>
+          <p class="qp-hint" id="add-name-hint"></p>
         </div>
-      </div>
-      <button class="mclose" onclick="closeModal('quick-patient-modal')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="mb">
-      <div>
-        <label class="flbl">Patient Name <span style="color:var(--red)">*</span></label>
-        <input type="text" class="finput" id="qp-name" placeholder="Full name" autocomplete="name" autocapitalize="words"/>
-      </div>
-      <div>
-        <label class="flbl">Mobile Number <span style="color:var(--red)">*</span></label>
-        <div class="prow">
-          <div class="ppfx" id="qp-dial">+91</div>
-          <input type="tel" class="finput" id="qp-phone" placeholder="Mobile number" style="flex:1" inputmode="numeric" autocomplete="tel"/>
-        </div>
-        <p class="qp-hint">That's all you need to register a patient</p>
-      </div>
-      <div class="optional-fields">
-        <button class="optional-toggle" onclick="toggleOptional()" type="button" id="opt-toggle-btn">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" id="opt-toggle-ic"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add optional details
-        </button>
-        <div class="opt-fields-wrap" id="opt-fields">
-          <div><label class="flbl">Date of Birth</label><input type="date" class="finput" id="qp-dob" style="color:var(--text-primary)"/></div>
-          <div><label class="flbl">Gender</label>
-            <select class="finput" id="qp-gender" style="color:var(--text-primary)">
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+          <div>
+            <label class="flbl">Gender <span style="color:var(--red)">*</span></label>
+            <select class="finput" id="add-gender" style="color:var(--text-primary)">
               <option value="">Select</option>
               <option>Male</option><option>Female</option><option>Other</option>
             </select>
           </div>
-          <div><label class="flbl">Chief Complaint</label><input type="text" class="finput" placeholder="e.g. Fever, Cough..."/></div>
+          <div>
+            <label class="flbl">Weight (kg)</label>
+            <input type="number" class="finput" id="add-weight" placeholder="Optional" inputmode="decimal" min="0" step="0.1"/>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+          <div>
+            <label class="flbl">Date of Birth</label>
+            <input type="date" class="finput" id="add-dob" oninput="add_onDobChange()" onchange="add_onDobChange()"/>
+          </div>
+          <div>
+            <label class="flbl">Age <span style="color:var(--red)">*</span></label>
+            <input type="number" class="finput" id="add-age" placeholder="Years" inputmode="numeric" min="0" max="130"/>
+          </div>
+        </div>
+        <p class="qp-hint">Enter Age, or Date of Birth to calculate it automatically</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+        <div><label class="flbl" data-i18n="date">Appointment Date <span style="color:var(--red)">*</span></label><input type="date" class="finput" id="add-date"/></div>
+        <div>
+          <label class="flbl" data-i18n="time">Appointment Time <span style="color:var(--red)">*</span></label>
+          <select class="finput" id="add-slot" style="color:var(--text-primary)">
+            <option value="">Select a time slot</option>
+          </select>
         </div>
       </div>
-      <button class="msub" onclick="quickAddPatient()" style="background:var(--green);box-shadow:0 2px 8px rgba(18,151,106,.2)">
+      <div><label class="flbl" data-i18n="reason_for_visit">Chief Complaint (optional)</label><input type="text" class="finput" id="add-reason" data-i18n-placeholder="chief_complaint" placeholder="Chief complaint or condition"/></div>
+      <button class="msub" onclick="addAppointment()" data-i18n="confirm_appointment">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        Add Patient
+        Confirm Appointment
       </button>
     </div>
   </div>
@@ -2691,8 +2655,6 @@ function renderAll(){
   document.getElementById("add-phone").placeholder=`${d.cur.dial} number`;
   const bookDocEl=document.getElementById("book-doc-name");
   if(bookDocEl)bookDocEl.textContent=d.doc.name;
-  const qpDialEl=document.getElementById("qp-dial");
-  if(qpDialEl)qpDialEl.textContent=d.cur.dial;
   applyTranslations();
   renderDash();renderPats();renderWA();renderAna();renderSettings();
 }
@@ -3159,12 +3121,13 @@ function copyBookingLink(){
 async function fetchPatients(){
   if(!_clinicId)return;
   const res=await _supa.from('patients')
-    .select('id,name,phone,last_visit,status,visit_count,created_at,gender,weight,date_of_birth')
+    .select('id,name,phone,last_visit,status,visit_count,created_at,gender,weight,date_of_birth,age,patient_code')
     .eq('clinic_id',_clinicId)
     .order('created_at',{ascending:false});
   if(res.error){showToast("Could not load patients: "+res.error.message);return;}
   DB[mkt].patients=(res.data||[]).map(p=>({
     id:p.id,
+    patientCode:p.patient_code||p.id,
     name:p.name||'',
     phone:p.phone||'',
     lastVisit:p.last_visit||'—',
@@ -3172,7 +3135,8 @@ async function fetchPatients(){
     visits:p.visit_count||0,
     gender:p.gender||'',
     weight:p.weight||'',
-    dob:p.date_of_birth||''
+    dob:p.date_of_birth||'',
+    age:p.age||''
   }));
   DB[mkt].metrics.patients=DB[mkt].patients.length;
   renderPats();
@@ -3245,8 +3209,13 @@ function add_resetModal(){
   _addLookupState={status:null,patientId:null,patient:null};
   var phoneEl=document.getElementById('add-phone'); if(phoneEl)phoneEl.value='';
   var nameEl=document.getElementById('add-name'); if(nameEl){nameEl.value='';nameEl.readOnly=false;nameEl.style.opacity='1';}
+  var genderEl=document.getElementById('add-gender'); if(genderEl){genderEl.value='';genderEl.disabled=false;}
+  var dobEl=document.getElementById('add-dob'); if(dobEl){dobEl.value='';dobEl.disabled=false;}
+  var ageEl=document.getElementById('add-age'); if(ageEl){ageEl.value='';ageEl.disabled=false;}
+  var weightEl=document.getElementById('add-weight'); if(weightEl)weightEl.value='';
   var dateEl=document.getElementById('add-date'); if(dateEl)dateEl.value='';
-  var timeEl=document.getElementById('add-time'); if(timeEl)timeEl.value='';
+  populateAddSlots();
+  var slotEl=document.getElementById('add-slot'); if(slotEl)slotEl.value='';
   var reasonEl=document.getElementById('add-reason'); if(reasonEl)reasonEl.value='';
   var badge=document.getElementById('add-phone-badge'); if(badge){badge.className='add-phone-badge';badge.innerHTML='';}
   var existing=document.getElementById('add-existing-summary'); if(existing){existing.style.display='none';existing.innerHTML='';}
@@ -3294,14 +3263,16 @@ async function add_lookupPhone(){
     if(badge){badge.className='add-phone-badge existing';badge.innerHTML='🟢 Existing Patient';}
     if(nameEl){nameEl.value=p.name||'';nameEl.readOnly=true;nameEl.style.opacity='0.7';}
     if(nameHint)nameHint.textContent='Loaded from patient record';
-    if(nameWrap)nameWrap.style.display='';
+    if(nameWrap)nameWrap.style.display='flex';
+    add_prefillClinicalFields(p);
     await add_renderExistingSummary(p,cid);
   }else{
     _addLookupState={status:'new',patientId:null,patient:null};
     if(badge){badge.className='add-phone-badge new';badge.innerHTML='🔵 New Patient';}
     if(nameEl){nameEl.value='';nameEl.readOnly=false;nameEl.style.opacity='1';}
     if(nameHint)nameHint.textContent='New patient — enter their name';
-    if(nameWrap)nameWrap.style.display='';
+    if(nameWrap)nameWrap.style.display='flex';
+    add_prefillClinicalFields(null);
     if(existing){existing.style.display='none';existing.innerHTML='';}
   }
 }
@@ -3326,60 +3297,110 @@ async function add_renderExistingSummary(p,cid){
     '</div>';
 }
 
-/* ══ QUICK ADD PATIENT (Admin Tools only — not part of the reception flow) ══ */
-function toggleOptional(){
-  const wrap=document.getElementById("opt-fields");
-  const ic=document.getElementById("opt-toggle-ic");
-  const open=wrap.classList.toggle("open");
-  if(ic)ic.innerHTML=open?'<line x1="5" y1="12" x2="19" y2="12"/>'
-    :'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>';
+/* ══════════════════════════════════════════════════════════════
+   APPOINTMENT SLOTS — configurable 30-minute slot generator.
+   Change APPOINTMENT_SLOT_CONFIG to adjust clinic hours / duration.
+   ══════════════════════════════════════════════════════════════ */
+var APPOINTMENT_SLOT_CONFIG={startHour:9,startMinute:0,endHour:20,endMinute:0,durationMinutes:30};
+function _fmtSlotTime(mins){
+  var h=Math.floor(mins/60),m=mins%60;
+  var ampm=h>=12?'PM':'AM';
+  var h12=h%12; if(h12===0)h12=12;
+  return (h12<10?'0'+h12:h12)+':'+(m<10?'0'+m:m)+' '+ampm;
 }
-async function quickAddPatient(){
-  const name=(document.getElementById("qp-name")||{}).value||"";
-  const phone=(document.getElementById("qp-phone")||{}).value||"";
-  const dob=(document.getElementById("qp-dob")||{}).value||"";
-  const gender=(document.getElementById("qp-gender")||{}).value||"";
-  if(!name.trim()||!phone.trim()){showToast("Name and mobile number are required.");return;}
-  const cid=await _ensureClinicId();
-  if(!cid){return;} /* _ensureClinicId already showed a descriptive toast */
-  const dial=DB[mkt].cur.dial;
-  const fullPhone=phone.startsWith("+")?phone:dial+" "+phone;
-  closeModal("quick-patient-modal");
-  const n=document.getElementById("qp-name");const p=document.getElementById("qp-phone");
-  const dobEl=document.getElementById("qp-dob");const genderEl=document.getElementById("qp-gender");
-  if(n)n.value="";if(p)p.value="";if(dobEl)dobEl.value="";if(genderEl)genderEl.value="";
-  document.getElementById("opt-fields").classList.remove("open");
-  showToast("Saving…");
-  const patRow={
-    clinic_id:cid,
-    name:name.trim(),
-    phone:fullPhone,
-    status:'Active',
-    visit_count:0
-  };
-  if(dob)patRow.date_of_birth=dob;
-  if(gender)patRow.gender=gender;
-  const ins=await _supa.from('patients').insert(patRow);
-  if(ins.error){showToast("Save failed: "+ins.error.message);return;}
-  await fetchPatients();
-  showToast("Patient added: "+name.trim());
+function generateTimeSlots(cfg){
+  cfg=cfg||APPOINTMENT_SLOT_CONFIG;
+  var slots=[];
+  var cur=cfg.startHour*60+cfg.startMinute;
+  var end=cfg.endHour*60+cfg.endMinute;
+  while(cur+cfg.durationMinutes<=end){
+    slots.push(_fmtSlotTime(cur)+' – '+_fmtSlotTime(cur+cfg.durationMinutes));
+    cur+=cfg.durationMinutes;
+  }
+  return slots;
+}
+function populateAddSlots(){
+  var sel=document.getElementById('add-slot');
+  if(!sel)return;
+  var cur=sel.value;
+  var slots=generateTimeSlots();
+  sel.innerHTML='<option value="">Select a time slot</option>'+slots.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
+  if(cur)sel.value=cur;
 }
 
-/* ══ CONFIRM APPOINTMENT — one click, decides create-vs-reuse itself ══ */
+/* ══ CONFIRM APPOINTMENT — the ONLY entry point for creating patients.
+   Confirm Appointment → Patient Created/Linked Automatically → Ready
+   for Prescription. There is no separate "add patient" workflow. ══ */
+function add_onDobChange(){
+  var dobEl=document.getElementById('add-dob');
+  var ageEl=document.getElementById('add-age');
+  if(!dobEl||!ageEl)return;
+  if(dobEl.value){
+    var a=calcAge(dobEl.value);
+    ageEl.value=a!==null?a:'';
+    ageEl.disabled=true;
+  }else{
+    ageEl.disabled=false;
+  }
+}
+function add_prefillClinicalFields(p){
+  var genderEl=document.getElementById('add-gender');
+  var dobEl=document.getElementById('add-dob');
+  var ageEl=document.getElementById('add-age');
+  var weightEl=document.getElementById('add-weight');
+  var dob=(p&&p.date_of_birth)?p.date_of_birth:'';
+  if(genderEl){
+    if(p&&p.gender){genderEl.value=p.gender;genderEl.disabled=true;}
+    else{genderEl.value='';genderEl.disabled=false;}
+  }
+  if(dobEl){dobEl.value=dob;dobEl.disabled=!!dob;}
+  if(ageEl){
+    if(dob){
+      var a=calcAge(dob);
+      ageEl.value=a!==null?a:'';
+      ageEl.disabled=true;
+    }else{
+      ageEl.value='';
+      ageEl.disabled=false;
+    }
+  }
+  if(weightEl)weightEl.value=(p&&p.weight)?p.weight:'';
+}
+async function _auraLogAppointmentVisit(cid,patientId,date,chiefComplaint,appointmentId){
+  try{
+    await _supa.from('visits').insert({
+      clinic_id:cid,
+      patient_id:patientId,
+      visit_date:date,
+      chief_complaint:chiefComplaint||null,
+      appointment_id:appointmentId||null
+    });
+  }catch(e){ /* silent — visit logging must never block the appointment flow */ }
+}
 async function addAppointment(){
   var phone=(document.getElementById('add-phone')||{}).value||'';
   var name=(document.getElementById('add-name')||{}).value||'';
+  var gender=(document.getElementById('add-gender')||{}).value||'';
+  var dob=(document.getElementById('add-dob')||{}).value||'';
+  var ageVal=(document.getElementById('add-age')||{}).value||'';
+  var weight=(document.getElementById('add-weight')||{}).value||'';
   var date=(document.getElementById('add-date')||{}).value||'';
-  var time=(document.getElementById('add-time')||{}).value||'';
-  var reason=((document.getElementById('add-reason')||{}).value||'').trim()||'General Consultation';
+  var slot=(document.getElementById('add-slot')||{}).value||'';
+  var reason=((document.getElementById('add-reason')||{}).value||'').trim();
+
   if(!phone.trim()){showToast('Enter a mobile number to continue.');return;}
   if(!name.trim()){showToast('Patient name is required.');return;}
-  if(!date||!time){showToast('Date and time are required.');return;}
+  if(!gender){showToast('Gender is required.');return;}
+  if(!dob&&!ageVal){showToast('Enter Age or Date of Birth.');return;}
+  if(!date){showToast('Appointment date is required.');return;}
+  if(!slot){showToast('Please select an appointment time slot.');return;}
+
   var cid=await _ensureClinicId();
   if(!cid){showToast('Not connected — please sign in again.');return;}
   var dial=DB[mkt].cur.dial;
   var fullPhone=phone.trim().startsWith('+')?phone.trim():dial+' '+phone.trim();
   showToast('Saving…');
+
   /* Reuse the patient identified during the live phone lookup. If that
      hasn't resolved yet for any reason, fall back to a fresh find-or-create
      so a duplicate patient is never created either way. */
@@ -3389,24 +3410,48 @@ async function addAppointment(){
     if(lk.data&&lk.data.length>0){
       patientId=lk.data[0].id;
     }else{
-      var np=await _supa.from('patients').insert({clinic_id:cid,name:name.trim(),phone:fullPhone,status:'Active',visit_count:0}).select('id').single();
+      var patRow={clinic_id:cid,name:name.trim(),phone:fullPhone,status:'Active',visit_count:0,gender:gender};
+      if(dob)patRow.date_of_birth=dob;
+      else if(ageVal)patRow.age=parseInt(ageVal,10);
+      if(weight)patRow.weight=parseFloat(weight);
+      patRow.first_visit_date=date;
+      var np=await _supa.from('patients').insert(patRow).select('id').single();
       if(np.error){showToast('Patient error: '+np.error.message);return;}
       if(np.data)patientId=np.data.id;
     }
   }
   if(!patientId){showToast('Could not resolve patient.');return;}
+
+  /* Keep the patient's permanent profile current. Only patch fields that
+     have a value so we never blank out data already on file. Chief
+     Complaint is intentionally excluded — it belongs to this visit only. */
+  var patch={};
+  if(name.trim())patch.name=name.trim();
+  if(gender)patch.gender=gender;
+  if(dob)patch.date_of_birth=dob;
+  else if(ageVal)patch.age=parseInt(ageVal,10);
+  if(weight)patch.weight=parseFloat(weight);
+  if(Object.keys(patch).length){
+    await _supa.from('patients').update(patch).eq('id',patientId);
+  }
+
   var ins=await _supa.from('appointments').insert({
     clinic_id:cid,
     patient_id:patientId,
     patient_name:name.trim(),
     patient_phone:fullPhone,
     appointment_date:date,
-    appointment_time:time,
-    reason:reason,
+    appointment_time:slot,
+    reason:reason||'General Consultation',
     status:'Waiting',
     source:'dashboard'
-  });
+  }).select('id').single();
   if(ins.error){showToast('Appointment failed: '+ins.error.message);return;}
+
+  /* Visit-level record so Chief Complaint shows against THIS visit only
+     in the Patient Timeline — never on the permanent patient profile. */
+  _auraLogAppointmentVisit(cid,patientId,date,reason,ins.data&&ins.data.id);
+
   closeModal('add-modal');
   add_resetModal();
   await fetchAppointments();
@@ -3721,6 +3766,7 @@ function rxPickPatient(){
   var phoneEl=document.getElementById("rx-phone");
   var gaEl=document.getElementById("rx-gender-age");
   var weightEl=document.getElementById("rx-weight");
+  var idHintEl=document.getElementById("rx-patient-id-hint");
   var pats=DB[mkt].patients||[];
   var p=null;
   for(var i=0;i<pats.length;i++){ if(String(pats[i].id)===String(sel.value)){p=pats[i];break;} }
@@ -3731,6 +3777,7 @@ function rxPickPatient(){
     nameEl.style.opacity="1"; phoneEl.style.opacity="1";
     nameEl.style.pointerEvents=""; phoneEl.style.pointerEvents="";
     if(gaEl)gaEl.textContent="—";
+    if(idHintEl)idHintEl.textContent="Patient ID: —";
     loadPatientTimeline();
     return;
   }
@@ -3740,11 +3787,13 @@ function rxPickPatient(){
   nameEl.readOnly=true; phoneEl.readOnly=true;
   nameEl.style.opacity="0.7"; phoneEl.style.opacity="0.7";
   nameEl.style.pointerEvents="none"; phoneEl.style.pointerEvents="none";
+  if(weightEl&&p.weight)weightEl.value=p.weight;
+  if(idHintEl)idHintEl.textContent="Patient ID: "+(p.patientCode||p.id);
   if(gaEl){
-    var age=calcAge(p.dob);
+    var age=p.dob?calcAge(p.dob):(p.age||null);
     var parts=[];
     if(p.gender)parts.push(p.gender);
-    if(age!==null)parts.push(age+" yrs");
+    if(age!==null&&age!=='')parts.push(age+" yrs");
     gaEl.textContent=parts.length?parts.join(" · "):"Not recorded";
   }
   loadPatientTimeline();
@@ -3934,7 +3983,7 @@ function renderTlSummary(patRow, visits, diagnoses, meds){
   if(!el)return;
   var rxCount=visits.filter(function(v){return v.prescription_id;}).length;
   var latestVisit=visits[0]?(visits[0].visit_date||"—"):"—";
-  var age=calcAge(patRow.date_of_birth);
+  var age=patRow.date_of_birth?calcAge(patRow.date_of_birth):(patRow.age||null);
   el.innerHTML=
     '<div class="tl-summary-top">'+
       '<div class="tl-avatar">'+((patRow.name||"?").charAt(0))+'</div>'+
