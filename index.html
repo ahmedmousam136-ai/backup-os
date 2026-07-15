@@ -686,6 +686,21 @@ main.content{
 .quick-add-btn:active{transform:scale(.97)}
 @media(max-width:479px){.quick-add-btn{width:100%;justify-content:center}}
 
+/* ══ SMART APPOINTMENT — phone-first patient lookup ══ */
+.add-phone-badge{display:none;align-items:center;gap:5px;margin-top:7px;padding:4px 10px;border-radius:6px;font-size:10.5px;font-weight:700;letter-spacing:.02em;width:fit-content;animation:addBadgeIn .18s ease}
+@keyframes addBadgeIn{from{opacity:0;transform:translateY(-2px)}to{opacity:1;transform:translateY(0)}}
+.add-phone-badge.searching{display:inline-flex;background:var(--surface-2);color:var(--text-tertiary)}
+.add-phone-badge.existing{display:inline-flex;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.add-phone-badge.new{display:inline-flex;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.add-existing-card{display:none;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 13px;animation:addBadgeIn .2s ease}
+.add-existing-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.add-existing-av{width:32px;height:32px;border-radius:8px;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',serif;font-size:14px;flex-shrink:0}
+.add-existing-name{font-size:13px;font-weight:700;color:var(--text-primary)}
+.add-existing-id{font-size:10px;color:var(--text-tertiary);font-weight:600;letter-spacing:.02em}
+.add-existing-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.add-existing-item .lbl{font-size:9.5px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+.add-existing-item .val{font-size:12px;color:var(--text-primary);font-weight:600;margin-top:1px}
+
 .mc-flow{display:flex;align-items:center;gap:0;overflow-x:auto;padding:14px 16px;-webkit-overflow-scrolling:touch}
 .mc-flow-step{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:90px}
 .mc-flow-ic{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -1326,7 +1341,7 @@ main.content{
             <p class="ss" data-i18n="dash_subtitle">Clinic overview · Friday, 22 May 2026</p>
             <span style="display:inline-block;margin-top:4px;padding:2px 8px;background:#e53935;color:#fff;font-size:10px;font-weight:700;border-radius:4px;letter-spacing:.5px">BUILD 8</span>
           </div>
-          <button class="add-btn" onclick="openModal('add-modal')">
+          <button class="add-btn" onclick="openAddAppointmentModal()">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             <span data-i18n="new_appointment">New Appointment</span>
           </button>
@@ -1404,13 +1419,9 @@ main.content{
           <div>
             <h1 class="st">Patients &amp; Appointments</h1>
           </div>
-          <button class="add-btn" onclick="openModal('add-modal')">
+          <button class="add-btn" onclick="openAddAppointmentModal()">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             New Appointment
-          </button>
-          <button class="quick-add-btn" onclick="openModal('quick-patient-modal')">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-            Add Patient
           </button>
         </div>
 
@@ -2030,6 +2041,22 @@ main.content{
         <div class="settings-section">
           <div class="ph">
             <div class="pt">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+              Admin Tools
+            </div>
+          </div>
+          <div class="settings-row">
+            <div>
+              <p class="settings-row-lbl">Manually Add Patient</p>
+              <p class="settings-row-sub">For bulk imports or records without an appointment. Normal reception should use New Appointment — it registers patients automatically.</p>
+            </div>
+            <button class="book-link-btn" style="font-size:11px;padding:6px 10px;min-height:32px" onclick="openModal('quick-patient-modal')">Add Patient</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="ph">
+            <div class="pt">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               Compliance &amp; Security
             </div>
@@ -2076,7 +2103,7 @@ main.content{
       </div>
       <span data-i18n="bn_patients">Patients</span>
     </button>
-    <button class="bn-fab" onclick="openModal('add-modal')" aria-label="New appointment">
+    <button class="bn-fab" onclick="openAddAppointmentModal()" aria-label="New appointment">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
     <button class="bn" onclick="navMob('whatsapp',this)" data-t="whatsapp">
@@ -2147,13 +2174,28 @@ main.content{
       </button>
     </div>
     <div class="mb">
-      <div><label class="flbl" data-i18n="patient_name">Patient Name</label><input type="text" class="finput" id="add-name" data-i18n-placeholder="full_name" placeholder="Full name"/></div>
-      <div><label class="flbl" data-i18n="phone_number">Phone Number</label><input type="tel" class="finput" id="add-phone" placeholder="+91 number"/></div>
+      <div>
+        <label class="flbl" data-i18n="mobile_number_field">Mobile Number</label>
+        <div class="prow">
+          <div class="ppfx" id="add-dial">+91</div>
+          <input type="tel" class="finput" id="add-phone" placeholder="Enter mobile number" style="flex:1" inputmode="numeric" autocomplete="tel" oninput="add_onPhoneInput()" autofocus/>
+        </div>
+        <div id="add-phone-badge" class="add-phone-badge"></div>
+      </div>
+
+      <div id="add-existing-summary" class="add-existing-card"></div>
+
+      <div id="add-name-wrap" style="display:none">
+        <label class="flbl" data-i18n="patient_name">Patient Name</label>
+        <input type="text" class="finput" id="add-name" data-i18n-placeholder="full_name" placeholder="Full name"/>
+        <p class="qp-hint" id="add-name-hint"></p>
+      </div>
+
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
         <div><label class="flbl" data-i18n="date">Date</label><input type="date" class="finput" id="add-date"/></div>
         <div><label class="flbl" data-i18n="time">Time</label><input type="time" class="finput" id="add-time"/></div>
       </div>
-      <div><label class="flbl" data-i18n="reason_for_visit">Reason for Visit</label><input type="text" class="finput" id="add-reason" data-i18n-placeholder="chief_complaint" placeholder="Chief complaint or condition"/></div>
+      <div><label class="flbl" data-i18n="reason_for_visit">Chief Complaint</label><input type="text" class="finput" id="add-reason" data-i18n-placeholder="chief_complaint" placeholder="Chief complaint or condition"/></div>
       <button class="msub" onclick="addAppointment()" data-i18n="confirm_appointment">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         Confirm Appointment
@@ -2171,8 +2213,8 @@ main.content{
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
         </div>
         <div>
-          <p class="mtitle">Quick Add Patient</p>
-          <p style="color:var(--text-tertiary);font-size:10px;margin-top:1px">Takes less than 10 seconds</p>
+          <p class="mtitle">Quick Add Patient <span style="font-weight:600;color:var(--text-tertiary);font-size:10px;text-transform:uppercase;letter-spacing:.04em">· Admin</span></p>
+          <p style="color:var(--text-tertiary);font-size:10px;margin-top:1px">For bulk imports & records without an appointment</p>
         </div>
       </div>
       <button class="mclose" onclick="closeModal('quick-patient-modal')">
@@ -2280,10 +2322,10 @@ const T={
     ana_title:"Reports & Analytics",ana_sub:"Last 30 days · Updated just now",
     auto_breakdown:"Automation Breakdown",thirty_days:"30 days",
     health_summary:"Patient Health Summary",current:"Current",
-    wa_modal_title:"Send WhatsApp Message",phone_number:"Phone Number",
+    wa_modal_title:"Send WhatsApp Message",phone_number:"Phone Number",mobile_number_field:"Mobile Number",
     message:"Message",send_wa:"Send via WhatsApp",
     patient_name:"Patient Name",full_name:"Full name",
-    date:"Date",time:"Time",reason_for_visit:"Reason for Visit",
+    date:"Date",time:"Time",reason_for_visit:"Chief Complaint",
     chief_complaint:"Chief complaint or condition",
     confirm_appointment:"Confirm Appointment",
     th_patient:"Patient",th_phone:"Phone",th_last_visit:"Last Visit",
@@ -2336,10 +2378,10 @@ const T={
     ana_title:"রিপোর্ট ও বিশ্লেষণ",ana_sub:"শেষ ৩০ দিন · এইমাত্র আপডেট হয়েছে",
     auto_breakdown:"অটোমেশন বিভাজন",thirty_days:"৩০ দিন",
     health_summary:"রোগীর স্বাস্থ্য সারসংক্ষেপ",current:"বর্তমান",
-    wa_modal_title:"হোয়াটসঅ্যাপ বার্তা পাঠান",phone_number:"ফোন নম্বর",
+    wa_modal_title:"হোয়াটসঅ্যাপ বার্তা পাঠান",phone_number:"ফোন নম্বর",mobile_number_field:"মোবাইল নম্বর",
     message:"বার্তা",send_wa:"হোয়াটসঅ্যাপে পাঠান",
     patient_name:"রোগীর নাম",full_name:"পুরো নাম",
-    date:"তারিখ",time:"সময়",reason_for_visit:"ভিজিটের কারণ",
+    date:"তারিখ",time:"সময়",reason_for_visit:"প্রধান অভিযোগ",
     chief_complaint:"প্রধান অভিযোগ বা অবস্থা",
     confirm_appointment:"অ্যাপয়েন্টমেন্ট নিশ্চিত করুন",
     th_patient:"রোগী",th_phone:"ফোন",th_last_visit:"শেষ ভিজিট",
@@ -2525,7 +2567,7 @@ function renderPats(){
   if(badge)badge.textContent=all.length;
   if(!all.length&&_clinicId){
     /* still loading or genuinely empty */
-    document.getElementById("pat-table").innerHTML='<div class="empty"><div class="empty-ic">👤</div><p class="empty-t">No patients yet</p><p class="empty-s">Use Add Patient to register your first patient.</p></div>';
+    document.getElementById("pat-table").innerHTML='<div class="empty"><div class="empty-ic">👤</div><p class="empty-t">No patients yet</p><p class="empty-s">Click New Appointment — entering a new mobile number registers the patient automatically.</p></div>';
     return;
   }
   if(!pats.length){
@@ -3184,7 +3226,107 @@ function renderAppts(appts){
   }).join('');
 }
 
-/* ══ QUICK ADD PATIENT ══ */
+/* ══════════════════════════════════════════════════════════════
+   SMART NEW APPOINTMENT — phone-first patient lookup.
+   One workflow only: enter a mobile number and AuraScale decides
+   whether this is an existing patient or a new one. No separate
+   "Add Patient" step for reception — Confirm Appointment always
+   creates-or-reuses the patient itself.
+   ══════════════════════════════════════════════════════════════ */
+var _addLookupState={status:null,patientId:null,patient:null};
+var _addPhoneTimer=null;
+
+function openAddAppointmentModal(){
+  add_resetModal();
+  openModal('add-modal');
+}
+
+function add_resetModal(){
+  _addLookupState={status:null,patientId:null,patient:null};
+  var phoneEl=document.getElementById('add-phone'); if(phoneEl)phoneEl.value='';
+  var nameEl=document.getElementById('add-name'); if(nameEl){nameEl.value='';nameEl.readOnly=false;nameEl.style.opacity='1';}
+  var dateEl=document.getElementById('add-date'); if(dateEl)dateEl.value='';
+  var timeEl=document.getElementById('add-time'); if(timeEl)timeEl.value='';
+  var reasonEl=document.getElementById('add-reason'); if(reasonEl)reasonEl.value='';
+  var badge=document.getElementById('add-phone-badge'); if(badge){badge.className='add-phone-badge';badge.innerHTML='';}
+  var existing=document.getElementById('add-existing-summary'); if(existing){existing.style.display='none';existing.innerHTML='';}
+  var nameWrap=document.getElementById('add-name-wrap'); if(nameWrap)nameWrap.style.display='none';
+  var dial=document.getElementById('add-dial'); if(dial&&DB[mkt])dial.textContent=DB[mkt].cur.dial;
+}
+
+function add_onPhoneInput(){
+  clearTimeout(_addPhoneTimer);
+  var val=(document.getElementById('add-phone')||{}).value||'';
+  var digits=val.replace(/\D/g,'');
+  var badge=document.getElementById('add-phone-badge');
+  var existing=document.getElementById('add-existing-summary');
+  var nameWrap=document.getElementById('add-name-wrap');
+  _addLookupState={status:null,patientId:null,patient:null};
+  if(digits.length<7){
+    if(badge){badge.className='add-phone-badge';badge.innerHTML='';}
+    if(existing){existing.style.display='none';existing.innerHTML='';}
+    if(nameWrap)nameWrap.style.display='none';
+    return;
+  }
+  if(badge){badge.className='add-phone-badge searching';badge.innerHTML='Searching…';}
+  _addPhoneTimer=setTimeout(add_lookupPhone,450);
+}
+
+async function add_lookupPhone(){
+  var phoneEl=document.getElementById('add-phone');
+  var val=phoneEl?phoneEl.value.trim():'';
+  if(!val)return;
+  var cid=await _ensureClinicId();
+  if(!cid)return;
+  var dial=DB[mkt].cur.dial;
+  var fullPhone=val.startsWith('+')?val:dial+' '+val;
+  var badge=document.getElementById('add-phone-badge');
+  var nameEl=document.getElementById('add-name');
+  var nameWrap=document.getElementById('add-name-wrap');
+  var nameHint=document.getElementById('add-name-hint');
+  var existing=document.getElementById('add-existing-summary');
+  var lk=await _supa.from('patients').select('*').eq('clinic_id',cid).eq('phone',fullPhone).limit(1);
+  /* guard against a stale response if the receptionist kept typing */
+  if((document.getElementById('add-phone')||{}).value.trim()!==val)return;
+  if(lk.data&&lk.data.length>0){
+    var p=lk.data[0];
+    _addLookupState={status:'existing',patientId:p.id,patient:p};
+    if(badge){badge.className='add-phone-badge existing';badge.innerHTML='🟢 Existing Patient';}
+    if(nameEl){nameEl.value=p.name||'';nameEl.readOnly=true;nameEl.style.opacity='0.7';}
+    if(nameHint)nameHint.textContent='Loaded from patient record';
+    if(nameWrap)nameWrap.style.display='';
+    await add_renderExistingSummary(p,cid);
+  }else{
+    _addLookupState={status:'new',patientId:null,patient:null};
+    if(badge){badge.className='add-phone-badge new';badge.innerHTML='🔵 New Patient';}
+    if(nameEl){nameEl.value='';nameEl.readOnly=false;nameEl.style.opacity='1';}
+    if(nameHint)nameHint.textContent='New patient — enter their name';
+    if(nameWrap)nameWrap.style.display='';
+    if(existing){existing.style.display='none';existing.innerHTML='';}
+  }
+}
+
+async function add_renderExistingSummary(p,cid){
+  var el=document.getElementById('add-existing-summary');
+  if(!el)return;
+  var visitsRes=await _supa.from('visits').select('visit_date').eq('patient_id',p.id).eq('clinic_id',cid).order('created_at',{ascending:false}).limit(1);
+  var lastVisit=(visitsRes.data&&visitsRes.data[0])?(visitsRes.data[0].visit_date||'—'):'No previous visits';
+  el.style.display='';
+  el.innerHTML=
+    '<div class="add-existing-top">'+
+      '<div class="add-existing-av">'+((p.name||'?').charAt(0))+'</div>'+
+      '<div style="min-width:0">'+
+        '<p class="add-existing-name">'+(p.name||'Unknown Patient')+'</p>'+
+        '<p class="add-existing-id">ID '+(p.patient_code||p.id)+'</p>'+
+      '</div>'+
+    '</div>'+
+    '<div class="add-existing-grid">'+
+      '<div class="add-existing-item"><p class="lbl">Last Visit</p><p class="val">'+lastVisit+'</p></div>'+
+      '<div class="add-existing-item"><p class="lbl">Total Visits</p><p class="val">'+(p.visit_count||0)+'</p></div>'+
+    '</div>';
+}
+
+/* ══ QUICK ADD PATIENT (Admin Tools only — not part of the reception flow) ══ */
 function toggleOptional(){
   const wrap=document.getElementById("opt-fields");
   const ic=document.getElementById("opt-toggle-ic");
@@ -3223,29 +3365,34 @@ async function quickAddPatient(){
   showToast("Patient added: "+name.trim());
 }
 
-/* ══ ADD APPOINTMENT FROM DASHBOARD MODAL ══ */
+/* ══ CONFIRM APPOINTMENT — one click, decides create-vs-reuse itself ══ */
 async function addAppointment(){
-  var name=(document.getElementById('add-name')||{}).value||'';
   var phone=(document.getElementById('add-phone')||{}).value||'';
+  var name=(document.getElementById('add-name')||{}).value||'';
   var date=(document.getElementById('add-date')||{}).value||'';
   var time=(document.getElementById('add-time')||{}).value||'';
   var reason=((document.getElementById('add-reason')||{}).value||'').trim()||'General Consultation';
-  if(!name.trim()||!phone.trim()){showToast('Name and phone are required.');return;}
+  if(!phone.trim()){showToast('Enter a mobile number to continue.');return;}
+  if(!name.trim()){showToast('Patient name is required.');return;}
   if(!date||!time){showToast('Date and time are required.');return;}
   var cid=await _ensureClinicId();
   if(!cid){showToast('Not connected — please sign in again.');return;}
   var dial=DB[mkt].cur.dial;
   var fullPhone=phone.trim().startsWith('+')?phone.trim():dial+' '+phone.trim();
   showToast('Saving…');
-  /* find or create patient */
-  var patientId=null;
-  var lk=await _supa.from('patients').select('id').eq('clinic_id',cid).eq('phone',fullPhone).limit(1);
-  if(lk.data&&lk.data.length>0){
-    patientId=lk.data[0].id;
-  }else{
-    var np=await _supa.from('patients').insert({clinic_id:cid,name:name.trim(),phone:fullPhone,status:'Active',visit_count:0}).select('id').single();
-    if(np.error){showToast('Patient error: '+np.error.message);return;}
-    if(np.data)patientId=np.data.id;
+  /* Reuse the patient identified during the live phone lookup. If that
+     hasn't resolved yet for any reason, fall back to a fresh find-or-create
+     so a duplicate patient is never created either way. */
+  var patientId=(_addLookupState.status==='existing')?_addLookupState.patientId:null;
+  if(!patientId){
+    var lk=await _supa.from('patients').select('id').eq('clinic_id',cid).eq('phone',fullPhone).limit(1);
+    if(lk.data&&lk.data.length>0){
+      patientId=lk.data[0].id;
+    }else{
+      var np=await _supa.from('patients').insert({clinic_id:cid,name:name.trim(),phone:fullPhone,status:'Active',visit_count:0}).select('id').single();
+      if(np.error){showToast('Patient error: '+np.error.message);return;}
+      if(np.data)patientId=np.data.id;
+    }
   }
   if(!patientId){showToast('Could not resolve patient.');return;}
   var ins=await _supa.from('appointments').insert({
@@ -3261,11 +3408,7 @@ async function addAppointment(){
   });
   if(ins.error){showToast('Appointment failed: '+ins.error.message);return;}
   closeModal('add-modal');
-  document.getElementById('add-name').value='';
-  document.getElementById('add-phone').value='';
-  document.getElementById('add-date').value='';
-  document.getElementById('add-time').value='';
-  document.getElementById('add-reason').value='';
+  add_resetModal();
   await fetchAppointments();
   await fetchPatients();
   showToast('Appointment saved for '+name.trim());
