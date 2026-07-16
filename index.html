@@ -1775,7 +1775,7 @@ main.content{
       <div>
         <label class="flbl">Medicines <span style="color:var(--red)">*</span></label>
         <div id="rx-meds"></div>
-        <button class="optional-toggle" type="button" onclick="addMedRow()">
+        <button class="optional-toggle" type="button" onclick="rxAddMedRowClicked()">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add medicine
         </button>
@@ -1980,11 +1980,12 @@ main.content{
 
         <div class="tl-quickbar" id="audit-filters">
           <button class="tl-qbtn active" onclick="auditFilter('all',this)" data-i18n="audit_f_all">All</button>
+          <button class="tl-qbtn" onclick="auditFilter('Patient Created',this)" data-i18n="audit_f_pat_new">New Patients</button>
+          <button class="tl-qbtn" onclick="auditFilter('Patient Updated',this)" data-i18n="audit_f_pat">Patient Updates</button>
+          <button class="tl-qbtn" onclick="auditFilter('Appointment Created',this)" data-i18n="audit_f_appt">Appointments</button>
           <button class="tl-qbtn" onclick="auditFilter('Prescription Created',this)" data-i18n="audit_f_rx">Prescriptions</button>
-          <button class="tl-qbtn" onclick="auditFilter('Patient Updated',this)" data-i18n="audit_f_pat">Patients</button>
-          <button class="tl-qbtn" onclick="auditFilter('Diagnosis Updated',this)" data-i18n="audit_f_diag">Diagnosis</button>
-          <button class="tl-qbtn" onclick="auditFilter('Follow-up Modified',this)" data-i18n="audit_f_fu">Follow-ups</button>
-          <button class="tl-qbtn" onclick="auditFilter('Laboratory Report Uploaded',this)" data-i18n="audit_f_lab">Lab Reports</button>
+          <button class="tl-qbtn" onclick="auditFilter('WhatsApp Prescription Sent',this)" data-i18n="audit_f_wa">WhatsApp</button>
+          <button class="tl-qbtn" onclick="auditFilter('Follow-up Reminder Scheduled',this)" data-i18n="audit_f_rem">Reminders</button>
         </div>
 
         <div class="panel">
@@ -2398,7 +2399,7 @@ const T={
     audit_title:"Activity Log",
     audit_sub:"A plain-language record of what happened and when in your clinic account.",
     audit_recent:"Recent Activity",
-    audit_f_all:"All",audit_f_rx:"Prescriptions",audit_f_pat:"Patients",audit_f_diag:"Diagnosis",audit_f_fu:"Follow-ups",audit_f_lab:"Lab Reports",
+    audit_f_all:"All",audit_f_pat_new:"New Patients",audit_f_pat:"Patient Updates",audit_f_appt:"Appointments",audit_f_rx:"Prescriptions",audit_f_wa:"WhatsApp",audit_f_rem:"Reminders",
     audit_footnote:"Full technical detail — device fingerprints, before/after values, IP address — will be available to clinic admins in the upcoming Admin Console. These entries cannot be edited or deleted by anyone, including doctors and Admin staff — they are permanent for compliance.",
     audit_empty_t:"No activity yet",audit_empty_s:"Actions like new prescriptions and patient updates will appear here automatically.",
   },
@@ -2461,7 +2462,7 @@ const T={
     audit_title:"অ্যাক্টিভিটি লগ",
     audit_sub:"আপনার ক্লিনিক অ্যাকাউন্টে কী ঘটেছে এবং কখন, তার সহজ ভাষায় রেকর্ড।",
     audit_recent:"সাম্প্রতিক কার্যক্রম",
-    audit_f_all:"সব",audit_f_rx:"প্রেসক্রিপশন",audit_f_pat:"রোগী",audit_f_diag:"রোগ নির্ণয়",audit_f_fu:"ফলো-আপ",audit_f_lab:"ল্যাব রিপোর্ট",
+    audit_f_all:"সব",audit_f_pat_new:"নতুন রোগী",audit_f_pat:"রোগীর তথ্য",audit_f_appt:"অ্যাপয়েন্টমেন্ট",audit_f_rx:"প্রেসক্রিপশন",audit_f_wa:"হোয়াটসঅ্যাপ",audit_f_rem:"রিমাইন্ডার",
     audit_footnote:"প্রযুক্তিগত বিস্তারিত — ডিভাইস তথ্য, পরিবর্তনের আগে/পরের মান, আইপি ঠিকানা — শীঘ্রই আসা অ্যাডমিন কনসোলে ক্লিনিক অ্যাডমিনদের জন্য উপলব্ধ হবে। এই এন্ট্রিগুলো ডাক্তার বা অ্যাডমিন কেউই সম্পাদনা বা মুছতে পারবেন না — এগুলো নিয়মমাফিক স্থায়ী থাকে।",
     audit_empty_t:"এখনো কোনো কার্যক্রম নেই",audit_empty_s:"নতুন প্রেসক্রিপশন ও রোগীর তথ্য আপডেট হলে তা এখানে স্বয়ংক্রিয়ভাবে দেখা যাবে।",
   }
@@ -2540,14 +2541,19 @@ function chipQ(s){
   return`<span class="chip ${cls[s]||'ch-wait'}" style="font-size:9.5px">${s||'Waiting'}</span>`;
 }
 var APPT_STATUSES=['Waiting','Checked In','In Consultation','Completed','Cancelled'];
-function statusSelect(id,current,cb){
+function _escAttr(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function statusSelect(id,current,cb,pname){
   var opts=APPT_STATUSES.map(function(s){return'<option value="'+s+'"'+(s===current?' selected':'')+'>'+s+'</option>';}).join('');
-  return'<select class="status-sel" onchange="'+cb+'(\''+id+'\',this.value)" onclick="event.stopPropagation()" title="Update status">'+opts+'</select>';
+  return'<select class="status-sel" data-pname="'+_escAttr(pname||'')+'" onchange="'+cb+'(\''+id+'\',this.value,this)" onclick="event.stopPropagation()" title="Update status">'+opts+'</select>';
 }
-async function updateAppointmentStatus(id,status){
+async function updateAppointmentStatus(id,status,selEl){
   if(!id){showToast('Cannot update: missing appointment ID');return;}
   var r=await _supa.from('appointments').update({status:status}).eq('id',id);
   if(r.error){showToast('Update failed: '+r.error.message);return;}
+  if(status==='Cancelled'){
+    var pname=(selEl&&selEl.dataset)?selEl.dataset.pname:'';
+    _auraLogAudit('Appointment Cancelled',{entityType:'appointment',entityId:id,patientName:pname||null}); /* audit trail — silent, never blocks the status change */
+  }
   await fetchAppointments();
 }
 function chipP(s){
@@ -2589,7 +2595,7 @@ function renderDash(){
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:7px">
-        ${statusSelect(p.id,p.status,'updateAppointmentStatus')}
+        ${statusSelect(p.id,p.status,'updateAppointmentStatus',p.name)}
         <button class="wa-icon-btn" onclick='openWA(${JSON.stringify(p)})' title="${t('send_reminder')}">${WA_SVG}</button>
       </div>
     </div>`).join("");
@@ -3272,7 +3278,7 @@ function renderAppts(appts){
       +'<div style="font-size:12px;font-weight:600;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(a.patient_name||'—')+'</div>'
       +'<div style="font-size:11px;color:var(--text-secondary)">'+(a.appointment_date||'—')+'</div>'
       +'<div style="font-size:11px;color:var(--text-secondary)">'+(a.appointment_time||'—')+'</div>'
-      +'<div style="display:flex;align-items:center">'+statusSelect(aid,s,'updateAppointmentStatus')+'</div>'
+      +'<div style="display:flex;align-items:center">'+statusSelect(aid,s,'updateAppointmentStatus',a.patient_name)+'</div>'
       +'<div style="font-size:11px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(a.reason||'—')+'</div>'
       +'</div>';
   }).join('');
@@ -3527,6 +3533,7 @@ async function addAppointment(){
      hasn't resolved yet for any reason, fall back to a fresh find-or-create
      so a duplicate patient is never created either way. */
   var patientId=(_addLookupState.status==='existing')?_addLookupState.patientId:null;
+  var isNewPatient=false;
   if(!patientId){
     var lk=await findPatientByPhone(cid, fullPhone, phone.trim());
     if(lk){
@@ -3539,10 +3546,13 @@ async function addAppointment(){
       patRow.first_visit_date=date;
       var np=await _supa.from('patients').insert(patRow).select('id').single();
       if(np.error){showToast('Patient error: '+np.error.message);return;}
-      if(np.data)patientId=np.data.id;
+      if(np.data){patientId=np.data.id;isNewPatient=true;}
     }
   }
   if(!patientId){showToast('Could not resolve patient.');return;}
+  if(isNewPatient){
+    _auraLogAudit('Patient Created', {entityType:'patient',entityId:patientId,patientName:name.trim()}); /* audit trail — silent, never blocks the appointment flow */
+  }
 
   /* Keep the patient's permanent profile current. Only patch fields that
      have a value so we never blank out data already on file. Chief
@@ -3555,7 +3565,9 @@ async function addAppointment(){
   if(weight)patch.weight=parseFloat(weight);
   if(Object.keys(patch).length){
     await _supa.from('patients').update(patch).eq('id',patientId);
-    _auraLogAudit('Patient Updated', {entityType:'patient',entityId:patientId,patientName:name.trim()}); /* audit trail — silent, never blocks the appointment flow */
+    if(!isNewPatient){
+      _auraLogAudit('Patient Updated', {entityType:'patient',entityId:patientId,patientName:name.trim()}); /* audit trail — silent, never blocks the appointment flow */
+    }
   }
 
   var ins=await _supa.from('appointments').insert({
@@ -3570,6 +3582,7 @@ async function addAppointment(){
     source:'dashboard'
   }).select('id').single();
   if(ins.error){showToast('Appointment failed: '+ins.error.message);return;}
+  _auraLogAudit('Appointment Created', {entityType:'appointment',entityId:(ins.data&&ins.data.id)||null,patientName:name.trim()}); /* audit trail — silent, never blocks the appointment flow */
 
   /* Visit-level record so Chief Complaint shows against THIS visit only
      in the Patient Timeline — never on the permanent patient profile. */
@@ -3598,6 +3611,8 @@ function showToast(msg){
 function sendTemplate(type){
   const msgs={"follow-up":"14-day follow-up reminder sent to 3 patients due for a visit!","medication":"Medication reminder sent to selected patients.","review":"Review request sent to today's 6 completed patients!"};
   showToast(msgs[type]||"Message sent!");
+  if(type==='medication')_auraLogAudit('Medicine Reminder Scheduled', {entityType:'reminder_template'}); /* audit trail — silent, never blocks the reminder flow */
+  else if(type==='follow-up')_auraLogAudit('Follow-up Reminder Scheduled', {entityType:'reminder_template'}); /* audit trail — silent, never blocks the reminder flow */
 }/* ══════════════════════════════════════════════════════════════
    AURA DROPDOWN — replaces the native <input list> datalist popover
    for Medicine / Dose / Days. Fixes the "dropdown traps focus and
@@ -3721,9 +3736,25 @@ function addMedRow(name,dose,dur,timing){
     '<input type="text" class="finput rx-m-dose" placeholder="Dose (1-0-1)" value="'+(dose||"")+'"/>'+
     '<input type="text" class="finput rx-m-dur" placeholder="Days" value="'+(dur||"")+'"/>'+
     '<select class="finput rx-m-timing" style="color:var(--text-primary)" title="Patient instruction shown on the PDF">'+timingOpts+'</select>'+
-    '<button class="mclose" type="button" title="Remove" onclick="this.parentNode.remove()">'+
+    '<button class="mclose" type="button" title="Remove" onclick="rxRemoveMedRow(this)">'+
       '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
   wrap.appendChild(row);
+}
+/* Logging wrappers — only fire on an explicit doctor click of the
+   "+ Add medicine" / row-remove buttons in the prescription form, not
+   on the single empty row that's auto-added on page load / form reset. */
+function rxAddMedRowClicked(){
+  addMedRow();
+  var nameEl=document.getElementById('rx-name');
+  _auraLogAudit('Medicine Added', {entityType:'prescription_draft',patientName:(nameEl&&nameEl.value)||null});
+}
+function rxRemoveMedRow(btn){
+  var row=btn.parentNode;
+  var medName='';
+  if(row){var mn=row.querySelector('.rx-m-name');if(mn)medName=mn.value||'';}
+  var nameEl=document.getElementById('rx-name');
+  if(row&&row.parentNode)row.parentNode.removeChild(row);
+  _auraLogAudit('Medicine Removed', {entityType:'prescription_draft',patientName:(nameEl&&nameEl.value)||null,details:{medicine:medName||null}});
 }
 function readMeds(){
   var meds=[];
@@ -3945,6 +3976,7 @@ async function generatePrescription(){
   var blob;
   try{ blob=buildRxPdf(data); }
   catch(e){ rxError("PDF generation failed: "+(e.message||e)); btn.disabled=false; btn.textContent="Generate Prescription"; return; }
+  _auraLogAudit('PDF Generated', {entityType:'prescription_pdf',patientName:name}); /* audit trail — silent, never blocks the prescription flow */
   btn.textContent="Uploading…";
   var st=await uploadRxPdf(cid, blob);
   if(st.error){ rxError("Upload failed: "+st.error); btn.disabled=false; btn.textContent="Generate Prescription"; return; }
@@ -3961,6 +3993,7 @@ if(ins.error){ rxError("Save failed: "+ins.error.message); btn.disabled=false; b
   var wa=await sendRxWhatsApp({wa_e164:v.e164, patient_name:name, doctor_name:d.name, clinic_name:d.clinic, pdf_url:st.url});
   if(wa.ok){
     await setRxStatus(rxId,"Sent");
+    _auraLogAudit('WhatsApp Prescription Sent', {entityType:'prescription',entityId:rxId,patientName:name}); /* audit trail — silent, never blocks the prescription flow */
     showToast("Prescription sent to "+name+"'s WhatsApp");
   }else if(wa.error==="WA_NOT_CONFIGURED"){
     await setRxStatus(rxId,"Failed","WhatsApp API not configured — sent manually");
@@ -3989,7 +4022,7 @@ async function retryRxWA(id){
   await _supa.from("prescriptions").update({pdf_url:url}).eq("id",id);
   var e164=(row.patient_phone||"").replace(/[^\d]/g,"");
   var wa=await sendRxWhatsApp({wa_e164:e164,patient_name:row.patient_name,doctor_name:row.doctor_name,clinic_name:DB[mkt].doc.clinic,pdf_url:url});
-  if(wa.ok){ await setRxStatus(id,"Sent"); showToast("Delivered"); }
+  if(wa.ok){ await setRxStatus(id,"Sent"); _auraLogAudit('WhatsApp Prescription Sent', {entityType:'prescription',entityId:id,patientName:row.patient_name}); showToast("Delivered"); }
   else if(wa.error==="WA_NOT_CONFIGURED"){ openRxManualWA(e164,row.patient_name,row.doctor_name,DB[mkt].doc.clinic,url); showToast("WhatsApp opened for manual send."); }
   else{ await setRxStatus(id,"Failed",wa.error); showToast("Delivery failed again: "+wa.error); }
   fetchPrescriptions();
@@ -4594,83 +4627,92 @@ async function stgMergeGroup(gi){
    AUDIT TRAIL — silent, immutable, additive background layer.
 
    Requires one new table (created by a database migration, NOT by
-   this file — see supabase/2026_07_16_audit_trail.sql, SQL text
-   included at the bottom of this comment for convenience):
+   this file — see supabase/2026_07_16_audit_trail.sql):
 
      audit_logs(id, clinic_id, user_id, user_name, action_type,
                 entity_type, entity_id, patient_name,
                 device_type, device_label, details, occurred_at)
 
    IMMUTABILITY: the migration enables Row Level Security and grants
-   only INSERT + SELECT policies to authenticated clinic users —
-   there is no UPDATE or DELETE policy for any non-service role, so
-   once a row is written, nobody in the app (doctor, receptionist,
-   or a future Admin) can alter or remove it. occurred_at defaults
-   to the database's own now(), so the timestamp is never something
-   the browser can be told to fake.
+   only INSERT + SELECT policies to authenticated clinic users — no
+   UPDATE or DELETE policy exists for any non-service role, so once a
+   row is written nobody in the app (doctor, receptionist, or a future
+   Admin) can alter or remove it. occurred_at defaults to the
+   database's own now(), never something the browser can fake.
 
-   DOCTOR-FACING vs ADMIN-FACING: the Activity Log screen below only
-   ever renders action_type, patient_name, occurred_at and a plain
-   device label ("Mobile · Chrome") — never entity_id, user_id, or
-   the raw `details` JSON. Admins get a technical view once the
-   Admin Console ships; for now, everyone with clinic access sees
-   the same simplified feed.
+   DOCTOR-FACING vs ADMIN-FACING: the Activity Log screen only ever
+   renders an icon, a plain-language label, patient name, date/time,
+   and a device label ("Mobile · Chrome") — never entity_id, user_id,
+   or the raw `details` JSON. A future Admin Console can read the full
+   row (AUDIT_ADMIN_MODE flag below is reserved for that).
 
-   WHAT LOGS TODAY vs WHAT'S WIRED FOR LATER:
-   - Prescription Created  → fires for real, from generatePrescription().
-   - Patient Updated       → fires for real, from addAppointment() and
-                              from the duplicate-merge tool in Settings.
-   - Prescription Edited / Prescription Deleted, Diagnosis Updated,
-     Follow-up Modified, Laboratory Report Uploaded → AuraScale doesn't
-     have edit/delete-prescription, diagnosis-editing, follow-up-editing,
-     or lab-upload screens yet, so there's nothing in the current app
-     that could trigger these. The audit* functions below are ready and
-     tested — call them from those screens the moment they're built and
-     entries will start appearing immediately, no further wiring needed.
-     This mirrors the same "readiness layer" approach already used for
-     ABHA elsewhere in this file.
+   ────────────────────────────────────────────────────────────────
+   WHAT'S ACTUALLY LIVE RIGHT NOW (fires from a real button/flow, and
+   is the *only* thing AUDIT_VISIBLE_EVENTS lets the Activity Log
+   screen display):
+     • Patient Created              — new patient created via New Appointment
+     • Patient Updated              — profile edited via New Appointment,
+                                       or via the duplicate-merge tool
+     • Appointment Created          — New Appointment → Confirm
+     • Appointment Cancelled        — status dropdown set to "Cancelled"
+     • Prescription Created         — Generate Prescription
+     • Medicine Added               — "+ Add medicine" clicked in the Rx form
+     • Medicine Removed             — the ✕ button on a medicine row
+     • PDF Generated                — prescription PDF built successfully
+     • WhatsApp Prescription Sent   — prescription WhatsApp delivery succeeds
+     • Medicine Reminder Scheduled  — "Send Now" on the Medication template
+     • Follow-up Reminder Scheduled — "Send to Due Patients" on the
+                                       14-Day Follow-Up template
+
+   NOT YET LIVE — no screen/button exists in AuraScale today to trigger
+   these, so they are excluded from AUDIT_VISIBLE_EVENTS and will never
+   appear in the Activity Log until the feature is actually built:
+     • Appointment Rescheduled  (no reschedule-date/time UI exists yet —
+                                  only status can be changed today)
+     • Prescription Edited      (no edit-existing-prescription screen)
+     • Prescription Deleted     (no delete-prescription screen)
+     • SMS Reminder Sent        (AuraScale only sends via WhatsApp today;
+                                  there is no SMS channel/integration)
+     • Diagnosis Updated
+     • Laboratory Report Uploaded
+     • Laboratory Report Viewed
+     • Clinical Notes Updated
+     • Follow-up Modified
+     • Vaccination Added
+     • Allergy Updated
+     • Chronic Disease Updated
+
+   Every one of the "not yet live" action types is still accepted by
+   the database (see the CHECK constraint in the migration) and has a
+   ready-to-call audit*() function below — the moment any of those
+   screens gets built, call the matching function and (1) it will
+   start logging immediately and (2) add its name to
+   AUDIT_VISIBLE_EVENTS so the Activity Log starts showing it. Until
+   then it stays hidden by design, not by accident.
 
    Nothing in this module changes any existing button, form, or data
    flow — it only ever adds a fire-and-forget logging call alongside
-   actions that already happen, exactly like the existing
-   `_auraLogVisit(...)` background call it sits next to.
-   ══════════════════════════════════════════════════════════════
-
-   -- supabase/2026_07_16_audit_trail.sql ------------------------
-   -- create table if not exists audit_logs (
-   --   id uuid primary key default gen_random_uuid(),
-   --   clinic_id uuid not null references clinics(id) on delete cascade,
-   --   user_id uuid,
-   --   user_name text,
-   --   action_type text not null check (action_type in (
-   --     'Prescription Created','Prescription Edited','Prescription Deleted',
-   --     'Diagnosis Updated','Patient Updated',
-   --     'Laboratory Report Uploaded','Follow-up Modified'
-   --   )),
-   --   entity_type text,
-   --   entity_id uuid,
-   --   patient_name text,
-   --   device_type text,
-   --   device_label text,
-   --   details jsonb,
-   --   occurred_at timestamptz not null default now()
-   -- );
-   -- create index if not exists audit_logs_clinic_idx
-   --   on audit_logs (clinic_id, occurred_at desc);
-   -- alter table audit_logs enable row level security;
-   -- create policy audit_logs_insert on audit_logs for insert to authenticated
-   --   with check (clinic_id in (select clinic_id from profiles where id = auth.uid()));
-   -- create policy audit_logs_select on audit_logs for select to authenticated
-   --   using (clinic_id in (select clinic_id from profiles where id = auth.uid()));
-   -- -- Deliberately no update/delete policy for any non-service role — this,
-   -- -- combined with RLS being enabled, is what makes the table append-only.
-   ------------------------------------------------------------- */
+   actions that already happen, the same way the existing
+   `_auraLogVisit(...)` background call already works.
+   ══════════════════════════════════════════════════════════════ */
 
 /* Toggle only ever read by the (future) Admin Console screen — has
-   no effect on the doctor-facing Activity Log, which is always the
-   simplified view. Left here so the Admin Console has a single flag
-   to flip on when it ships. */
+   no effect on the doctor-facing Activity Log, which always shows
+   the simplified view regardless of this flag. */
 var AUDIT_ADMIN_MODE = false;
+
+/* The allowlist that keeps the Activity Log limited to currently
+   implemented features. Even if a row for a "not yet live" action
+   type is ever written (e.g. by a future dev build or a manual
+   insert), it will not render in the Activity Log unless its name
+   is added here — this is the actual enforcement point. */
+var AUDIT_VISIBLE_EVENTS=[
+  'Patient Created','Patient Updated',
+  'Appointment Created','Appointment Cancelled',
+  'Prescription Created','Medicine Added','Medicine Removed','PDF Generated',
+  'WhatsApp Prescription Sent',
+  'Medicine Reminder Scheduled','Follow-up Reminder Scheduled'
+];
 
 function _auraDeviceInfo(){
   var ua=navigator.userAgent||'';
@@ -4715,34 +4757,72 @@ async function _auraLogAudit(actionType, opts){
   }catch(e){ /* silent — the audit trail must never surface an error to the doctor or interrupt the action it's logging */ }
 }
 
-/* ── Readiness stubs — not called anywhere yet (see note above),
-   ready to wire in the moment the corresponding screen exists ── */
+/* ── Readiness stubs — none of these are called anywhere in the app
+   yet (see "NOT YET LIVE" above). Ready to wire in, and to add to
+   AUDIT_VISIBLE_EVENTS, the moment each corresponding screen ships. ── */
+async function auditAppointmentRescheduled(apptId, patientName, newDate, newTime){
+  return _auraLogAudit('Appointment Rescheduled', {entityType:'appointment',entityId:apptId,patientName:patientName,details:{date:newDate||null,time:newTime||null}});
+}
 async function auditPrescriptionEdited(rxId, patientName, changes){
   return _auraLogAudit('Prescription Edited', {entityType:'prescription',entityId:rxId,patientName:patientName,details:changes||null});
 }
 async function auditPrescriptionDeleted(rxId, patientName){
   return _auraLogAudit('Prescription Deleted', {entityType:'prescription',entityId:rxId,patientName:patientName});
 }
+async function auditSmsReminderSent(patientId, patientName, message){
+  return _auraLogAudit('SMS Reminder Sent', {entityType:'patient',entityId:patientId,patientName:patientName,details:{message:message||null}});
+}
 async function auditDiagnosisUpdated(patientId, patientName, diagnosis){
   return _auraLogAudit('Diagnosis Updated', {entityType:'patient',entityId:patientId,patientName:patientName,details:{diagnosis:diagnosis}});
+}
+async function auditLabReportUploaded(patientId, patientName, fileName){
+  return _auraLogAudit('Laboratory Report Uploaded', {entityType:'lab_report',entityId:patientId,patientName:patientName,details:{file:fileName||null}});
+}
+async function auditLabReportViewed(patientId, patientName, fileName){
+  return _auraLogAudit('Laboratory Report Viewed', {entityType:'lab_report',entityId:patientId,patientName:patientName,details:{file:fileName||null}});
+}
+async function auditClinicalNotesUpdated(patientId, patientName){
+  return _auraLogAudit('Clinical Notes Updated', {entityType:'patient',entityId:patientId,patientName:patientName});
 }
 async function auditFollowupModified(followupId, patientName, status){
   return _auraLogAudit('Follow-up Modified', {entityType:'followup',entityId:followupId,patientName:patientName,details:{status:status}});
 }
-async function auditLabReportUploaded(patientId, patientName, fileName){
-  return _auraLogAudit('Laboratory Report Uploaded', {entityType:'lab_report',entityId:patientId,patientName:patientName,details:{file:fileName||null}});
+async function auditVaccinationAdded(patientId, patientName, vaccine){
+  return _auraLogAudit('Vaccination Added', {entityType:'patient',entityId:patientId,patientName:patientName,details:{vaccine:vaccine||null}});
+}
+async function auditAllergyUpdated(patientId, patientName, allergy){
+  return _auraLogAudit('Allergy Updated', {entityType:'patient',entityId:patientId,patientName:patientName,details:{allergy:allergy||null}});
+}
+async function auditChronicDiseaseUpdated(patientId, patientName, condition){
+  return _auraLogAudit('Chronic Disease Updated', {entityType:'patient',entityId:patientId,patientName:patientName,details:{condition:condition||null}});
 }
 
 /* ── Doctor-facing feed — simplified only, per requirement.
    Never renders entity_id, user_id, or the raw `details` object. ── */
 var _auditFriendlyMap={
+  'Patient Created':{icon:'🆕',en:'Patient created',bn:'নতুন রোগী তৈরি হয়েছে'},
+  'Patient Updated':{icon:'👤',en:'Patient record updated',bn:'রোগীর তথ্য আপডেট হয়েছে'},
+  'Appointment Created':{icon:'📅',en:'Appointment created',bn:'অ্যাপয়েন্টমেন্ট তৈরি হয়েছে'},
+  'Appointment Rescheduled':{icon:'🔁',en:'Appointment rescheduled',bn:'অ্যাপয়েন্টমেন্ট পুনঃনির্ধারিত হয়েছে'},
+  'Appointment Cancelled':{icon:'❌',en:'Appointment cancelled',bn:'অ্যাপয়েন্টমেন্ট বাতিল হয়েছে'},
   'Prescription Created':{icon:'📝',en:'Prescription created',bn:'প্রেসক্রিপশন তৈরি হয়েছে'},
   'Prescription Edited':{icon:'✏️',en:'Prescription edited',bn:'প্রেসক্রিপশন সম্পাদিত হয়েছে'},
   'Prescription Deleted':{icon:'🗑️',en:'Prescription deleted',bn:'প্রেসক্রিপশন মুছে ফেলা হয়েছে'},
+  'Medicine Added':{icon:'💊',en:'Medicine added',bn:'ওষুধ যোগ হয়েছে'},
+  'Medicine Removed':{icon:'➖',en:'Medicine removed',bn:'ওষুধ সরানো হয়েছে'},
+  'PDF Generated':{icon:'📄',en:'PDF generated',bn:'পিডিএফ তৈরি হয়েছে'},
+  'WhatsApp Prescription Sent':{icon:'✅',en:'Prescription sent via WhatsApp',bn:'হোয়াটসঅ্যাপে প্রেসক্রিপশন পাঠানো হয়েছে'},
+  'SMS Reminder Sent':{icon:'💬',en:'SMS reminder sent',bn:'এসএমএস রিমাইন্ডার পাঠানো হয়েছে'},
+  'Medicine Reminder Scheduled':{icon:'⏰',en:'Medicine reminder scheduled',bn:'ওষুধ রিমাইন্ডার নির্ধারিত হয়েছে'},
+  'Follow-up Reminder Scheduled':{icon:'🔔',en:'Follow-up reminder scheduled',bn:'ফলো-আপ রিমাইন্ডার নির্ধারিত হয়েছে'},
   'Diagnosis Updated':{icon:'🩺',en:'Diagnosis updated',bn:'রোগ নির্ণয় আপডেট হয়েছে'},
-  'Patient Updated':{icon:'👤',en:'Patient record updated',bn:'রোগীর তথ্য আপডেট হয়েছে'},
   'Laboratory Report Uploaded':{icon:'🧪',en:'Lab report uploaded',bn:'ল্যাব রিপোর্ট আপলোড হয়েছে'},
-  'Follow-up Modified':{icon:'🔔',en:'Follow-up updated',bn:'ফলো-আপ আপডেট হয়েছে'}
+  'Laboratory Report Viewed':{icon:'👁️',en:'Lab report viewed',bn:'ল্যাব রিপোর্ট দেখা হয়েছে'},
+  'Clinical Notes Updated':{icon:'📋',en:'Clinical notes updated',bn:'ক্লিনিক্যাল নোট আপডেট হয়েছে'},
+  'Follow-up Modified':{icon:'🔔',en:'Follow-up updated',bn:'ফলো-আপ আপডেট হয়েছে'},
+  'Vaccination Added':{icon:'💉',en:'Vaccination added',bn:'টিকা যোগ হয়েছে'},
+  'Allergy Updated':{icon:'⚠️',en:'Allergy updated',bn:'অ্যালার্জি আপডেট হয়েছে'},
+  'Chronic Disease Updated':{icon:'🫀',en:'Chronic condition updated',bn:'দীর্ঘস্থায়ী রোগ আপডেট হয়েছে'}
 };
 function _auditFriendly(actionType){
   var m=_auditFriendlyMap[actionType];
@@ -4764,7 +4844,10 @@ async function fetchAuditLogs(filter){
   var el=document.getElementById('audit-list');
   var cnt=document.getElementById('audit-count');
   if(!el)return;
-  var q=_supa.from('audit_logs').select('action_type,patient_name,device_label,occurred_at').eq('clinic_id',_clinicId).order('occurred_at',{ascending:false}).limit(100);
+  /* .in(...AUDIT_VISIBLE_EVENTS) is the enforcement point: only
+     currently-implemented event types can ever be displayed, no
+     matter what filter is chosen or what rows exist in the table. */
+  var q=_supa.from('audit_logs').select('action_type,patient_name,device_label,occurred_at').eq('clinic_id',_clinicId).in('action_type',AUDIT_VISIBLE_EVENTS).order('occurred_at',{ascending:false}).limit(100);
   if(filter&&filter!=='all')q=q.eq('action_type',filter);
   var res=await q;
   if(res.error){
