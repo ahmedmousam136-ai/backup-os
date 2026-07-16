@@ -4931,6 +4931,119 @@ async function fetchAuditLogs(groupKey){
     if(id==='audit')fetchAuditLogs(_auditCurrentFilter);
   };
 })();
+
+/* ══════════════════════════════════════════════════════════════
+   ENTERPRISE SECURITY ARCHITECTURE — roles, permissions, sessions.
+
+   Requires supabase/2026_07_16_rbac_security.sql to be applied
+   (adds profiles.role + role-aware RLS + a user_sessions table).
+   That migration is what actually enforces access — every check
+   here on the client is a friendly, optional pre-check so a
+   restricted user sees a normal toast instead of a raw database
+   error. Removing this whole block would not create a security
+   hole: RLS in the database is the real boundary.
+
+   BACKWARD COMPATIBILITY: every existing AuraScale account defaults
+   to the 'admin' role, which passes every permission check below.
+   Nothing about the current UI, current buttons, or current workflow
+   changes for today's users — this only starts mattering once a
+   Doctor or Receptionist-role login is created (see the migration's
+   final comment for how to do that today, ahead of a future in-app
+   "Invite Staff" screen).
+   ══════════════════════════════════════════════════════════════ */
+
+var AURA_ROLE_PERMISSIONS={
+  admin:        ['view_patients','register_patients','schedule_appointments','create_prescriptions','view_timeline'],
+  doctor:       ['view_patients','create_prescriptions','view_timeline'],
+  receptionist: ['register_patients','schedule_appointments']
+};
+
+var _auraCurrentRole='admin'; /* safe default until the real role loads */
+
+function auraHasPermission(action){
+  var perms=AURA_ROLE_PERMISSIONS[_auraCurrentRole]||[];
+  return perms.indexOf(action)!==-1;
+}
+
+/* Friendly, non-blocking gate for a write action. Returns true/false
+   and shows a toast on denial — callers just do:
+     if(!auraCheckPermission('create_prescriptions'))return;
+   at the top of the function, one line, no UI change. */
+function auraCheckPermission(action){
+  if(auraHasPermission(action))return true;
+  showToast("Your account role (" + _auraCurrentRole + ") doesn't have permission for this action.");
+  return false;
+}
+
+async function _auraLoadRole(uid){
+  try{
+    var r=await _supa.from('profiles').select('role').eq('id',uid).single();
+    if(r.data&&r.data.role)_auraCurrentRole=r.data.role;
+  }catch(e){ /* keep the safe 'admin' default if this can't be read yet (e.g. migration not applied) */ }
+}
+
+/* Lightweight session record — one row per login, fire-and-forget,
+   never blocks sign-in. Foundation for a future Admin "Active
+   Sessions" screen; safe no-op if the table doesn't exist yet. */
+async function _auraLogSession(){
+  try{
+    if(!_clinicId)return;
+    var sr=await _supa.auth.getSession();
+    var sess=sr&&sr.data?sr.data.session:null;
+    if(!sess||!sess.user)return;
+    var dev=_auraDeviceInfo();
+    await _supa.from('user_sessions').insert({
+      clinic_id:_clinicId,
+      user_id:sess.user.id,
+      role:_auraCurrentRole,
+      device_label:dev.label
+    });
+  }catch(e){ /* silent — session logging must never block or interrupt login */ }
+}
+
+/* Wrap _loadClinicAndGo non-invasively (same technique used
+   elsewhere in this file) to load the role and record the session
+   right after clinic data loads, without touching a single line of
+   the original login flow. */
+(function wrapLoadClinicForSecurity(){
+  var _oldLoadClinicAndGo=_loadClinicAndGo;
+  _loadClinicAndGo=async function(user){
+    await _oldLoadClinicAndGo(user);
+    await _auraLoadRole(user.id);
+    _auraLogSession();
+  };
+})();
+
+/* Friendly pre-checks on the write actions the spec calls out.
+   Wrapped non-invasively so the original functions — and everything
+   they already do — are completely untouched; a denied check simply
+   returns before any of the original logic (and therefore any
+   database write) runs. */
+(function wrapWritesForPermissions(){
+  var _oldAddAppointment=addAppointment;
+  addAppointment=async function(){
+    if(!auraCheckPermission('schedule_appointments'))return;
+    return _oldAddAppointment.apply(this,arguments);
+  };
+
+  var _oldGeneratePrescription=generatePrescription;
+  generatePrescription=async function(){
+    if(!auraCheckPermission('create_prescriptions'))return;
+    return _oldGeneratePrescription.apply(this,arguments);
+  };
+
+  var _oldUpdateAppointmentStatus=updateAppointmentStatus;
+  updateAppointmentStatus=async function(id,status,selEl){
+    if(!auraCheckPermission('schedule_appointments'))return;
+    return _oldUpdateAppointmentStatus.apply(this,arguments);
+  };
+
+  var _oldConfirmBooking=confirmBooking;
+  confirmBooking=async function(){
+    if(!auraCheckPermission('schedule_appointments'))return;
+    return _oldConfirmBooking.apply(this,arguments);
+  };
+})();
 </script>
 </body>
 </html>
