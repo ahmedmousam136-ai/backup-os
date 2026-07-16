@@ -1980,12 +1980,12 @@ main.content{
 
         <div class="tl-quickbar" id="audit-filters">
           <button class="tl-qbtn active" onclick="auditFilter('all',this)" data-i18n="audit_f_all">All</button>
-          <button class="tl-qbtn" onclick="auditFilter('Patient Created',this)" data-i18n="audit_f_pat_new">New Patients</button>
-          <button class="tl-qbtn" onclick="auditFilter('Patient Updated',this)" data-i18n="audit_f_pat">Patient Updates</button>
-          <button class="tl-qbtn" onclick="auditFilter('Appointment Created',this)" data-i18n="audit_f_appt">Appointments</button>
-          <button class="tl-qbtn" onclick="auditFilter('Prescription Created',this)" data-i18n="audit_f_rx">Prescriptions</button>
-          <button class="tl-qbtn" onclick="auditFilter('WhatsApp Prescription Sent',this)" data-i18n="audit_f_wa">WhatsApp</button>
-          <button class="tl-qbtn" onclick="auditFilter('Follow-up Reminder Scheduled',this)" data-i18n="audit_f_rem">Reminders</button>
+          <button class="tl-qbtn" onclick="auditFilter('new_patients',this)" data-i18n="audit_f_pat_new">New Patients</button>
+          <button class="tl-qbtn" onclick="auditFilter('patient_updates',this)" data-i18n="audit_f_pat">Patient Updates</button>
+          <button class="tl-qbtn" onclick="auditFilter('appointments',this)" data-i18n="audit_f_appt">Appointments</button>
+          <button class="tl-qbtn" onclick="auditFilter('prescriptions',this)" data-i18n="audit_f_rx">Prescriptions</button>
+          <button class="tl-qbtn" onclick="auditFilter('whatsapp',this)" data-i18n="audit_f_wa">WhatsApp</button>
+          <button class="tl-qbtn" onclick="auditFilter('reminders',this)" data-i18n="audit_f_rem">Reminders</button>
         </div>
 
         <div class="panel">
@@ -2210,7 +2210,7 @@ main.content{
         <label class="flbl" data-i18n="message">Message</label>
         <textarea class="ftextarea" id="wa-msg" rows="5"></textarea>
       </div>
-      <button class="msub" data-i18n="send_wa">
+      <button class="msub" onclick="sendWaModalMessage()" data-i18n="send_wa">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         Send via WhatsApp
       </button>
@@ -2896,6 +2896,26 @@ function openWA(p){
     ?`প্রিয় ${p.name},\n\nআপনার ফলো-আপ অ্যাপয়েন্টমেন্টের সময় হয়েছে। অনুগ্রহ করে যোগাযোগ করুন।\n\nধন্যবাদ,\n${d.doc.name}`
     :`Dear ${p.name},\n\nThis is a friendly reminder from ${d.doc.clinic}. It's time for your follow-up appointment. Please contact us to schedule.\n\nBest regards,\n${d.doc.name}`;
   openModal("wa-modal");
+}
+
+/* Makes the "Send via WhatsApp" button inside the reminder popup
+   actually do something. AuraScale has no bulk-messaging backend for
+   free-text reminders (only the prescription flow has a real WhatsApp
+   API integration via the send-prescription-wa function), so — same
+   fallback pattern already used by openRxManualWA() elsewhere in this
+   file — this opens WhatsApp Web/App with the number and message
+   pre-filled, ready for the doctor to hit send themselves. */
+function sendWaModalMessage(){
+  var dial=(document.getElementById('wa-dial')||{}).textContent||'';
+  var rawPhone=(document.getElementById('wa-phone')||{}).textContent||'';
+  var msg=(document.getElementById('wa-msg')||{}).value||'';
+  var patientName=(document.getElementById('wa-sub')||{}).textContent||'';
+  var e164=(dial+rawPhone).replace(/[^\d]/g,'');
+  if(!e164){showToast('No phone number available for this patient.');return;}
+  window.open('https://wa.me/'+e164+'?text='+encodeURIComponent(msg),'_blank');
+  _auraLogAudit('WhatsApp Reminder Sent', {entityType:'patient',patientName:patientName||null}); /* audit trail — silent, never blocks the reminder flow */
+  closeModal('wa-modal');
+  showToast('WhatsApp opened for '+(patientName||'patient'));
 }
 
 /* ══ AUTH ══ */
@@ -3613,6 +3633,7 @@ function sendTemplate(type){
   showToast(msgs[type]||"Message sent!");
   if(type==='medication')_auraLogAudit('Medicine Reminder Scheduled', {entityType:'reminder_template'}); /* audit trail — silent, never blocks the reminder flow */
   else if(type==='follow-up')_auraLogAudit('Follow-up Reminder Scheduled', {entityType:'reminder_template'}); /* audit trail — silent, never blocks the reminder flow */
+  else if(type==='review')_auraLogAudit('Review Request Sent', {entityType:'reminder_template'}); /* audit trail — silent, never blocks the reminder flow */
 }/* ══════════════════════════════════════════════════════════════
    AURA DROPDOWN — replaces the native <input list> datalist popover
    for Medicine / Dose / Days. Fixes the "dropdown traps focus and
@@ -4660,9 +4681,14 @@ async function stgMergeGroup(gi){
      • Medicine Removed             — the ✕ button on a medicine row
      • PDF Generated                — prescription PDF built successfully
      • WhatsApp Prescription Sent   — prescription WhatsApp delivery succeeds
+     • WhatsApp Reminder Sent       — "Send via WhatsApp" in the reminder popup
+                                       (opened via the WA icon/"Send Reminder"
+                                       buttons across Dashboard/Patients/WhatsApp)
      • Medicine Reminder Scheduled  — "Send Now" on the Medication template
      • Follow-up Reminder Scheduled — "Send to Due Patients" on the
                                        14-Day Follow-Up template
+     • Review Request Sent          — "Send to Today's Patients" on the
+                                       Review Request template
 
    NOT YET LIVE — no screen/button exists in AuraScale today to trigger
    these, so they are excluded from AUDIT_VISIBLE_EVENTS and will never
@@ -4710,9 +4736,22 @@ var AUDIT_VISIBLE_EVENTS=[
   'Patient Created','Patient Updated',
   'Appointment Created','Appointment Cancelled',
   'Prescription Created','Medicine Added','Medicine Removed','PDF Generated',
-  'WhatsApp Prescription Sent',
-  'Medicine Reminder Scheduled','Follow-up Reminder Scheduled'
+  'WhatsApp Prescription Sent','WhatsApp Reminder Sent',
+  'Medicine Reminder Scheduled','Follow-up Reminder Scheduled','Review Request Sent'
 ];
+
+/* Groups the flat event list into the tabs shown at the top of the
+   Activity Log, so e.g. the "WhatsApp" tab catches both a sent
+   prescription AND a manually-sent reminder, not just one of them. */
+var AUDIT_FILTER_GROUPS={
+  'all':null,
+  'new_patients':['Patient Created'],
+  'patient_updates':['Patient Updated'],
+  'appointments':['Appointment Created','Appointment Cancelled'],
+  'prescriptions':['Prescription Created','Medicine Added','Medicine Removed','PDF Generated'],
+  'whatsapp':['WhatsApp Prescription Sent','WhatsApp Reminder Sent'],
+  'reminders':['Medicine Reminder Scheduled','Follow-up Reminder Scheduled','Review Request Sent']
+};
 
 function _auraDeviceInfo(){
   var ua=navigator.userAgent||'';
@@ -4812,9 +4851,11 @@ var _auditFriendlyMap={
   'Medicine Removed':{icon:'➖',en:'Medicine removed',bn:'ওষুধ সরানো হয়েছে'},
   'PDF Generated':{icon:'📄',en:'PDF generated',bn:'পিডিএফ তৈরি হয়েছে'},
   'WhatsApp Prescription Sent':{icon:'✅',en:'Prescription sent via WhatsApp',bn:'হোয়াটসঅ্যাপে প্রেসক্রিপশন পাঠানো হয়েছে'},
+  'WhatsApp Reminder Sent':{icon:'💚',en:'WhatsApp reminder sent',bn:'হোয়াটসঅ্যাপ রিমাইন্ডার পাঠানো হয়েছে'},
   'SMS Reminder Sent':{icon:'💬',en:'SMS reminder sent',bn:'এসএমএস রিমাইন্ডার পাঠানো হয়েছে'},
   'Medicine Reminder Scheduled':{icon:'⏰',en:'Medicine reminder scheduled',bn:'ওষুধ রিমাইন্ডার নির্ধারিত হয়েছে'},
   'Follow-up Reminder Scheduled':{icon:'🔔',en:'Follow-up reminder scheduled',bn:'ফলো-আপ রিমাইন্ডার নির্ধারিত হয়েছে'},
+  'Review Request Sent':{icon:'⭐',en:'Review request sent',bn:'রিভিউ অনুরোধ পাঠানো হয়েছে'},
   'Diagnosis Updated':{icon:'🩺',en:'Diagnosis updated',bn:'রোগ নির্ণয় আপডেট হয়েছে'},
   'Laboratory Report Uploaded':{icon:'🧪',en:'Lab report uploaded',bn:'ল্যাব রিপোর্ট আপলোড হয়েছে'},
   'Laboratory Report Viewed':{icon:'👁️',en:'Lab report viewed',bn:'ল্যাব রিপোর্ট দেখা হয়েছে'},
@@ -4831,16 +4872,16 @@ function _auditFriendly(actionType){
 }
 
 var _auditCurrentFilter='all';
-function auditFilter(type,btn){
-  _auditCurrentFilter=type;
+function auditFilter(groupKey,btn){
+  _auditCurrentFilter=groupKey;
   document.querySelectorAll('#audit-filters .tl-qbtn').forEach(function(b){b.classList.remove('active');});
   if(btn)btn.classList.add('active');
-  fetchAuditLogs(type);
+  fetchAuditLogs(groupKey);
 }
 
-async function fetchAuditLogs(filter){
+async function fetchAuditLogs(groupKey){
   if(!_clinicId)return;
-  filter=filter||_auditCurrentFilter||'all';
+  groupKey=groupKey||_auditCurrentFilter||'all';
   var el=document.getElementById('audit-list');
   var cnt=document.getElementById('audit-count');
   if(!el)return;
@@ -4848,7 +4889,8 @@ async function fetchAuditLogs(filter){
      currently-implemented event types can ever be displayed, no
      matter what filter is chosen or what rows exist in the table. */
   var q=_supa.from('audit_logs').select('action_type,patient_name,device_label,occurred_at').eq('clinic_id',_clinicId).in('action_type',AUDIT_VISIBLE_EVENTS).order('occurred_at',{ascending:false}).limit(100);
-  if(filter&&filter!=='all')q=q.eq('action_type',filter);
+  var groupTypes=AUDIT_FILTER_GROUPS.hasOwnProperty(groupKey)?AUDIT_FILTER_GROUPS[groupKey]:null;
+  if(groupTypes)q=q.in('action_type',groupTypes);
   var res=await q;
   if(res.error){
     /* Most likely cause: the audit_logs table/migration hasn't been
