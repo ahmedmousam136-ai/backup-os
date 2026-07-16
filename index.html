@@ -2143,6 +2143,65 @@ main.content{
             <span class="pb pb-g">Certified</span>
           </div>
         </div>
+
+        <!-- ══ INTEGRATIONS & INTEROPERABILITY — readiness layer only.
+             Every row below is disabled by design: no live network
+             call is made anywhere in this section. Each is wired to
+             the same modular integration registry (AURA_INTEGRATIONS
+             in the script below) so a real government or private API
+             can be switched on later without changing this markup. ══ -->
+        <div class="settings-section" id="stg-integrations-section">
+          <div class="ph">
+            <div class="pt">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>
+              Integrations &amp; Interoperability
+            </div>
+            <span class="pb pb-a">Not Connected</span>
+          </div>
+          <div class="settings-row">
+            <div>
+              <p class="settings-row-lbl">ABHA Integration</p>
+              <p class="settings-row-sub">Ayushman Bharat Health Account — link patient Health IDs with the national ABDM network</p>
+            </div>
+            <button class="book-link-btn" disabled title="Enabled once government ABDM integration goes live" onclick="auraIntegrationConnect('abha')" style="font-size:11px;padding:6px 10px;min-height:32px">Connect</button>
+          </div>
+          <div class="settings-row">
+            <div>
+              <p class="settings-row-lbl">Ayushman Bharat (PM-JAY)</p>
+              <p class="settings-row-sub">Verify beneficiary eligibility and submit scheme-linked claims</p>
+            </div>
+            <button class="book-link-btn" disabled title="Enabled once government PM-JAY integration goes live" onclick="auraIntegrationConnect('ayushman_bharat')" style="font-size:11px;padding:6px 10px;min-height:32px">Connect</button>
+          </div>
+          <div class="settings-row">
+            <div>
+              <p class="settings-row-lbl">Insurance Integration</p>
+              <p class="settings-row-sub">Coverage verification and cashless/reimbursement claims with private insurers</p>
+            </div>
+            <button class="book-link-btn" disabled title="Coming soon" onclick="auraIntegrationConnect('insurance')" style="font-size:11px;padding:6px 10px;min-height:32px">Connect</button>
+          </div>
+          <div class="settings-row">
+            <div>
+              <p class="settings-row-lbl">Hospital Integration</p>
+              <p class="settings-row-sub">Share referrals and records with partner hospitals and external EMRs</p>
+            </div>
+            <button class="book-link-btn" disabled title="Coming soon" onclick="auraIntegrationConnect('hospital')" style="font-size:11px;padding:6px 10px;min-height:32px">Connect</button>
+          </div>
+          <div class="settings-row">
+            <div>
+              <p class="settings-row-lbl">Laboratory Integration</p>
+              <p class="settings-row-sub">Send test orders and receive results directly from partner labs</p>
+            </div>
+            <button class="book-link-btn" disabled title="Coming soon" onclick="auraIntegrationConnect('laboratory')" style="font-size:11px;padding:6px 10px;min-height:32px">Connect</button>
+          </div>
+          <div class="settings-row">
+            <div>
+              <p class="settings-row-lbl">Pharmacy Integration</p>
+              <p class="settings-row-sub">Route e-prescriptions for fulfillment and delivery tracking with partner pharmacies</p>
+            </div>
+            <button class="book-link-btn" disabled title="Coming soon" onclick="auraIntegrationConnect('pharmacy')" style="font-size:11px;padding:6px 10px;min-height:32px">Connect</button>
+          </div>
+          <p class="abha-note" style="padding:2px 13px 12px">No live connection is made by any button above. Each is reserved for a future government or private API and can be switched on independently, without any change to the rest of AuraScale.</p>
+        </div>
       </div>
 
     </main>
@@ -5042,6 +5101,130 @@ async function _auraLogSession(){
   confirmBooking=async function(){
     if(!auraCheckPermission('schedule_appointments'))return;
     return _oldConfirmBooking.apply(this,arguments);
+  };
+})();
+
+/* ══════════════════════════════════════════════════════════════
+   INTEGRATION REGISTRY — future government/private API readiness.
+
+   Modular by design: every integration is one entry in
+   AURA_INTEGRATIONS plus one adapter file that will be dropped in
+   later (see "adding a real integration" below). Nothing here makes
+   or is capable of making a live network call — every path returns
+   or shows a friendly "not enabled" response, same as the existing
+   ABHA readiness section in the Patient Timeline this mirrors.
+
+   Requires supabase/2026_07_16_integrations.sql for the persisted
+   on/off + config storage — safe no-op if that migration hasn't
+   been applied yet (auraIntegrationStatus() just reports "disabled").
+
+   ── Adding a real integration later, e.g. ABHA ──────────────────
+   1. Build an adapter object with the methods that integration needs,
+      e.g.:
+        var _aura_abha_adapter = {
+          linkPatient: async function(payload){ /* real fetch() here */ },
+          verifyPatient: async function(payload){ ... }
+        };
+   2. Register it: AURA_INTEGRATIONS.abha.adapter = _aura_abha_adapter;
+   3. Flip AURA_INTEGRATIONS.abha.status = 'enabled' (and update the
+      row in the `integrations` table so it persists).
+   4. Every existing call site that already goes through
+      auraIntegrationCall('abha', 'linkPatient', payload) starts
+      actually calling the real adapter — nothing else in the app
+      needs to change. That's the point of routing everything through
+      one gateway function instead of calling each API directly.
+   ══════════════════════════════════════════════════════════════ */
+
+var AURA_INTEGRATIONS={
+  abha:{
+    id:'abha',name:'ABHA Integration',category:'government',
+    description:'Link patient Health IDs with the national ABDM network.',
+    status:'disabled',adapter:null
+  },
+  ayushman_bharat:{
+    id:'ayushman_bharat',name:'Ayushman Bharat (PM-JAY)',category:'government',
+    description:'Verify beneficiary eligibility and submit scheme-linked claims.',
+    status:'disabled',adapter:null
+  },
+  insurance:{
+    id:'insurance',name:'Insurance Integration',category:'private',
+    description:'Coverage verification and cashless/reimbursement claims with private insurers.',
+    status:'disabled',adapter:null
+  },
+  hospital:{
+    id:'hospital',name:'Hospital Integration',category:'private',
+    description:'Share referrals and records with partner hospitals and external EMRs.',
+    status:'disabled',adapter:null
+  },
+  laboratory:{
+    id:'laboratory',name:'Laboratory Integration',category:'private',
+    description:'Send test orders and receive results directly from partner labs.',
+    status:'disabled',adapter:null
+  },
+  pharmacy:{
+    id:'pharmacy',name:'Pharmacy Integration',category:'private',
+    description:'Route e-prescriptions for fulfillment and delivery tracking with partner pharmacies.',
+    status:'disabled',adapter:null
+  }
+};
+
+/* Button handler for every "Connect" button in Settings. Buttons are
+   also HTML-disabled, so this only ever fires from a programmatic
+   call (e.g. testing) — kept honest either way: never opens a
+   network connection, only ever informs the user. */
+function auraIntegrationConnect(id){
+  var integ=AURA_INTEGRATIONS[id];
+  var label=integ?integ.name:id;
+  showToast(label+' isn\'t connected yet — this will be available in a future update.');
+}
+
+/* The ONE gateway every future integration call goes through. This
+   is what makes the architecture modular: application code never
+   calls a government/private API directly, it always calls
+   auraIntegrationCall(id, action, payload) — so turning a real
+   integration on/off, or swapping an adapter's implementation, never
+   requires touching any of the calling code elsewhere in the app. */
+async function auraIntegrationCall(id, action, payload){
+  var integ=AURA_INTEGRATIONS[id];
+  if(!integ){
+    return {ok:false,error:'UNKNOWN_INTEGRATION'};
+  }
+  if(integ.status!=='enabled'||!integ.adapter){
+    console.warn('[AuraIntegrations] '+id+'.'+action+' blocked — integration is not enabled yet.');
+    return {ok:false,error:'NOT_ENABLED'};
+  }
+  if(typeof integ.adapter[action]!=='function'){
+    return {ok:false,error:'UNSUPPORTED_ACTION'};
+  }
+  try{
+    var result=await integ.adapter[action](payload);
+    return {ok:true,data:result};
+  }catch(e){
+    return {ok:false,error:String((e&&e.message)||e)};
+  }
+}
+
+/* Reads persisted on/off state from the `integrations` table (if the
+   migration has been applied) and refreshes AURA_INTEGRATIONS +
+   the status pill in Settings. Safe no-op otherwise — the section
+   simply keeps showing every integration as disabled, which is
+   correct until a migration + a real adapter both exist. */
+async function auraLoadIntegrationStatuses(){
+  if(!_clinicId)return;
+  try{
+    var res=await _supa.from('integrations').select('integration_id,enabled').eq('clinic_id',_clinicId);
+    if(res.error||!res.data)return;
+    res.data.forEach(function(row){
+      var integ=AURA_INTEGRATIONS[row.integration_id];
+      if(integ)integ.status=row.enabled?'enabled':'disabled';
+    });
+  }catch(e){ /* silent — Settings just shows the safe "disabled" default */ }
+}
+(function wrapNavForIntegrations(){
+  var _oldNav2=nav;
+  nav=function(id,btn){
+    _oldNav2(id,btn);
+    if(id==='settings')auraLoadIntegrationStatuses();
   };
 })();
 </script>
