@@ -5122,7 +5122,7 @@ async function _auraLogSession(){
    1. Build an adapter object with the methods that integration needs,
       e.g.:
         var _aura_abha_adapter = {
-          linkPatient: async function(payload){ /* real fetch() here */ },
+          linkPatient: async function(payload){ add the real fetch() call here },
           verifyPatient: async function(payload){ ... }
         };
    2. Register it: AURA_INTEGRATIONS.abha.adapter = _aura_abha_adapter;
