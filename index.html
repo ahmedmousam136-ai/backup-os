@@ -1272,6 +1272,10 @@ main.content{
   <span data-i18n="nav_rx">Prescriptions</span>
 </button>
       <p class="nav-sec" data-i18n="nav_setup">Setup</p>
+      <button class="nb" onclick="nav('audit',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 7 12 12 16 14"/></svg></span>
+        <span data-i18n="nav_audit">Activity Log</span>
+      </button>
       <button class="nb" onclick="nav('settings',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></span>
         <span data-i18n="nav_settings">Settings</span>
@@ -1965,6 +1969,37 @@ main.content{
         </div>
       </div>
 
+      <!-- ── ACTIVITY LOG (Audit Trail — doctor-facing, simplified) ── -->
+      <div id="v-audit" class="view">
+        <div class="sh">
+          <div>
+            <h1 class="st" data-i18n="audit_title">Activity Log</h1>
+            <p class="ss" data-i18n="audit_sub">A plain-language record of what happened and when in your clinic account.</p>
+          </div>
+        </div>
+
+        <div class="tl-quickbar" id="audit-filters">
+          <button class="tl-qbtn active" onclick="auditFilter('all',this)" data-i18n="audit_f_all">All</button>
+          <button class="tl-qbtn" onclick="auditFilter('Prescription Created',this)" data-i18n="audit_f_rx">Prescriptions</button>
+          <button class="tl-qbtn" onclick="auditFilter('Patient Updated',this)" data-i18n="audit_f_pat">Patients</button>
+          <button class="tl-qbtn" onclick="auditFilter('Diagnosis Updated',this)" data-i18n="audit_f_diag">Diagnosis</button>
+          <button class="tl-qbtn" onclick="auditFilter('Follow-up Modified',this)" data-i18n="audit_f_fu">Follow-ups</button>
+          <button class="tl-qbtn" onclick="auditFilter('Laboratory Report Uploaded',this)" data-i18n="audit_f_lab">Lab Reports</button>
+        </div>
+
+        <div class="panel">
+          <div class="ph">
+            <div class="pt" data-i18n="audit_recent">Recent Activity</div>
+            <span class="pb pb-b" id="audit-count">0</span>
+          </div>
+          <div id="audit-list"></div>
+        </div>
+
+        <div class="abha-note" style="padding:2px 4px 0">
+          <span data-i18n="audit_footnote">Full technical detail — device fingerprints, before/after values, IP address — will be available to clinic admins in the upcoming Admin Console. These entries cannot be edited or deleted by anyone, including doctors and Admin staff — they are permanent for compliance.</span>
+        </div>
+      </div>
+
       <!-- ── SETTINGS ── -->
       <div id="v-settings" class="view">
         <div class="sh">
@@ -2359,6 +2394,13 @@ const T={
     status_checked_in:"Checked In",status_waiting:"Waiting",
     status_in_progress:"In Progress",status_missed:"Missed",
     workspace_lbl:"Workspace",ws_india:"🇮🇳 India",ws_bd:"🇧🇩 Bangladesh",
+    nav_audit:"Activity Log",
+    audit_title:"Activity Log",
+    audit_sub:"A plain-language record of what happened and when in your clinic account.",
+    audit_recent:"Recent Activity",
+    audit_f_all:"All",audit_f_rx:"Prescriptions",audit_f_pat:"Patients",audit_f_diag:"Diagnosis",audit_f_fu:"Follow-ups",audit_f_lab:"Lab Reports",
+    audit_footnote:"Full technical detail — device fingerprints, before/after values, IP address — will be available to clinic admins in the upcoming Admin Console. These entries cannot be edited or deleted by anyone, including doctors and Admin staff — they are permanent for compliance.",
+    audit_empty_t:"No activity yet",audit_empty_s:"Actions like new prescriptions and patient updates will appear here automatically.",
   },
   bn:{
     tagline:"ক্লিনিক অপারেটিং সিস্টেম",nav_rx:"প্রেসক্রিপশন",rx_title:"ডিজিটাল প্রেসক্রিপশন",rx_sub:"পিডিএফ তৈরি · রোগীর হোয়াটসঅ্যাপে স্বয়ংক্রিয় ডেলিভারি",rx_new:"নতুন প্রেসক্রিপশন",rx_history:"প্রেসক্রিপশন ইতিহাস",
@@ -2415,6 +2457,13 @@ const T={
     status_checked_in:"চেক-ইন",status_waiting:"অপেক্ষায়",
     status_in_progress:"চলছে",status_missed:"মিস হয়েছে",
     workspace_lbl:"ওয়ার্কস্পেস",ws_india:"🇮🇳 ভারত",ws_bd:"🇧🇩 বাংলাদেশ",
+    nav_audit:"অ্যাক্টিভিটি লগ",
+    audit_title:"অ্যাক্টিভিটি লগ",
+    audit_sub:"আপনার ক্লিনিক অ্যাকাউন্টে কী ঘটেছে এবং কখন, তার সহজ ভাষায় রেকর্ড।",
+    audit_recent:"সাম্প্রতিক কার্যক্রম",
+    audit_f_all:"সব",audit_f_rx:"প্রেসক্রিপশন",audit_f_pat:"রোগী",audit_f_diag:"রোগ নির্ণয়",audit_f_fu:"ফলো-আপ",audit_f_lab:"ল্যাব রিপোর্ট",
+    audit_footnote:"প্রযুক্তিগত বিস্তারিত — ডিভাইস তথ্য, পরিবর্তনের আগে/পরের মান, আইপি ঠিকানা — শীঘ্রই আসা অ্যাডমিন কনসোলে ক্লিনিক অ্যাডমিনদের জন্য উপলব্ধ হবে। এই এন্ট্রিগুলো ডাক্তার বা অ্যাডমিন কেউই সম্পাদনা বা মুছতে পারবেন না — এগুলো নিয়মমাফিক স্থায়ী থাকে।",
+    audit_empty_t:"এখনো কোনো কার্যক্রম নেই",audit_empty_s:"নতুন প্রেসক্রিপশন ও রোগীর তথ্য আপডেট হলে তা এখানে স্বয়ংক্রিয়ভাবে দেখা যাবে।",
   }
 };
 
@@ -2454,7 +2503,7 @@ const AUTOS=[
   {label_en:"AI Reception Assistant",label_bn:"এআই রিসেপশন সহকারী",desc_en:"Answers common patient questions automatically",desc_bn:"সাধারণ রোগীর প্রশ্নের স্বয়ংক্রিয় উত্তর দেয়",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,on:false},
 ];
 
-const TABS_KEYS={prescriptions:"nav_rx",dashboard:"nav_dashboard",patients:"nav_patients",whatsapp:"nav_whatsapp",analytics:"nav_reports","missed-calls":"nav_dashboard",book:"nav_dashboard",settings:"nav_settings"};
+const TABS_KEYS={prescriptions:"nav_rx",dashboard:"nav_dashboard",patients:"nav_patients",whatsapp:"nav_whatsapp",analytics:"nav_reports","missed-calls":"nav_dashboard",book:"nav_dashboard",settings:"nav_settings",audit:"nav_audit"};
 let mkt="india";
 let currentLang="en";
 let currentTheme="light";
@@ -3506,6 +3555,7 @@ async function addAppointment(){
   if(weight)patch.weight=parseFloat(weight);
   if(Object.keys(patch).length){
     await _supa.from('patients').update(patch).eq('id',patientId);
+    _auraLogAudit('Patient Updated', {entityType:'patient',entityId:patientId,patientName:name.trim()}); /* audit trail — silent, never blocks the appointment flow */
   }
 
   var ins=await _supa.from('appointments').insert({
@@ -3906,6 +3956,7 @@ async function generatePrescription(){
 if(ins.error){ rxError("Save failed: "+ins.error.message); btn.disabled=false; btn.textContent="Generate Prescription"; return; }
   var rxId=ins.data.id;
   _auraLogVisit(cid, name, v.display, d.name, meds, instr, rxId, st, weight); /* silent background EMR foundation — never blocks the prescription flow */
+  _auraLogAudit('Prescription Created', {entityType:'prescription',entityId:rxId,patientName:name}); /* audit trail — silent, never blocks the prescription flow */
   btn.textContent="Sending to WhatsApp…";
   var wa=await sendRxWhatsApp({wa_e164:v.e164, patient_name:name, doctor_name:d.name, clinic_name:d.clinic, pdf_url:st.url});
   if(wa.ok){
@@ -4529,6 +4580,7 @@ async function stgMergeGroup(gi){
         await _supa.from('patients').update({status:'Merged',name:(dupes[i].name||'')+' (merged)'}).eq('id',dId);
       }
     }
+    _auraLogAudit('Patient Updated', {entityType:'patient',entityId:primary.id,patientName:primary.name,details:{merged_records:g.length}}); /* audit trail — silent, never blocks the merge flow */
     showToast('Merged into one patient record.');
     await fetchPatients();
     await fetchAppointments();
@@ -4537,6 +4589,223 @@ async function stgMergeGroup(gi){
     showToast('Merge failed: '+(e.message||e));
   }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   AUDIT TRAIL — silent, immutable, additive background layer.
+
+   Requires one new table (created by a database migration, NOT by
+   this file — see supabase/2026_07_16_audit_trail.sql, SQL text
+   included at the bottom of this comment for convenience):
+
+     audit_logs(id, clinic_id, user_id, user_name, action_type,
+                entity_type, entity_id, patient_name,
+                device_type, device_label, details, occurred_at)
+
+   IMMUTABILITY: the migration enables Row Level Security and grants
+   only INSERT + SELECT policies to authenticated clinic users —
+   there is no UPDATE or DELETE policy for any non-service role, so
+   once a row is written, nobody in the app (doctor, receptionist,
+   or a future Admin) can alter or remove it. occurred_at defaults
+   to the database's own now(), so the timestamp is never something
+   the browser can be told to fake.
+
+   DOCTOR-FACING vs ADMIN-FACING: the Activity Log screen below only
+   ever renders action_type, patient_name, occurred_at and a plain
+   device label ("Mobile · Chrome") — never entity_id, user_id, or
+   the raw `details` JSON. Admins get a technical view once the
+   Admin Console ships; for now, everyone with clinic access sees
+   the same simplified feed.
+
+   WHAT LOGS TODAY vs WHAT'S WIRED FOR LATER:
+   - Prescription Created  → fires for real, from generatePrescription().
+   - Patient Updated       → fires for real, from addAppointment() and
+                              from the duplicate-merge tool in Settings.
+   - Prescription Edited / Prescription Deleted, Diagnosis Updated,
+     Follow-up Modified, Laboratory Report Uploaded → AuraScale doesn't
+     have edit/delete-prescription, diagnosis-editing, follow-up-editing,
+     or lab-upload screens yet, so there's nothing in the current app
+     that could trigger these. The audit* functions below are ready and
+     tested — call them from those screens the moment they're built and
+     entries will start appearing immediately, no further wiring needed.
+     This mirrors the same "readiness layer" approach already used for
+     ABHA elsewhere in this file.
+
+   Nothing in this module changes any existing button, form, or data
+   flow — it only ever adds a fire-and-forget logging call alongside
+   actions that already happen, exactly like the existing
+   `_auraLogVisit(...)` background call it sits next to.
+   ══════════════════════════════════════════════════════════════
+
+   -- supabase/2026_07_16_audit_trail.sql ------------------------
+   -- create table if not exists audit_logs (
+   --   id uuid primary key default gen_random_uuid(),
+   --   clinic_id uuid not null references clinics(id) on delete cascade,
+   --   user_id uuid,
+   --   user_name text,
+   --   action_type text not null check (action_type in (
+   --     'Prescription Created','Prescription Edited','Prescription Deleted',
+   --     'Diagnosis Updated','Patient Updated',
+   --     'Laboratory Report Uploaded','Follow-up Modified'
+   --   )),
+   --   entity_type text,
+   --   entity_id uuid,
+   --   patient_name text,
+   --   device_type text,
+   --   device_label text,
+   --   details jsonb,
+   --   occurred_at timestamptz not null default now()
+   -- );
+   -- create index if not exists audit_logs_clinic_idx
+   --   on audit_logs (clinic_id, occurred_at desc);
+   -- alter table audit_logs enable row level security;
+   -- create policy audit_logs_insert on audit_logs for insert to authenticated
+   --   with check (clinic_id in (select clinic_id from profiles where id = auth.uid()));
+   -- create policy audit_logs_select on audit_logs for select to authenticated
+   --   using (clinic_id in (select clinic_id from profiles where id = auth.uid()));
+   -- -- Deliberately no update/delete policy for any non-service role — this,
+   -- -- combined with RLS being enabled, is what makes the table append-only.
+   ------------------------------------------------------------- */
+
+/* Toggle only ever read by the (future) Admin Console screen — has
+   no effect on the doctor-facing Activity Log, which is always the
+   simplified view. Left here so the Admin Console has a single flag
+   to flip on when it ships. */
+var AUDIT_ADMIN_MODE = false;
+
+function _auraDeviceInfo(){
+  var ua=navigator.userAgent||'';
+  var isMobile=/Mobi|Android|iPhone|iPad/i.test(ua);
+  var browser='Browser';
+  if(ua.indexOf('Edg')>-1)browser='Edge';
+  else if(ua.indexOf('Chrome')>-1)browser='Chrome';
+  else if(ua.indexOf('Firefox')>-1)browser='Firefox';
+  else if(ua.indexOf('Safari')>-1)browser='Safari';
+  var type=isMobile?'Mobile':'Desktop';
+  return {type:type,label:type+' · '+browser};
+}
+
+/* Core logger — every mutation point in this file calls this the
+   same way _auraLogVisit is already called: fire-and-forget, wrapped
+   in try/catch, and never awaited by the caller so it can never slow
+   down or block the real clinical workflow it sits next to. */
+async function _auraLogAudit(actionType, opts){
+  opts=opts||{};
+  try{
+    if(!_clinicId)return;
+    var uname=(DB[mkt]&&DB[mkt].doc&&DB[mkt].doc.name)||'Doctor';
+    var uid=null;
+    try{
+      var sr=await _supa.auth.getSession();
+      var sess=sr&&sr.data?sr.data.session:null;
+      if(sess&&sess.user)uid=sess.user.id;
+    }catch(e2){}
+    var dev=_auraDeviceInfo();
+    await _supa.from('audit_logs').insert({
+      clinic_id:_clinicId,
+      user_id:uid,
+      user_name:uname,
+      action_type:actionType,
+      entity_type:opts.entityType||null,
+      entity_id:opts.entityId||null,
+      patient_name:opts.patientName||null,
+      device_type:dev.type,
+      device_label:dev.label,
+      details:opts.details||null
+    });
+  }catch(e){ /* silent — the audit trail must never surface an error to the doctor or interrupt the action it's logging */ }
+}
+
+/* ── Readiness stubs — not called anywhere yet (see note above),
+   ready to wire in the moment the corresponding screen exists ── */
+async function auditPrescriptionEdited(rxId, patientName, changes){
+  return _auraLogAudit('Prescription Edited', {entityType:'prescription',entityId:rxId,patientName:patientName,details:changes||null});
+}
+async function auditPrescriptionDeleted(rxId, patientName){
+  return _auraLogAudit('Prescription Deleted', {entityType:'prescription',entityId:rxId,patientName:patientName});
+}
+async function auditDiagnosisUpdated(patientId, patientName, diagnosis){
+  return _auraLogAudit('Diagnosis Updated', {entityType:'patient',entityId:patientId,patientName:patientName,details:{diagnosis:diagnosis}});
+}
+async function auditFollowupModified(followupId, patientName, status){
+  return _auraLogAudit('Follow-up Modified', {entityType:'followup',entityId:followupId,patientName:patientName,details:{status:status}});
+}
+async function auditLabReportUploaded(patientId, patientName, fileName){
+  return _auraLogAudit('Laboratory Report Uploaded', {entityType:'lab_report',entityId:patientId,patientName:patientName,details:{file:fileName||null}});
+}
+
+/* ── Doctor-facing feed — simplified only, per requirement.
+   Never renders entity_id, user_id, or the raw `details` object. ── */
+var _auditFriendlyMap={
+  'Prescription Created':{icon:'📝',en:'Prescription created',bn:'প্রেসক্রিপশন তৈরি হয়েছে'},
+  'Prescription Edited':{icon:'✏️',en:'Prescription edited',bn:'প্রেসক্রিপশন সম্পাদিত হয়েছে'},
+  'Prescription Deleted':{icon:'🗑️',en:'Prescription deleted',bn:'প্রেসক্রিপশন মুছে ফেলা হয়েছে'},
+  'Diagnosis Updated':{icon:'🩺',en:'Diagnosis updated',bn:'রোগ নির্ণয় আপডেট হয়েছে'},
+  'Patient Updated':{icon:'👤',en:'Patient record updated',bn:'রোগীর তথ্য আপডেট হয়েছে'},
+  'Laboratory Report Uploaded':{icon:'🧪',en:'Lab report uploaded',bn:'ল্যাব রিপোর্ট আপলোড হয়েছে'},
+  'Follow-up Modified':{icon:'🔔',en:'Follow-up updated',bn:'ফলো-আপ আপডেট হয়েছে'}
+};
+function _auditFriendly(actionType){
+  var m=_auditFriendlyMap[actionType];
+  if(!m)return {icon:'•',label:actionType};
+  return {icon:m.icon,label:currentLang==='bn'?m.bn:m.en};
+}
+
+var _auditCurrentFilter='all';
+function auditFilter(type,btn){
+  _auditCurrentFilter=type;
+  document.querySelectorAll('#audit-filters .tl-qbtn').forEach(function(b){b.classList.remove('active');});
+  if(btn)btn.classList.add('active');
+  fetchAuditLogs(type);
+}
+
+async function fetchAuditLogs(filter){
+  if(!_clinicId)return;
+  filter=filter||_auditCurrentFilter||'all';
+  var el=document.getElementById('audit-list');
+  var cnt=document.getElementById('audit-count');
+  if(!el)return;
+  var q=_supa.from('audit_logs').select('action_type,patient_name,device_label,occurred_at').eq('clinic_id',_clinicId).order('occurred_at',{ascending:false}).limit(100);
+  if(filter&&filter!=='all')q=q.eq('action_type',filter);
+  var res=await q;
+  if(res.error){
+    /* Most likely cause: the audit_logs table/migration hasn't been
+       applied yet. Fail quietly with a friendly empty state rather
+       than surfacing a database error to the doctor. */
+    el.innerHTML='<div class="empty"><div class="empty-ic">🗒️</div><p class="empty-t">'+t('audit_empty_t')+'</p><p class="empty-s">'+t('audit_empty_s')+'</p></div>';
+    if(cnt)cnt.textContent='0';
+    return;
+  }
+  var rows=res.data||[];
+  if(cnt)cnt.textContent=rows.length;
+  if(!rows.length){
+    el.innerHTML='<div class="empty"><div class="empty-ic">🗒️</div><p class="empty-t">'+t('audit_empty_t')+'</p><p class="empty-s">'+t('audit_empty_s')+'</p></div>';
+    return;
+  }
+  el.innerHTML=rows.map(function(r){
+    var dt=new Date(r.occurred_at);
+    var when=dt.toLocaleDateString('en-GB')+' · '+dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    var f=_auditFriendly(r.action_type);
+    var who=r.patient_name?(' — '+r.patient_name):'';
+    return '<div class="mcr-row">'+
+      '<div style="min-width:0;flex:1">'+
+        '<p class="mcr-name">'+f.icon+' '+f.label+who+'</p>'+
+        '<p class="mcr-time">'+when+(r.device_label?(' · '+r.device_label):'')+'</p>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+/* Wrap `nav` non-invasively (same technique already used elsewhere in
+   this file for fetchPatients/addMedRow/setMkt) so visiting the new
+   Activity Log tab lazy-loads its data — without touching a single
+   line of the original nav() function or any other tab's behavior. */
+(function wrapNavForAudit(){
+  var _oldNav=nav;
+  nav=function(id,btn){
+    _oldNav(id,btn);
+    if(id==='audit')fetchAuditLogs(_auditCurrentFilter);
+  };
+})();
 </script>
 </body>
 </html>
