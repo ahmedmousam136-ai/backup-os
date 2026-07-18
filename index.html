@@ -3331,7 +3331,7 @@ async function fetchAppointments(){
   const todayAppts=all.filter(function(a){return a.appointment_date===today;});
   DB[mkt].queue=todayAppts.map(function(a,i){
     var s=a.status||'Waiting';
-    return{id:a.id||a.appointment_id||i,name:a.patient_name||'Unknown',time:a.appointment_time||'',status:s,token:'T-'+(i+1<10?'0'+(i+1):(i+1))};
+    return{id:a.id||a.appointment_id||i,name:a.patient_name||'Unknown',phone:a.patient_phone||'',time:a.appointment_time||'',status:s,token:'T-'+(i+1<10?'0'+(i+1):(i+1))};
   });
   DB[mkt].actionMetrics.totalAppts=todayAppts.length;
   DB[mkt].actionMetrics.seen=todayAppts.filter(function(a){return a.status==='Completed';}).length;
@@ -3430,7 +3430,15 @@ function add_resetModal(){
 
 function add_onPhoneInput(){
   clearTimeout(_addPhoneTimer);
-  var val=(document.getElementById('add-phone')||{}).value||'';
+  var phoneEl=document.getElementById('add-phone');
+  var val=(phoneEl||{}).value||'';
+  /* Browser "tel" autofill can insert the full number with its own
+     leading country code (e.g. "+91 93306 60325"), which would then
+     show twice — once in the +91 chip beside the field, once inside
+     it. Strip any leading +<digits> so the field only ever holds the
+     local number, matching what the prefix chip already displays. */
+  var stripped=val.replace(/^\s*\+\d{1,4}[\s-]*/,'');
+  if(stripped!==val && phoneEl){ phoneEl.value=stripped; val=stripped; }
   var digits=val.replace(/\D/g,'');
   var badge=document.getElementById('add-phone-badge');
   var existing=document.getElementById('add-existing-summary');
