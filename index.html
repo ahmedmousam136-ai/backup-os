@@ -1098,6 +1098,18 @@ main.content{
 .abha-btn[disabled]{opacity:.45;cursor:not-allowed;pointer-events:none}
 .abha-note{font-size:9.5px;color:var(--text-tertiary);margin-top:6px;line-height:1.5}
 
+/* ══ DUPLICATE PATIENT ALERTS (name-match) — Settings review cards ══ */
+.dupe-alert-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 14px}
+.dupe-alert-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.dupe-alert-name{font-size:13px;font-weight:700;color:var(--text-primary)}
+.dupe-alert-meta{font-size:10px;color:var(--text-tertiary);margin-top:2px}
+.dupe-alert-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+@media(max-width:560px){.dupe-alert-grid{grid-template-columns:1fr}}
+.dupe-alert-col{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 11px}
+.dupe-alert-col-title{font-size:9px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:var(--text-tertiary);margin-bottom:5px}
+.dupe-alert-line{font-size:11px;color:var(--text-secondary);line-height:1.6}
+.dupe-alert-actions{display:flex;gap:6px;flex-wrap:wrap}
+
 /* ══ AURA DROPDOWN — custom, focus-safe autocomplete (Rx Medicine/Dose/Days) ══ */
 .aura-dd-menu{position:fixed;z-index:9000;background:var(--surface);border:1px solid var(--border);
   border-radius:var(--r-sm);box-shadow:var(--sh-md);max-height:220px;overflow-y:auto;
@@ -2100,7 +2112,7 @@ main.content{
           <div class="ph">
             <div class="pt">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              Duplicate Patients
+              Duplicate Patients — Same Phone Number
             </div>
             <button class="book-link-btn" style="font-size:11px;padding:6px 10px;min-height:32px" onclick="stgScanDuplicates()">Scan</button>
           </div>
@@ -2109,6 +2121,31 @@ main.content{
               <div>
                 <p class="settings-row-lbl">No scan run yet</p>
                 <p class="settings-row-sub">Click Scan to find patients with the same phone number saved as separate records (e.g. from before phone-matching was tightened), and merge them into one profile.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ DUPLICATE PATIENTS — NAME MATCH ALERTS ══
+             Auto-populated whenever a new patient registration has the
+             exact same name as an existing patient. Review-only: marking
+             a status never merges, edits, or deletes any patient record.
+             Registration itself is never affected by anything in this
+             section — it is a read/review surface only. ══ -->
+        <div class="settings-section" id="stg-name-dupe-section">
+          <div class="ph">
+            <div class="pt">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Duplicate Patients
+            </div>
+            <span class="pb pb-a" id="stg-name-dupe-count">0</span>
+          </div>
+          <p class="abha-note" style="padding:10px 16px 0">Automatically detected whenever a new patient is registered with the exact same name (case-insensitive) as an existing patient — regardless of mobile number, age, or gender. Registration always completes normally; these are for review only. No records are merged, edited, or deleted automatically.</p>
+          <div id="stg-name-dupe-list" style="padding:10px 16px 16px;display:flex;flex-direction:column;gap:10px">
+            <div class="settings-row">
+              <div>
+                <p class="settings-row-lbl">No duplicate alerts yet</p>
+                <p class="settings-row-sub">Alerts will appear here automatically as new patients are registered.</p>
               </div>
             </div>
           </div>
@@ -3636,7 +3673,7 @@ async function addAppointment(){
       var np=await _supa.from('patients').insert(patRow).select('id').single();
       if(np.error){showToast('Patient error: '+np.error.message);return;}
       if(np.data){patientId=np.data.id;isNewPatient=true;}
-      _auraDuplicateNameCheck(cid,patientId,name.trim(),fullPhone); /* silent duplicate name alert */
+      _auraDuplicateNameCheck(cid,patientId,name.trim(),fullPhone,{gender:gender||'',age:ageVal||'',dob:dob||''}); /* silent duplicate name alert — never blocks registration */
     }
   }
   if(!patientId){showToast('Could not resolve patient.');return;}
@@ -4960,7 +4997,7 @@ async function fetchAuditLogs(groupKey){
   /* .in(...AUDIT_VISIBLE_EVENTS) is the enforcement point: only
      currently-implemented event types can ever be displayed, no
      matter what filter is chosen or what rows exist in the table. */
-  var q=_supa.from('audit_logs').select('action_type,patient_name,device_label,occurred_at').eq('clinic_id',_clinicId).in('action_type',AUDIT_VISIBLE_EVENTS).order('occurred_at',{ascending:false}).limit(100);
+  var q=_supa.from('audit_logs').select('action_type,patient_name,device_label,details,occurred_at').eq('clinic_id',_clinicId).in('action_type',AUDIT_VISIBLE_EVENTS).order('occurred_at',{ascending:false}).limit(100);
   var groupTypes=AUDIT_FILTER_GROUPS.hasOwnProperty(groupKey)?AUDIT_FILTER_GROUPS[groupKey]:null;
   if(groupTypes)q=q.in('action_type',groupTypes);
   var res=await q;
@@ -4983,6 +5020,23 @@ async function fetchAuditLogs(groupKey){
     var when=dt.toLocaleDateString('en-GB')+' · '+dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
     var f=_auditFriendly(r.action_type);
     var who=r.patient_name?(' — '+r.patient_name):'';
+    /* Duplicate Patient Alert gets a fuller plain-language detail block
+       (name / existing / new / status / detected-on) instead of the
+       one-line summary every other event type uses — everything else
+       below is completely unchanged for every other action type. */
+    if(r.action_type==='Duplicate Patient Alert'){
+      var dd=r.details||{};
+      return '<div class="mcr-row">'+
+        '<div style="min-width:0;flex:1">'+
+          '<p class="mcr-name">⚠️ Potential Duplicate Patient Detected</p>'+
+          '<p class="mcr-time" style="margin-top:4px">Name: '+(r.patient_name||'—')+'</p>'+
+          (dd.existing_mobile?('<p class="mcr-time">Existing Patient: '+dd.existing_mobile+'</p>'):'')+
+          (dd.new_mobile?('<p class="mcr-time">New Registration: '+dd.new_mobile+'</p>'):'')+
+          '<p class="mcr-time">Status: '+(dd.status||'Pending Verification')+'</p>'+
+          '<p class="mcr-time">Detected On: '+when+(r.device_label?(' · '+r.device_label):'')+'</p>'+
+        '</div>'+
+      '</div>';
+    }
     return '<div class="mcr-row">'+
       '<div style="min-width:0;flex:1">'+
         '<p class="mcr-name">'+f.icon+' '+f.label+who+'</p>'+
@@ -5241,48 +5295,234 @@ async function auraLoadIntegrationStatuses(){
   };
 })();
   /* ══════════════════════════════════════════════════════════════
-   DUPLICATE PATIENT NAME ALERT — mobile is always the primary key.
-   A same-name different-mobile registration is allowed and logged
-   silently. Never blocks the receptionist workflow.
+   DUPLICATE PATIENT NAME ALERT — v2 (exact-name detection, always-on)
+
+   RULE: registration must NEVER stop, slow down, or ask the
+   receptionist anything because of a duplicate name. This function
+   is always called fire-and-forget (never awaited by its caller),
+   is fully wrapped in try/catch, and every individual step inside
+   is also defensively guarded — a failure at any point simply means
+   no alert is logged this time; it can NEVER surface an error to the
+   receptionist or roll back the patient/appointment that already
+   saved successfully.
+
+   Detection now fires on an EXACT NAME MATCH (case-insensitive)
+   regardless of mobile, WhatsApp number, age, or gender — including
+   when the mobile number happens to be the same, per spec. (In the
+   normal flow, an identical mobile number would already have been
+   resolved to the SAME patient by findPatientByPhone() before this
+   function is ever reached, so that specific case is naturally rare
+   — but nothing here excludes it any more, so if it ever happens it
+   still gets flagged for a human to review.)
+
+   Requires the `duplicate_patient_alerts` table with these columns:
+     clinic_id, patient_name,
+     existing_patient_id, existing_mobile, existing_whatsapp,
+     existing_age, existing_gender,
+     new_patient_id, new_mobile, new_whatsapp, new_age, new_gender,
+     registration_date, registration_time, status, created_at
+   Missing columns simply cause a silent insert failure (caught
+   below) — this NEVER blocks patient/appointment creation, which has
+   already completed by the time this function runs.
    ══════════════════════════════════════════════════════════════ */
-async function _auraDuplicateNameCheck(cid, newPatientId, newName, newPhone){
+var DUPE_STATUS_PENDING='Pending Verification';
+var DUPE_STATUS_SAME='Confirmed Same Patient';
+var DUPE_STATUS_DIFFERENT='Confirmed Different Patient';
+
+async function _auraDuplicateNameCheck(cid, newPatientId, newName, newPhone, newMeta){
   try{
-    if(!cid||!newName)return;
-    /* find any existing patient with same name but different mobile */
+    if(!cid||!newName||!newPatientId)return; /* nothing to compare against — bail out quietly */
+    newMeta=newMeta||{};
+    /* find any existing patient with the exact same name (case-insensitive),
+       excluding the record we just created */
     var res=await _supa.from('patients')
-      .select('id,name,phone')
+      .select('id,name,phone,gender,age,date_of_birth,patient_code')
       .eq('clinic_id',cid)
       .ilike('name',newName.trim())
       .neq('id',newPatientId)
-      .limit(5);
+      .limit(10);
     if(res.error||!res.data||!res.data.length)return;
+
+    var now=new Date();
+    var regDate=now.toISOString().split('T')[0];
+    var regTime=now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    var newAge=newMeta.age||(newMeta.dob?calcAge(newMeta.dob):'')||'';
+
     for(var i=0;i<res.data.length;i++){
       var ex=res.data[i];
-      /* only alert if the phones are genuinely different */
-      if(_samePhone(ex.phone,newPhone))continue;
-      /* log to duplicate_patient_alerts table */
-      await _supa.from('duplicate_patient_alerts').insert({
-        clinic_id:cid,
-        patient_name:newName.trim(),
-        existing_patient_id:ex.id,
-        existing_mobile:ex.phone||'',
-        new_patient_id:newPatientId,
-        new_mobile:newPhone||'',
-        status:'Pending'
-      });
-      /* also log to the standard audit trail so it appears in Activity Log */
-      await _auraLogAudit('Duplicate Patient Alert',{
-        entityType:'patient',
-        entityId:newPatientId,
-        patientName:newName.trim(),
-        details:{
+      var exAge=ex.age||(ex.date_of_birth?calcAge(ex.date_of_birth):'')||'';
+
+      /* log to duplicate_patient_alerts — one row per matching existing
+         record, so the review list never loses which pair was flagged.
+         Best-effort: if the table/columns aren't migrated yet, we still
+         fall through to the audit-trail log below so the event isn't
+         lost entirely — and registration is unaffected either way. */
+      try{
+        await _supa.from('duplicate_patient_alerts').insert({
+          clinic_id:cid,
+          patient_name:newName.trim(),
+          existing_patient_id:ex.id,
           existing_mobile:ex.phone||'',
-          new_mobile:newPhone||''
-        }
-      });
+          existing_whatsapp:ex.phone||'', /* AuraScale uses one number for both today */
+          existing_age:exAge||null,
+          existing_gender:ex.gender||'',
+          new_patient_id:newPatientId,
+          new_mobile:newPhone||'',
+          new_whatsapp:newPhone||'',
+          new_age:newAge||null,
+          new_gender:newMeta.gender||'',
+          registration_date:regDate,
+          registration_time:regTime,
+          status:DUPE_STATUS_PENDING
+        });
+      }catch(e1){ /* silent — duplicate_patient_alerts insert must never block registration */ }
+
+      /* also log to the standard audit trail so it appears in Activity Log,
+         with the full plain-language detail block the doctor/receptionist sees */
+      try{
+        await _auraLogAudit('Duplicate Patient Alert',{
+          entityType:'patient',
+          entityId:newPatientId,
+          patientName:newName.trim(),
+          details:{
+            existing_mobile:ex.phone||'',
+            new_mobile:newPhone||'',
+            status:DUPE_STATUS_PENDING
+          }
+        });
+      }catch(e2){ /* silent — audit logging must never block registration */ }
     }
-  }catch(e){ /* silent — never blocks registration */ }
+  }catch(e){ /* silent — never blocks registration under any circumstance */ }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   SETTINGS → DUPLICATE PATIENTS (name-match alerts) — review-only.
+   No merge, no auto-block, no auto-delete. Every alert simply sits
+   here until a human marks it Same / Different. Marking a status is
+   a metadata update only — it never touches the two patient records,
+   their appointments, prescriptions, or timelines.
+   ══════════════════════════════════════════════════════════════ */
+function _dupeAlertStatusChip(status){
+  var map={};
+  map[DUPE_STATUS_PENDING]='ch-wait';
+  map[DUPE_STATUS_SAME]='ch-act';
+  map[DUPE_STATUS_DIFFERENT]='ch-inact';
+  var s=status||DUPE_STATUS_PENDING;
+  return '<span class="chip '+(map[s]||'ch-wait')+'">'+s+'</span>';
+}
+function _dupeFmtDateTime(dateStr,timeStr,createdAt){
+  if(dateStr){
+    var d=new Date(dateStr);
+    var pretty=isNaN(d.getTime())?dateStr:d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    return pretty+(timeStr?(', '+timeStr):'');
+  }
+  if(createdAt){
+    var d2=new Date(createdAt);
+    return d2.toLocaleDateString('en-GB')+', '+d2.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  }
+  return '—';
+}
+async function fetchNameDupeAlerts(){
+  var el=document.getElementById('stg-name-dupe-list');
+  var cnt=document.getElementById('stg-name-dupe-count');
+  if(!el)return;
+  if(!_clinicId){
+    el.innerHTML='<div class="settings-row"><div><p class="settings-row-lbl">Not connected</p><p class="settings-row-sub">Please sign in again to view duplicate alerts.</p></div></div>';
+    return;
+  }
+  var res=await _supa.from('duplicate_patient_alerts')
+    .select('*')
+    .eq('clinic_id',_clinicId)
+    .order('created_at',{ascending:false})
+    .limit(100);
+  if(res.error){
+    /* most likely the migration hasn't been applied yet — fail quietly */
+    el.innerHTML='<div class="settings-row"><div><p class="settings-row-lbl">No duplicate alerts yet</p><p class="settings-row-sub">Patients registered with a name that exactly matches an existing patient will automatically appear here for review — registration is never blocked or delayed.</p></div></div>';
+    if(cnt)cnt.textContent='0';
+    return;
+  }
+  var rows=res.data||[];
+  if(cnt)cnt.textContent=rows.length;
+  renderNameDupeAlerts(rows);
+}
+function renderNameDupeAlerts(rows){
+  var el=document.getElementById('stg-name-dupe-list');
+  if(!el)return;
+  if(!rows.length){
+    el.innerHTML='<div class="settings-row"><div><p class="settings-row-lbl">No duplicate alerts</p><p class="settings-row-sub">Patients registered with a name that exactly matches an existing patient will automatically appear here for review — registration is never blocked or delayed.</p></div></div>';
+    return;
+  }
+  el.innerHTML=rows.map(function(r){
+    var when=_dupeFmtDateTime(r.registration_date,r.registration_time,r.created_at);
+    return '<div class="dupe-alert-card">'+
+      '<div class="dupe-alert-head">'+
+        '<div><p class="dupe-alert-name">'+(r.patient_name||'—')+'</p>'+
+        '<p class="dupe-alert-meta">Detected '+when+'</p></div>'+
+        _dupeAlertStatusChip(r.status)+
+      '</div>'+
+      '<div class="dupe-alert-grid">'+
+        '<div class="dupe-alert-col">'+
+          '<p class="dupe-alert-col-title">Existing Patient</p>'+
+          '<p class="dupe-alert-line">ID: '+(r.existing_patient_id||'—')+'</p>'+
+          '<p class="dupe-alert-line">Mobile: '+(r.existing_mobile||'—')+'</p>'+
+          '<p class="dupe-alert-line">WhatsApp: '+(r.existing_whatsapp||r.existing_mobile||'—')+'</p>'+
+          '<p class="dupe-alert-line">Age / Gender: '+(r.existing_age||'—')+' · '+(r.existing_gender||'—')+'</p>'+
+        '</div>'+
+        '<div class="dupe-alert-col">'+
+          '<p class="dupe-alert-col-title">New Registration</p>'+
+          '<p class="dupe-alert-line">ID: '+(r.new_patient_id||'—')+'</p>'+
+          '<p class="dupe-alert-line">Mobile: '+(r.new_mobile||'—')+'</p>'+
+          '<p class="dupe-alert-line">WhatsApp: '+(r.new_whatsapp||r.new_mobile||'—')+'</p>'+
+          '<p class="dupe-alert-line">Age / Gender: '+(r.new_age||'—')+' · '+(r.new_gender||'—')+'</p>'+
+        '</div>'+
+      '</div>'+
+      '<div class="dupe-alert-actions">'+
+        '<button class="qbtn" onclick="dupeMarkStatus(\''+r.id+'\',\''+DUPE_STATUS_SAME+'\')">Mark as Same Patient</button>'+
+        '<button class="qbtn" onclick="dupeMarkStatus(\''+r.id+'\',\''+DUPE_STATUS_DIFFERENT+'\')">Mark as Different Patient</button>'+
+        '<button class="qbtn" onclick="dupeViewProfiles(\''+(r.existing_patient_id||'')+'\',\''+(r.new_patient_id||'')+'\')">View Both Profiles</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+/* Marking a status is metadata-only — it never merges, edits, or
+   deletes either patient record. This is deliberately the ONLY
+   action available today; merge architecture is reserved for later
+   (see stgMergeGroup() above for the existing phone-based merge tool,
+   which this name-based alert list intentionally does NOT trigger). */
+async function dupeMarkStatus(alertId, newStatus){
+  if(!alertId){showToast('Cannot update: missing alert ID');return;}
+  var r=await _supa.from('duplicate_patient_alerts').update({status:newStatus}).eq('id',alertId);
+  if(r.error){showToast('Could not update status: '+r.error.message);return;}
+  _auraLogAudit('Duplicate Patient Alert',{entityType:'duplicate_alert',entityId:alertId,details:{status:newStatus}}); /* audit trail — silent, never blocks the review flow */
+  showToast('Marked as: '+newStatus);
+  fetchNameDupeAlerts();
+}
+/* Read-only lookup, side-by-side — no merge, no navigation away from
+   Settings. Future-ready hook: a real merge screen can later reuse
+   this exact lookup to pre-populate its comparison view. */
+async function dupeViewProfiles(existingId, newId){
+  if(!existingId&&!newId){showToast('No profiles to show.');return;}
+  try{
+    var ids=[existingId,newId].filter(Boolean);
+    var res=await _supa.from('patients').select('id,name,phone,gender,age,date_of_birth,visit_count,last_visit,patient_code').in('id',ids);
+    if(res.error||!res.data){showToast('Could not load profiles: '+(res.error?res.error.message:'unknown error'));return;}
+    var lines=res.data.map(function(p){
+      var age=p.age||(p.date_of_birth?calcAge(p.date_of_birth):null);
+      return (p.id===existingId?'EXISTING — ':'NEW — ')+(p.name||'Unknown')+'\n'+
+        'ID: '+(p.patient_code||p.id)+' · Mobile: '+(p.phone||'—')+'\n'+
+        'Age: '+(age!==null&&age!==''?age:'—')+' · Gender: '+(p.gender||'—')+'\n'+
+        'Visits: '+(p.visit_count||0)+' · Last Visit: '+(p.last_visit||'—');
+    });
+    alert(lines.join('\n\n'));
+  }catch(e){showToast('Could not load profiles.');}
+}
+(function wrapNavForNameDupes(){
+  var _oldNav3=nav;
+  nav=function(id,btn){
+    _oldNav3(id,btn);
+    if(id==='settings')fetchNameDupeAlerts();
+  };
+})();
 </script>
 </body>
 </html>
