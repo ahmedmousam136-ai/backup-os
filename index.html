@@ -3635,6 +3635,7 @@ async function addAppointment(){
       var np=await _supa.from('patients').insert(patRow).select('id').single();
       if(np.error){showToast('Patient error: '+np.error.message);return;}
       if(np.data){patientId=np.data.id;isNewPatient=true;}
+      _auraDuplicateNameCheck(cid,patientId,name.trim(),fullPhone); /* silent duplicate name alert */
     }
   }
   if(!patientId){showToast('Could not resolve patient.');return;}
