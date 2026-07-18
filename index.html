@@ -5236,6 +5236,49 @@ async function auraLoadIntegrationStatuses(){
     if(id==='settings')auraLoadIntegrationStatuses();
   };
 })();
+  /* ══════════════════════════════════════════════════════════════
+   DUPLICATE PATIENT NAME ALERT — mobile is always the primary key.
+   A same-name different-mobile registration is allowed and logged
+   silently. Never blocks the receptionist workflow.
+   ══════════════════════════════════════════════════════════════ */
+async function _auraDuplicateNameCheck(cid, newPatientId, newName, newPhone){
+  try{
+    if(!cid||!newName)return;
+    /* find any existing patient with same name but different mobile */
+    var res=await _supa.from('patients')
+      .select('id,name,phone')
+      .eq('clinic_id',cid)
+      .ilike('name',newName.trim())
+      .neq('id',newPatientId)
+      .limit(5);
+    if(res.error||!res.data||!res.data.length)return;
+    for(var i=0;i<res.data.length;i++){
+      var ex=res.data[i];
+      /* only alert if the phones are genuinely different */
+      if(_samePhone(ex.phone,newPhone))continue;
+      /* log to duplicate_patient_alerts table */
+      await _supa.from('duplicate_patient_alerts').insert({
+        clinic_id:cid,
+        patient_name:newName.trim(),
+        existing_patient_id:ex.id,
+        existing_mobile:ex.phone||'',
+        new_patient_id:newPatientId,
+        new_mobile:newPhone||'',
+        status:'Pending'
+      });
+      /* also log to the standard audit trail so it appears in Activity Log */
+      await _auraLogAudit('Duplicate Patient Alert',{
+        entityType:'patient',
+        entityId:newPatientId,
+        patientName:newName.trim(),
+        details:{
+          existing_mobile:ex.phone||'',
+          new_mobile:newPhone||''
+        }
+      });
+    }
+  }catch(e){ /* silent — never blocks registration */ }
+}
 </script>
 </body>
 </html>
