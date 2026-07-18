@@ -3247,6 +3247,7 @@ async function confirmBooking(){
     var newPatRes=await _supa.from('patients').insert({clinic_id:cid,name:name.trim(),phone:fullPhone,status:'Active',visit_count:0}).select('id').single();
     if(newPatRes.error){_showBookingError("Patient create error: "+newPatRes.error.message);return;}
     if(newPatRes.data)patientId=newPatRes.data.id;
+    if(newPatRes.data)_auraDuplicateNameCheck(cid,newPatRes.data.id,name.trim(),fullPhone);
   }
   if(!patientId){_showBookingError("Could not resolve patient.");return;}
   /* insert appointment */
