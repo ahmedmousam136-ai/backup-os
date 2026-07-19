@@ -1841,6 +1841,7 @@ main.content{
           <input type="date" class="finput" id="rx-fu-custom-date" onchange="rxOnFollowupChange()"/>
         </div>
         <p class="qp-hint" id="rx-fu-hint">Patient's follow-up date will be calculated automatically and saved to their record.</p>
+        <p class="qp-hint" id="rx-fu-existing" style="display:none;color:var(--blue);font-weight:600"></p>
       </div>
 
       <div>
@@ -4370,6 +4371,7 @@ function rxPickPatient(){
     nameEl.style.pointerEvents=""; phoneEl.style.pointerEvents="";
     if(gaEl)gaEl.textContent="—";
     if(idHintEl)idHintEl.textContent="Patient ID: —";
+    rxShowExistingFollowup(null);
     loadPatientTimeline();
     return;
   }
@@ -4388,7 +4390,32 @@ function rxPickPatient(){
     if(age!==null&&age!=='')parts.push(age+" yrs");
     gaEl.textContent=parts.length?parts.join(" · "):"Not recorded";
   }
+  rxShowExistingFollowup(p.id);
   loadPatientTimeline();
+}
+
+/* Shows any currently Scheduled follow-up already on file for this
+   patient directly on the Prescription screen, so the doctor can see
+   "this patient already has a follow-up booked for 14 Jun" before
+   deciding whether to set a new one. Read-only, best-effort. */
+async function rxShowExistingFollowup(patientId){
+  var el=document.getElementById('rx-fu-existing');
+  if(!el)return;
+  if(!patientId||!_clinicId){el.style.display='none';el.textContent='';return;}
+  try{
+    var res=await _supa.from('followup_history')
+      .select('followup_date,status')
+      .eq('clinic_id',_clinicId)
+      .eq('patient_id',patientId)
+      .eq('status','Scheduled')
+      .order('followup_date',{ascending:true})
+      .limit(1);
+    if(res.error||!res.data||!res.data.length){el.style.display='none';el.textContent='';return;}
+    var fu=res.data[0];
+    var st=_fuStatusFor(fu.followup_date);
+    el.style.display='block';
+    el.textContent='This patient already has a follow-up scheduled for '+_fuPrettyDate(fu.followup_date)+' ('+st.label+'). Selecting a new one below will add another.';
+  }catch(e){ el.style.display='none'; el.textContent=''; }
 }
 
 function calcAge(dobStr){
@@ -4591,7 +4618,7 @@ async function loadPatientTimeline(){
   var meds=medRes.data||[];
   var followups=fuRes.data||[];
 
-  renderTlSummary(patRow, visits, diagnoses, meds);
+  renderTlSummary(patRow, visits, diagnoses, meds, followups);
   renderTlVisits(visits);
   renderTlDiagnosis(diagnoses);
   renderTlMeds(meds);
@@ -4599,12 +4626,14 @@ async function loadPatientTimeline(){
   renderTlPdf(visits);
 }
 
-function renderTlSummary(patRow, visits, diagnoses, meds){
+function renderTlSummary(patRow, visits, diagnoses, meds, followups){
   var el=document.getElementById("tl-summary");
   if(!el)return;
   var rxCount=visits.filter(function(v){return v.prescription_id;}).length;
   var latestVisit=visits[0]?(visits[0].visit_date||"—"):"—";
   var age=patRow.date_of_birth?calcAge(patRow.date_of_birth):(patRow.age||null);
+  var nextFu=(followups||[]).filter(function(f){return f.status==='Scheduled';}).sort(function(a,b){return (a.followup_date||'').localeCompare(b.followup_date||'');})[0];
+  var nextFuVal=nextFu?(_fuPrettyDate(nextFu.followup_date)+' · '+_fuStatusFor(nextFu.followup_date).label):"Not scheduled";
   el.innerHTML=
     '<div class="tl-summary-top">'+
       '<div class="tl-avatar">'+((patRow.name||"?").charAt(0))+'</div>'+
@@ -4620,6 +4649,7 @@ function renderTlSummary(patRow, visits, diagnoses, meds){
       '<div class="tl-sitem"><p class="tl-sitem-lbl">Latest Weight</p><p class="tl-sitem-val small">'+(patRow.weight?(patRow.weight+" kg"):"Not recorded")+'</p></div>'+
       '<div class="tl-sitem"><p class="tl-sitem-lbl">Latest BP</p><p class="tl-sitem-val small">Not recorded</p></div>'+
       '<div class="tl-sitem"><p class="tl-sitem-lbl">Latest Visit</p><p class="tl-sitem-val small">'+latestVisit+'</p></div>'+
+      '<div class="tl-sitem"><p class="tl-sitem-lbl">Next Follow-up</p><p class="tl-sitem-val small">'+nextFuVal+'</p></div>'+
       '<div class="tl-sitem"><p class="tl-sitem-lbl">Total Visits</p><p class="tl-sitem-val">'+visits.length+'</p></div>'+
       '<div class="tl-sitem"><p class="tl-sitem-lbl">Diagnoses</p><p class="tl-sitem-val">'+diagnoses.length+'</p></div>'+
       '<div class="tl-sitem"><p class="tl-sitem-lbl">Prescriptions</p><p class="tl-sitem-val">'+rxCount+'</p></div>'+
@@ -6063,7 +6093,7 @@ async function _auraLogFollowup(cid, patientId, patientName, patientPhone, docto
     var followupDate=rxComputeFollowupDate();
     if(!followupDate)return;
     var today=new Date().toISOString().split('T')[0];
-    await _supa.from('followup_history').insert({
+    var ins=await _supa.from('followup_history').insert({
       clinic_id:cid,
       patient_id:patientId||null,
       patient_name:patientName,
@@ -6075,6 +6105,7 @@ async function _auraLogFollowup(cid, patientId, patientName, patientPhone, docto
       reminder_status:'Pending',
       source_prescription_id:prescriptionId||null
     });
+    if(ins.error){console.warn('[AuraFollowUp] Could not save follow-up — run the setup SQL. Details:',ins.error.message);}
     fetchFollowupAlerts();
   }catch(e){ /* silent — follow-up scheduling must never block prescription delivery */ }
 }
@@ -6112,8 +6143,12 @@ async function fetchFollowupAlerts(){
     .order('followup_date',{ascending:true})
     .limit(50);
   if(res.error){
-    /* migration likely not applied yet — leave the panel's existing
-       static/empty state alone rather than showing a raw DB error */
+    /* Table/migration genuinely missing — say so clearly instead of
+       looking identical to "zero follow-ups", so this is diagnosable
+       without opening the browser console. */
+    console.warn('[AuraFollowUp] followup_history read failed:',res.error.message);
+    if(cnt)cnt.textContent='Setup needed';
+    el.innerHTML='<div class="empty" style="padding:24px 16px"><div class="empty-ic">⚙️</div><p class="empty-t">Follow-up tracking isn\'t set up yet</p><p class="empty-s">Ask your admin to run the follow-up setup script in Supabase (see AURA_FOLLOWUP_SETUP_SQL in the code, or the setup guide provided with this update).</p></div>';
     return;
   }
   var rows=res.data||[];
