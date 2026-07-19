@@ -1121,6 +1121,30 @@ main.content{
 .aura-dd-opt{padding:8px 12px;font-size:12.5px;color:var(--text-primary);cursor:pointer;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .aura-dd-opt:hover,.aura-dd-opt.hi{background:var(--blue-bg);color:var(--blue)}
+
+/* ══ FOLLOW-UP MANAGEMENT SYSTEM ══ */
+.fu-row{padding:11px 15px;border-bottom:1px solid rgba(228,224,216,.65);transition:background var(--ease)}
+[data-theme="dark"] .fu-row{border-bottom-color:rgba(37,42,56,.9)}
+.fu-row:hover{background:var(--bg)}
+.fu-row:last-child{border-bottom:none}
+.fu-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.fu-name{color:var(--text-primary);font-size:12.5px;font-weight:700}
+.fu-meta{color:var(--text-secondary);font-size:10.5px;margin-top:2px;line-height:1.6}
+.fu-meta b{color:var(--text-primary);font-weight:600}
+.fu-badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:5px;font-size:9.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.fu-badge-today{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.fu-badge-tomorrow{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.fu-badge-upcoming{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.fu-badge-overdue{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.fu-actions{display:flex;align-items:center;gap:6px;margin-top:9px;flex-wrap:wrap}
+.fu-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-primary);font-size:10px;padding:6px 10px;border-radius:6px;display:flex;align-items:center;gap:4px;font-weight:600;transition:all var(--ease);box-shadow:var(--sh-xs);cursor:pointer;white-space:nowrap;min-height:32px}
+.fu-btn:hover{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+.fu-btn.fu-btn-done:hover{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)}
+.fu-method-row{display:flex;gap:8px}
+.fu-method-opt{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:var(--bg);color:var(--text-secondary);font-size:12px;font-weight:600;cursor:pointer;transition:all var(--ease)}
+.fu-method-opt.active{border-color:var(--blue);background:var(--blue-bg);color:var(--blue)}
+.rx-fu-custom{display:none;margin-top:8px}
+.rx-fu-custom.on{display:block}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -1427,7 +1451,7 @@ main.content{
                 <span class="dot dot-a"></span>
                 <span data-i18n="alerts_title">Follow-up Alerts</span>
               </div>
-              <span class="pb pb-r" data-i18n="alerts_window">14-day window</span>
+              <span class="pb pb-r" id="fu-alert-count">0 due</span>
             </div>
             <div id="alerts-list"></div>
           </div>
@@ -1798,6 +1822,28 @@ main.content{
       </div>
 
       <div>
+        <label class="flbl">Next Follow-up</label>
+        <select class="finput" id="rx-followup" style="color:var(--text-primary)" onchange="rxOnFollowupChange()">
+          <option value="">— No follow-up needed —</option>
+          <option value="3">3 Days</option>
+          <option value="5">5 Days</option>
+          <option value="7">7 Days</option>
+          <option value="10">10 Days</option>
+          <option value="14">14 Days</option>
+          <option value="21">21 Days</option>
+          <option value="30">30 Days</option>
+          <option value="45">45 Days</option>
+          <option value="60">60 Days</option>
+          <option value="90">90 Days</option>
+          <option value="custom">Custom Date</option>
+        </select>
+        <div class="rx-fu-custom" id="rx-fu-custom-wrap">
+          <input type="date" class="finput" id="rx-fu-custom-date" onchange="rxOnFollowupChange()"/>
+        </div>
+        <p class="qp-hint" id="rx-fu-hint">Patient's follow-up date will be calculated automatically and saved to their record.</p>
+      </div>
+
+      <div>
         <label class="flbl">Instructions / Advice</label>
         <textarea class="ftextarea" id="rx-instr" rows="3" placeholder="e.g. Plenty of fluids. Review after 5 days."></textarea>
         <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px">
@@ -2081,6 +2127,15 @@ main.content{
               <span class="tknob"></span>
             </button>
           </div>
+          <div class="settings-row">
+            <div>
+              <p class="settings-row-lbl">Automatic Follow-up Reminders</p>
+              <p class="settings-row-sub">On the follow-up date, sends WhatsApp automatically — falls back to SMS if WhatsApp fails. Nothing opens WhatsApp Web.</p>
+            </div>
+            <button class="toggle off" id="stg-auto-followup-toggle" onclick="stgToggleAutoFollowup(this)" aria-label="Toggle automatic follow-up reminders">
+              <span class="tknob"></span>
+            </button>
+          </div>
         </div>
 
         <div class="settings-section">
@@ -2315,6 +2370,63 @@ main.content{
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         Send via WhatsApp
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- FOLLOW-UP REMINDER MODAL -->
+<div class="mod-ov" id="fu-modal">
+  <div class="modal">
+    <div class="mh">
+      <div style="display:flex;align-items:center;gap:9px">
+        <div class="mic">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div>
+          <p class="mtitle">Send Follow-up Reminder</p>
+          <p style="color:var(--text-tertiary);font-size:10px;margin-top:1px" id="fu-modal-sub">Patient</p>
+        </div>
+      </div>
+      <button class="mclose" onclick="closeModal('fu-modal')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="mb">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+        <div>
+          <label class="flbl">Mobile Number</label>
+          <div class="finput" id="fu-mobile" style="display:flex;align-items:center;font-size:13px;color:var(--text-secondary)"></div>
+        </div>
+        <div>
+          <label class="flbl">WhatsApp Number</label>
+          <div class="finput" id="fu-whatsapp" style="display:flex;align-items:center;font-size:13px;color:var(--text-secondary)"></div>
+        </div>
+      </div>
+      <div>
+        <label class="flbl">Delivery Method</label>
+        <div class="fu-method-row">
+          <button type="button" class="fu-method-opt active" id="fu-method-wa" onclick="fuSelectMethod('WhatsApp')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            WhatsApp
+          </button>
+          <button type="button" class="fu-method-opt" id="fu-method-sms" onclick="fuSelectMethod('SMS')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            SMS
+          </button>
+        </div>
+      </div>
+      <div>
+        <label class="flbl">Message</label>
+        <textarea class="ftextarea" id="fu-msg" rows="6"></textarea>
+      </div>
+      <div id="fu-error" class="auth-error" style="display:none"></div>
+      <div style="display:flex;gap:8px">
+        <button class="qbtn" style="flex:1;justify-content:center;min-height:44px" onclick="closeModal('fu-modal')">Cancel</button>
+        <button class="msub" style="flex:1.6" id="fu-send-btn" onclick="fuSendFromModal()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Send
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -5871,6 +5983,448 @@ async function confirmPatientMerge(){
     if(id==='settings')fetchNameDupeAlerts();
   };
 })();
+
+/* ══════════════════════════════════════════════════════════════
+   COMPLETE FOLLOW-UP MANAGEMENT SYSTEM
+
+   Requires the `followup_history` table (see
+   supabase/2026_07_17_followup_management.sql). Columns used:
+     id, clinic_id, patient_id, patient_name, patient_phone,
+     doctor_name, last_visit_date, followup_date, status
+       ('Scheduled' | 'Completed' | 'Cancelled'),
+     reminder_sent_at, reminder_method, reminder_status
+       ('Pending' | 'Sent' | 'Delivered' | 'Failed'),
+     source_prescription_id, created_at
+
+   Also requires clinics.auto_followup_enabled (boolean, default
+   false) for the Automatic Follow-up Reminders toggle in Settings.
+
+   Every read/write below is defensively wrapped exactly like the
+   rest of this file's background layers (ABDM foundation, audit
+   trail, integrations registry) — a missing table/column never
+   blocks prescription generation, appointment booking, or any
+   other existing workflow. This module is purely additive.
+   ══════════════════════════════════════════════════════════════ */
+
+var RX_FOLLOWUP_DAY_OPTIONS=[3,5,7,10,14,21,30,45,60,90];
+
+function _fuAddDays(dateStr, days){
+  var d=dateStr?new Date(dateStr+"T00:00:00"):new Date();
+  if(isNaN(d.getTime()))d=new Date();
+  d.setDate(d.getDate()+Number(days));
+  return d.toISOString().split('T')[0];
+}
+function _fuPrettyDate(dateStr){
+  if(!dateStr)return '—';
+  var d=new Date(dateStr+"T00:00:00");
+  if(isNaN(d.getTime()))return dateStr;
+  return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+}
+
+function rxOnFollowupChange(){
+  var sel=document.getElementById('rx-followup');
+  var wrap=document.getElementById('rx-fu-custom-wrap');
+  var hint=document.getElementById('rx-fu-hint');
+  if(!sel)return;
+  var isCustom=sel.value==='custom';
+  if(wrap)wrap.classList.toggle('on',isCustom);
+  var followupDate=rxComputeFollowupDate();
+  if(hint){
+    hint.textContent=followupDate
+      ?('Follow-up date: '+_fuPrettyDate(followupDate)+' — will be saved to the patient record.')
+      :"Patient's follow-up date will be calculated automatically and saved to their record.";
+  }
+}
+function rxComputeFollowupDate(){
+  var sel=document.getElementById('rx-followup');
+  if(!sel||!sel.value)return null;
+  if(sel.value==='custom'){
+    var d=document.getElementById('rx-fu-custom-date');
+    return (d&&d.value)?d.value:null;
+  }
+  return _fuAddDays(new Date().toISOString().split('T')[0], sel.value);
+}
+function rxResetFollowupField(){
+  var sel=document.getElementById('rx-followup'); if(sel)sel.value='';
+  var wrap=document.getElementById('rx-fu-custom-wrap'); if(wrap)wrap.classList.remove('on');
+  var d=document.getElementById('rx-fu-custom-date'); if(d)d.value='';
+  var hint=document.getElementById('rx-fu-hint');
+  if(hint)hint.textContent="Patient's follow-up date will be calculated automatically and saved to their record.";
+}
+
+/* Called from generatePrescription() right after the prescription +
+   visit have already been saved successfully. Fire-and-forget, same
+   pattern as _auraLogVisit — a failure here never rolls back or
+   blocks the prescription/WhatsApp delivery that already completed. */
+async function _auraLogFollowup(cid, patientId, patientName, patientPhone, doctorName, prescriptionId){
+  try{
+    var sel=document.getElementById('rx-followup');
+    if(!sel||!sel.value)return; /* no follow-up requested for this prescription */
+    var followupDate=rxComputeFollowupDate();
+    if(!followupDate)return;
+    var today=new Date().toISOString().split('T')[0];
+    await _supa.from('followup_history').insert({
+      clinic_id:cid,
+      patient_id:patientId||null,
+      patient_name:patientName,
+      patient_phone:patientPhone,
+      doctor_name:doctorName,
+      last_visit_date:today,
+      followup_date:followupDate,
+      status:'Scheduled',
+      reminder_status:'Pending',
+      source_prescription_id:prescriptionId||null
+    });
+    fetchFollowupAlerts();
+  }catch(e){ /* silent — follow-up scheduling must never block prescription delivery */ }
+}
+
+/* ── Status classification ─────────────────────────────────── */
+function _fuStatusFor(followupDate){
+  var today=new Date(); today.setHours(0,0,0,0);
+  var fd=new Date(followupDate+"T00:00:00");
+  var diffDays=Math.round((fd-today)/86400000);
+  if(diffDays<0)return {key:'overdue',label:'Overdue',cls:'fu-badge-overdue',days:diffDays};
+  if(diffDays===0)return {key:'today',label:'Today',cls:'fu-badge-today',days:0};
+  if(diffDays===1)return {key:'tomorrow',label:'Tomorrow',cls:'fu-badge-tomorrow',days:1};
+  return {key:'upcoming',label:'Upcoming',cls:'fu-badge-upcoming',days:diffDays};
+}
+function _fuDaysLabel(st){
+  if(st.key==='overdue')return Math.abs(st.days)+(Math.abs(st.days)===1?' day overdue':' days overdue');
+  if(st.key==='today')return 'Due today';
+  if(st.key==='tomorrow')return 'Due tomorrow';
+  return 'In '+st.days+' days';
+}
+
+/* ── Dashboard widget — real-time Follow-up Alerts ───────────
+   Replaces the static DB[mkt].alerts rendering with live rows from
+   followup_history. Re-fetched on dashboard nav, right after login,
+   and every 60 seconds while the app is open so the widget reflects
+   day-rollovers (Today → Overdue etc.) without a manual refresh. */
+async function fetchFollowupAlerts(){
+  var el=document.getElementById('alerts-list');
+  var cnt=document.getElementById('fu-alert-count');
+  if(!el||!_clinicId)return;
+  var res=await _supa.from('followup_history')
+    .select('*')
+    .eq('clinic_id',_clinicId)
+    .eq('status','Scheduled')
+    .order('followup_date',{ascending:true})
+    .limit(50);
+  if(res.error){
+    /* migration likely not applied yet — leave the panel's existing
+       static/empty state alone rather than showing a raw DB error */
+    return;
+  }
+  var rows=res.data||[];
+  window._fuAlertRows={};
+  rows.forEach(function(r){window._fuAlertRows[r.id]=r;});
+  if(cnt)cnt.textContent=rows.length+(currentLang==='bn'?' জন বকেয়া':' due');
+  if(!rows.length){
+    el.innerHTML='<div class="empty" style="padding:24px 16px"><div class="empty-ic">🔔</div><p class="empty-t">No follow-up alerts</p><p class="empty-s">Alerts will appear when patients are due for a follow-up.</p></div>';
+    return;
+  }
+  el.innerHTML=rows.map(function(r){
+    var st=_fuStatusFor(r.followup_date);
+    return '<div class="fu-row">'+
+      '<div class="fu-top">'+
+        '<div style="min-width:0">'+
+          '<p class="fu-name">'+(r.patient_name||'—')+'</p>'+
+          '<p class="fu-meta"><b>Mobile:</b> '+(r.patient_phone||'—')+' &nbsp; <b>Doctor:</b> '+(r.doctor_name||'—')+'</p>'+
+          '<p class="fu-meta"><b>Last Visit:</b> '+_fuPrettyDate(r.last_visit_date)+' &nbsp; <b>Next Follow-up:</b> '+_fuPrettyDate(r.followup_date)+'</p>'+
+          '<p class="fu-meta">'+_fuDaysLabel(st)+(r.reminder_sent_at?(' &nbsp; · &nbsp; Reminder sent '+new Date(r.reminder_sent_at).toLocaleString('en-GB')):'')+'</p>'+
+        '</div>'+
+        '<span class="fu-badge '+st.cls+'">'+st.label+'</span>'+
+      '</div>'+
+      '<div class="fu-actions">'+
+        '<button class="fu-btn" onclick="openFollowupModal(\''+r.id+'\')">'+WA_SVG+' Send Follow-up Reminder</button>'+
+        '<button class="fu-btn fu-btn-done" onclick="markFollowupCompleted(\''+r.id+'\')">'+
+          '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Mark as Completed</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+async function markFollowupCompleted(id){
+  if(!id)return;
+  var r=await _supa.from('followup_history').update({status:'Completed'}).eq('id',id);
+  if(r.error){showToast('Could not update follow-up: '+r.error.message);return;}
+  var row=(window._fuAlertRows||{})[id];
+  _auraLogAudit('Follow-up Modified',{entityType:'followup',entityId:id,patientName:row?row.patient_name:null,details:{status:'Completed'}});
+  showToast('Follow-up marked as completed.');
+  fetchFollowupAlerts();
+}
+
+/* ── Manual reminder modal ────────────────────────────────── */
+var _fuModalState=null;
+var _fuSelectedMethod='WhatsApp';
+
+function fuBuildMessage(row){
+  var d=DB[mkt].doc;
+  return "Hello "+(row.patient_name||'')+"\n"+
+    "This is a reminder from "+d.clinic+".\n"+
+    "Your follow-up appointment with Dr. "+(row.doctor_name||d.name).replace(/^Dr\.?\s*/i,'')+" is due.\n\n"+
+    "Suggested Follow-up Date:\n"+_fuPrettyDate(row.followup_date)+"\n\n"+
+    "Please contact the clinic if you would like to schedule your visit.\n\n"+
+    "Regards,\n"+d.clinic;
+}
+function fuSelectMethod(method){
+  _fuSelectedMethod=method;
+  var waBtn=document.getElementById('fu-method-wa'), smsBtn=document.getElementById('fu-method-sms');
+  if(waBtn)waBtn.classList.toggle('active',method==='WhatsApp');
+  if(smsBtn)smsBtn.classList.toggle('active',method==='SMS');
+}
+function openFollowupModal(id){
+  var row=(window._fuAlertRows||{})[id];
+  if(!row){showToast('Could not load this follow-up.');return;}
+  _fuModalState={id:id,row:row};
+  _fuSelectedMethod='WhatsApp';
+  fuSelectMethod('WhatsApp');
+  document.getElementById('fu-modal-sub').textContent=row.patient_name||'Patient';
+  document.getElementById('fu-mobile').textContent=row.patient_phone||'—';
+  document.getElementById('fu-whatsapp').textContent=row.patient_phone||'—';
+  document.getElementById('fu-msg').value=fuBuildMessage(row);
+  var errEl=document.getElementById('fu-error'); if(errEl){errEl.style.display='none';errEl.textContent='';}
+  openModal('fu-modal');
+}
+async function fuSendFromModal(){
+  if(!_fuModalState){showToast('Nothing to send.');return;}
+  var msg=(document.getElementById('fu-msg')||{}).value||'';
+  var errEl=document.getElementById('fu-error');
+  if(!msg.trim()){ if(errEl){errEl.textContent='Message cannot be empty.';errEl.style.display='block';} return; }
+  var btn=document.getElementById('fu-send-btn');
+  if(btn){btn.disabled=true;btn.textContent='Sending…';}
+  var res=await sendFollowupReminder(_fuModalState.id, _fuSelectedMethod, msg, false);
+  if(btn){btn.disabled=false;btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send';}
+  if(res&&res.ok){
+    closeModal('fu-modal');
+  }else if(errEl){
+    errEl.textContent=(res&&res.error)||'Could not deliver the reminder. Please try again.';
+    errEl.style.display='block';
+  }
+}
+
+/* ── Delivery service — everything happens inside AuraScale, never
+   a wa.me redirect. WhatsApp is tried first (unless SMS is chosen
+   explicitly); if WhatsApp fails, SMS is tried automatically as a
+   fallback — matching the spec for both manual and automatic
+   sends. Every outcome is written to the immutable audit trail and
+   reflected on the patient's Timeline via reminder_sent_at on the
+   followup_history row itself (read by renderTlFollowup). ── */
+async function sendFollowupReminder(id, method, message, isAutomatic){
+  var row=(window._fuAlertRows||{})[id];
+  if(!row){
+    var r0=await _supa.from('followup_history').select('*').eq('id',id).single();
+    if(r0.data)row=r0.data;
+  }
+  if(!row)return {ok:false,error:'Follow-up record not found.'};
+  var finalMsg=message||fuBuildMessage(row);
+  var e164=(row.patient_phone||'').replace(/[^\d]/g,'');
+  if(!e164)return {ok:false,error:'No phone number on file for this patient.'};
+
+  var attemptOrder=method==='SMS'?['SMS']:['WhatsApp','SMS'];
+  var lastError=null;
+  for(var i=0;i<attemptOrder.length;i++){
+    var m=attemptOrder[i];
+    var outcome=await _fuDeliverVia(m, e164, row, finalMsg);
+    if(outcome.ok){
+      await _supa.from('followup_history').update({
+        reminder_sent_at:new Date().toISOString(),
+        reminder_method:m,
+        reminder_status:'Sent'
+      }).eq('id',id);
+      _auraLogAudit('Reminder Sent',{entityType:'followup',entityId:id,patientName:row.patient_name,details:{method:m,automatic:!!isAutomatic}});
+      showToast((isAutomatic?'Automatic':'')+' Follow-up reminder sent via '+m+' to '+(row.patient_name||'patient'));
+      fetchFollowupAlerts();
+      return {ok:true,method:m};
+    }
+    lastError=outcome.error;
+    _auraLogAudit('Reminder Failed',{entityType:'followup',entityId:id,patientName:row.patient_name,details:{method:m,error:lastError,automatic:!!isAutomatic}});
+  }
+  await _supa.from('followup_history').update({reminder_status:'Failed'}).eq('id',id);
+  showToast('Could not deliver reminder to '+(row.patient_name||'patient')+' via WhatsApp or SMS.');
+  fetchFollowupAlerts();
+  return {ok:false,error:lastError||'Delivery failed.'};
+}
+
+/* Routes through Supabase Edge Functions so delivery genuinely stays
+   inside AuraScale (no wa.me redirect). Safe no-op error if the
+   function isn't deployed yet — caller's WhatsApp→SMS fallback and
+   audit logging still work correctly either way. */
+async function _fuDeliverVia(method, e164, row, message){
+  try{
+    var fn=method==='SMS'?'send-followup-sms':'send-followup-whatsapp';
+    var r=await _supa.functions.invoke(fn,{body:{
+      to:e164,
+      patientName:row.patient_name,
+      doctorName:row.doctor_name,
+      clinicName:DB[mkt].doc.clinic,
+      message:message
+    }});
+    if(r.error)return {ok:false,error:r.error.message||(method+' delivery function error')};
+    if(r.data&&r.data.ok)return {ok:true};
+    return {ok:false,error:(r.data&&r.data.error)||(method+' not configured yet')};
+  }catch(e){ return {ok:false,error:String(e.message||e)}; }
+}
+
+/* Resend — same delivery path, logged distinctly as "Reminder
+   Resent" rather than "Reminder Sent" so the audit trail shows the
+   difference. */
+async function resendFollowupReminder(id){
+  var row=(window._fuAlertRows||{})[id];
+  var msg=row?fuBuildMessage(row):null;
+  var res=await sendFollowupReminder(id,'WhatsApp',msg,false);
+  if(res.ok){
+    _auraLogAudit('Reminder Resent',{entityType:'followup',entityId:id,patientName:row?row.patient_name:null,details:{method:res.method}});
+  }
+  return res;
+}
+
+/* ── Automatic delivery ──────────────────────────────────────
+   Runs on dashboard load, on login, and every 60s while the app is
+   open. If Settings → Automatic Follow-up Reminders is enabled,
+   scans for follow-ups due today that haven't had a reminder sent
+   yet and delivers them silently — WhatsApp first, SMS fallback,
+   never a wa.me redirect. */
+async function checkAutomaticFollowups(){
+  try{
+    if(!_clinicId)return;
+    if(!DB[mkt]._autoFollowupEnabled)return;
+    var today=new Date().toISOString().split('T')[0];
+    var res=await _supa.from('followup_history')
+      .select('*')
+      .eq('clinic_id',_clinicId)
+      .eq('status','Scheduled')
+      .eq('followup_date',today)
+      .is('reminder_sent_at',null);
+    if(res.error||!res.data||!res.data.length)return;
+    for(var i=0;i<res.data.length;i++){
+      window._fuAlertRows=window._fuAlertRows||{};
+      window._fuAlertRows[res.data[i].id]=res.data[i];
+      await sendFollowupReminder(res.data[i].id,'WhatsApp',null,true);
+    }
+  }catch(e){ /* silent — automatic delivery must never surface an error or interrupt the app */ }
+}
+
+/* ── Settings toggle: Automatic Follow-up Reminders ─────────── */
+async function stgToggleAutoFollowup(btn){
+  if(!_clinicId){showToast('Not connected — please sign in again.');return;}
+  var enabling=btn.classList.contains('off');
+  btn.classList.toggle('on');
+  btn.classList.toggle('off');
+  DB[mkt]._autoFollowupEnabled=enabling;
+  try{
+    await _supa.from('clinics').update({auto_followup_enabled:enabling}).eq('id',_clinicId);
+  }catch(e){ /* silent — column may not exist yet until migration is applied */ }
+  showToast('Automatic Follow-up Reminders '+(enabling?'enabled':'disabled')+'.');
+  if(enabling)checkAutomaticFollowups();
+}
+async function _fuLoadAutoSetting(){
+  try{
+    if(!_clinicId)return;
+    var r=await _supa.from('clinics').select('auto_followup_enabled').eq('id',_clinicId).single();
+    var on=!!(r.data&&r.data.auto_followup_enabled);
+    DB[mkt]._autoFollowupEnabled=on;
+    var btn=document.getElementById('stg-auto-followup-toggle');
+    if(btn){btn.classList.toggle('on',on);btn.classList.toggle('off',!on);}
+  }catch(e){ /* silent — safe default is "disabled" until migration is applied */ }
+}
+
+/* ── Wire into existing lifecycle, non-invasively ────────────
+   Same technique used throughout this file: wrap the existing
+   function rather than editing it, so every current workflow is
+   completely untouched. ── */
+(function wrapForFollowups(){
+  var _oldLoadClinicAndGo2=_loadClinicAndGo;
+  _loadClinicAndGo=async function(user){
+    await _oldLoadClinicAndGo2(user);
+    await _fuLoadAutoSetting();
+    fetchFollowupAlerts();
+    checkAutomaticFollowups();
+  };
+
+  var _oldNav4=nav;
+  nav=function(id,btn){
+    _oldNav4(id,btn);
+    if(id==='dashboard'){fetchFollowupAlerts();checkAutomaticFollowups();}
+  };
+  var _oldNavMob=navMob;
+  navMob=function(id,btn){
+    _oldNavMob(id,btn);
+    if(id==='dashboard'){fetchFollowupAlerts();checkAutomaticFollowups();}
+  };
+
+  /* Real-time refresh: keeps Today/Tomorrow/Upcoming/Overdue correct
+     across day rollovers and shows newly-sent reminders without a
+     manual page reload. */
+  setInterval(function(){
+    fetchFollowupAlerts();
+    checkAutomaticFollowups();
+  },60000);
+})();
+
+/* Extend generatePrescription's own success path to log the
+   follow-up and reset the field — done by wrapping uploadRxPdf's
+   sibling call site is not possible cleanly, so instead we hook the
+   one function already called on every successful prescription:
+   _auraLogVisit. This guarantees follow-up logging fires exactly
+   when — and only when — a prescription actually saved, with zero
+   changes to generatePrescription() itself. */
+(function wrapAuraLogVisitForFollowup(){
+  var _oldAuraLogVisit=_auraLogVisit;
+  _auraLogVisit=async function(cid, name, phoneDisplay, doctorName, meds, instr, rxId, st, weight){
+    await _oldAuraLogVisit.apply(this,arguments);
+    try{
+      var patientId=await _auraResolvePatientId(cid, name, phoneDisplay);
+      await _auraLogFollowup(cid, patientId, name, phoneDisplay, doctorName, rxId);
+    }catch(e){ /* silent */ }
+    rxResetFollowupField();
+  };
+})();
+
+/* Extend renderTlFollowup (Patient Timeline → Follow-up History) to
+   surface reminder delivery details alongside the scheduled date,
+   satisfying "whenever a reminder is sent, create a Timeline entry"
+   without adding a second, redundant table — the same
+   followup_history row already read by the Timeline carries the
+   reminder_sent_at / reminder_method / reminder_status fields. */
+(function wrapRenderTlFollowupForReminders(){
+  var _oldRenderTlFollowup=renderTlFollowup;
+  renderTlFollowup=function(followups){
+    var el=document.getElementById("tl-followup-list");
+    var cnt=document.getElementById("tl-fu-count");
+    if(cnt)cnt.textContent=followups.length;
+    if(!el)return;
+    if(!followups.length){
+      el.innerHTML='<div class="empty"><div class="empty-ic">🔔</div><p class="empty-t">No follow-ups yet</p><p class="empty-s">Follow-ups are scheduled automatically from the prescription form.</p></div>';
+      return;
+    }
+    el.innerHTML=followups.map(function(f){
+      var reminderLine=f.reminder_sent_at
+        ?('<p class="fu-meta">Follow-up Reminder Sent — '+new Date(f.reminder_sent_at).toLocaleString('en-GB')+(f.reminder_method?(' via '+f.reminder_method):'')+'</p>')
+        :'';
+      return '<div class="tl-fu-row" style="flex-direction:column;align-items:stretch;gap:6px">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">'+
+          '<p class="tl-diag-text">'+_fuPrettyDate(f.followup_date||f.scheduled_date)+(f.doctor_name?(' · '+f.doctor_name):'')+'</p>'+
+          tlFuChip(f.status)+
+        '</div>'+
+        reminderLine+
+      '</div>';
+    }).join("");
+  };
+})();
+
+/* Add "Follow-up Reminder Sent" / "Reminder Resent" wording + Reminder
+   audit types into the existing Activity Log friendly map, visible
+   events allowlist, and filter groups. */
+_auditFriendlyMap['Reminder Sent']={icon:'🔔',en:'Follow-up reminder sent',bn:'ফলো-আপ রিমাইন্ডার পাঠানো হয়েছে'};
+_auditFriendlyMap['Reminder Failed']={icon:'⚠️',en:'Follow-up reminder failed',bn:'ফলো-আপ রিমাইন্ডার ব্যর্থ হয়েছে'};
+_auditFriendlyMap['Reminder Delivered']={icon:'✅',en:'Follow-up reminder delivered',bn:'ফলো-আপ রিমাইন্ডার পৌঁছেছে'};
+_auditFriendlyMap['Reminder Resent']={icon:'🔁',en:'Follow-up reminder resent',bn:'ফলো-আপ রিমাইন্ডার পুনরায় পাঠানো হয়েছে'};
+AUDIT_VISIBLE_EVENTS.push('Reminder Sent','Reminder Failed','Reminder Delivered','Reminder Resent');
+if(AUDIT_FILTER_GROUPS['reminders']){
+  AUDIT_FILTER_GROUPS['reminders']=AUDIT_FILTER_GROUPS['reminders'].concat(['Reminder Sent','Reminder Failed','Reminder Delivered','Reminder Resent']);
+}
 </script>
 </body>
 </html>
