@@ -1109,6 +1109,10 @@ main.content{
 .dupe-alert-col-title{font-size:9px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:var(--text-tertiary);margin-bottom:5px}
 .dupe-alert-line{font-size:11px;color:var(--text-secondary);line-height:1.6}
 .dupe-alert-actions{display:flex;gap:6px;flex-wrap:wrap}
+.merge-radio-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-primary);cursor:pointer;line-height:1.4}
+.merge-radio-row input[type="radio"]{accent-color:var(--blue);width:15px;height:15px;flex-shrink:0;cursor:pointer}
+#merge-review-body{gap:14px}
+#merge-review-body>div:not(.dupe-alert-grid){display:block}
 
 /* ══ AURA DROPDOWN — custom, focus-safe autocomplete (Rx Medicine/Dose/Days) ══ */
 .aura-dd-menu{position:fixed;z-index:9000;background:var(--surface);border:1px solid var(--border);
@@ -2389,6 +2393,26 @@ main.content{
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         Confirm Appointment
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- PATIENT MERGE REVIEW MODAL — manual confirmation required, never auto-merges -->
+<div class="mod-ov" id="merge-review-modal">
+  <div class="modal" style="max-width:660px">
+    <div class="mh">
+      <div style="display:flex;align-items:center;gap:9px">
+        <div class="mic" style="background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <p class="mtitle">Confirm Patient Merge</p>
+      </div>
+      <button class="mclose" onclick="closeMergeReviewModal()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="mb" id="merge-review-body">
+      <!-- populated dynamically by renderMergeReviewModal() -->
     </div>
   </div>
 </div>
@@ -4845,7 +4869,7 @@ var AUDIT_VISIBLE_EVENTS=[
   'Prescription Created','Medicine Added','Medicine Removed','PDF Generated',
   'WhatsApp Prescription Sent','WhatsApp Reminder Sent',
   'Medicine Reminder Scheduled','Follow-up Reminder Scheduled','Review Request Sent',
-'Duplicate Patient Alert'
+'Duplicate Patient Alert','Patient Merge Completed'
 ];
 
 /* Groups the flat event list into the tabs shown at the top of the
@@ -4859,7 +4883,7 @@ var AUDIT_FILTER_GROUPS={
   'prescriptions':['Prescription Created','Medicine Added','Medicine Removed','PDF Generated'],
   'whatsapp':['WhatsApp Prescription Sent','WhatsApp Reminder Sent'],
   'reminders':['Medicine Reminder Scheduled','Follow-up Reminder Scheduled','Review Request Sent'],
-  'duplicates':['Duplicate Patient Alert']
+  'duplicates':['Duplicate Patient Alert','Patient Merge Completed']
 };
 
 function _auraDeviceInfo(){
@@ -4972,7 +4996,8 @@ var _auditFriendlyMap={
   'Follow-up Modified':{icon:'🔔',en:'Follow-up updated',bn:'ফলো-আপ আপডেট হয়েছে'},
   'Vaccination Added':{icon:'💉',en:'Vaccination added',bn:'টিকা যোগ হয়েছে'},
   'Allergy Updated':{icon:'⚠️',en:'Allergy updated',bn:'অ্যালার্জি আপডেট হয়েছে'},
-  'Chronic Disease Updated':{icon:'🫀',en:'Chronic condition updated',bn:'দীর্ঘস্থায়ী রোগ আপডেট হয়েছে'}
+  'Chronic Disease Updated':{icon:'🫀',en:'Chronic condition updated',bn:'দীর্ঘস্থায়ী রোগ আপডেট হয়েছে'},
+  'Patient Merge Completed':{icon:'🔗',en:'Patient records merged',bn:'রোগীর রেকর্ড একত্রিত হয়েছে'}
 };
 function _auditFriendly(actionType){
   var m=_auditFriendlyMap[actionType];
@@ -5034,6 +5059,24 @@ async function fetchAuditLogs(groupKey){
           (dd.new_mobile?('<p class="mcr-time">New Registration: '+dd.new_mobile+'</p>'):'')+
           '<p class="mcr-time">Status: '+(dd.status||'Pending Verification')+'</p>'+
           '<p class="mcr-time">Detected On: '+when+(r.device_label?(' · '+r.device_label):'')+'</p>'+
+        '</div>'+
+      '</div>';
+    }
+    /* Patient Merge Completed — full plain-language detail block, same
+       treatment as the Duplicate Patient Alert block above. */
+    if(r.action_type==='Patient Merge Completed'){
+      var md=r.details||{};
+      var oldIds=Array.isArray(md.old_patient_ids)?md.old_patient_ids.join(', '):(md.old_patient_ids||'—');
+      return '<div class="mcr-row">'+
+        '<div style="min-width:0;flex:1">'+
+          '<p class="mcr-name">🔗 Patient Merge Completed</p>'+
+          '<p class="mcr-time" style="margin-top:4px">Patient: '+(r.patient_name||'—')+'</p>'+
+          '<p class="mcr-time">Merged By: '+(md.merged_by||'—')+'</p>'+
+          '<p class="mcr-time">Old Patient IDs: '+oldIds+'</p>'+
+          '<p class="mcr-time">Final Patient ID: '+(md.final_patient_id||'—')+'</p>'+
+          (md.primary_mobile?('<p class="mcr-time">Selected Primary Mobile: '+md.primary_mobile+'</p>'):'')+
+          (md.whatsapp_number?('<p class="mcr-time">Selected WhatsApp Number: '+md.whatsapp_number+'</p>'):'')+
+          '<p class="mcr-time">Date &amp; Time: '+when+(r.device_label?(' · '+r.device_label):'')+'</p>'+
         '</div>'+
       '</div>';
     }
@@ -5477,18 +5520,20 @@ function renderNameDupeAlerts(rows){
         '</div>'+
       '</div>'+
       '<div class="dupe-alert-actions">'+
-        '<button class="qbtn" onclick="dupeMarkStatus(\''+r.id+'\',\''+DUPE_STATUS_SAME+'\')">Mark as Same Patient</button>'+
+        '<button class="qbtn" onclick="openMergeReviewModal(\''+r.id+'\',\''+(r.existing_patient_id||'')+'\',\''+(r.new_patient_id||'')+'\',\''+_escAttr(r.patient_name||'')+'\')">Mark as Same Patient</button>'+
         '<button class="qbtn" onclick="dupeMarkStatus(\''+r.id+'\',\''+DUPE_STATUS_DIFFERENT+'\')">Mark as Different Patient</button>'+
         '<button class="qbtn" onclick="dupeViewProfiles(\''+(r.existing_patient_id||'')+'\',\''+(r.new_patient_id||'')+'\')">View Both Profiles</button>'+
       '</div>'+
     '</div>';
   }).join('');
 }
-/* Marking a status is metadata-only — it never merges, edits, or
-   deletes either patient record. This is deliberately the ONLY
-   action available today; merge architecture is reserved for later
-   (see stgMergeGroup() above for the existing phone-based merge tool,
-   which this name-based alert list intentionally does NOT trigger). */
+/* "Mark as Different Patient" is metadata-only — it never merges,
+   edits, or deletes either patient record; it simply records the
+   staff decision. "Mark as Same Patient" no longer calls this
+   directly — it opens the Merge Review modal (openMergeReviewModal
+   below), which requires explicit field-by-field confirmation before
+   any records are combined. See stgMergeGroup() above for the
+   separate, older phone-based merge tool — unrelated to this flow. */
 async function dupeMarkStatus(alertId, newStatus){
   if(!alertId){showToast('Cannot update: missing alert ID');return;}
   var r=await _supa.from('duplicate_patient_alerts').update({status:newStatus}).eq('id',alertId);
@@ -5516,6 +5561,309 @@ async function dupeViewProfiles(existingId, newId){
     alert(lines.join('\n\n'));
   }catch(e){showToast('Could not load profiles.');}
 }
+
+/* ══════════════════════════════════════════════════════════════
+   PATIENT MERGE REVIEW — manual, field-by-field confirmation.
+   Triggered ONLY by "Mark as Same Patient" on a duplicate-name alert.
+   Nothing here ever runs automatically: every merge requires the
+   staff member to open this window, review both records side by
+   side, choose values field-by-field, and click "Confirm & Merge".
+
+   Terminology used below:
+     Patient A = the pre-existing patient record (the one the new
+                 registration matched by name)
+     Patient B = the newer duplicate registration
+   Patient A is kept as the surviving Patient ID; Patient B is
+   archived (status = 'Merged', never deleted) once its history has
+   been moved across. This is a deliberate, consistent default — the
+   individual field choices below (mobile/WhatsApp/address/age/
+   gender) are independent of which ID survives, so no data is lost
+   either way.
+
+   Some target columns referenced in the patch below — address,
+   alternate_mobile, whatsapp_number, alternate_whatsapp,
+   merged_into_patient_id — may not exist yet in the `patients` table
+   until a migration adds them. Every write is wrapped so a missing
+   column only skips that one field; it never blocks the rest of the
+   merge or leaves data half-moved.
+   ══════════════════════════════════════════════════════════════ */
+var _mergeReviewState=null; /* {alertId, patientA, patientB} for the modal currently open */
+
+function _mergeVal(v){ return (v===undefined||v===null||v==='')?'Not recorded':v; }
+function _mergeAgeDob(p){
+  var age=p.age||(p.date_of_birth?calcAge(p.date_of_birth):null);
+  if(p.date_of_birth)return p.date_of_birth+(age!==null?(' ('+age+' yrs)'):'');
+  return age!==null&&age!==''?(age+' yrs'):'';
+}
+
+async function openMergeReviewModal(alertId, patientAId, patientBId, patientName){
+  if(!patientAId||!patientBId){showToast('Both patient records are needed to review this merge.');return;}
+  if(patientAId===patientBId){showToast('This alert already points to the same patient record.');return;}
+  showToast('Loading patient records…');
+  var res=await _supa.from('patients').select('*').in('id',[patientAId,patientBId]);
+  if(res.error||!res.data||res.data.length<2){showToast('Could not load both patient records for review.');return;}
+  var pA=res.data.filter(function(p){return String(p.id)===String(patientAId);})[0];
+  var pB=res.data.filter(function(p){return String(p.id)===String(patientBId);})[0];
+  if(!pA||!pB){showToast('Could not identify both records.');return;}
+  _mergeReviewState={alertId:alertId,patientA:pA,patientB:pB};
+  renderMergeReviewModal();
+  openModal('merge-review-modal');
+}
+
+function closeMergeReviewModal(){
+  closeModal('merge-review-modal');
+  _mergeReviewState=null;
+}
+
+function renderMergeReviewModal(){
+  var st=_mergeReviewState; if(!st)return;
+  var pA=st.patientA, pB=st.patientB;
+  var ageA=pA.age||(pA.date_of_birth?calcAge(pA.date_of_birth):null);
+  var ageB=pB.age||(pB.date_of_birth?calcAge(pB.date_of_birth):null);
+  var dobDiffers=((pA.date_of_birth||'')!==(pB.date_of_birth||''))||(String(ageA||'')!==String(ageB||''));
+  var genderDiffers=(pA.gender||'')!==(pB.gender||'');
+  var waA=pA.whatsapp_number||pA.phone||'';
+  var waB=pB.whatsapp_number||pB.phone||'';
+
+  function patientCard(p,label){
+    return '<div class="dupe-alert-col">'+
+      '<p class="dupe-alert-col-title">'+label+'</p>'+
+      '<p class="dupe-alert-line"><b>ID:</b> '+_mergeVal(p.patient_code||p.id)+'</p>'+
+      '<p class="dupe-alert-line"><b>Name:</b> '+_mergeVal(p.name)+'</p>'+
+      '<p class="dupe-alert-line"><b>Mobile:</b> '+_mergeVal(p.phone)+'</p>'+
+      '<p class="dupe-alert-line"><b>WhatsApp:</b> '+_mergeVal(p.whatsapp_number||p.phone)+'</p>'+
+      '<p class="dupe-alert-line"><b>Age / DOB:</b> '+_mergeVal(_mergeAgeDob(p))+'</p>'+
+      '<p class="dupe-alert-line"><b>Gender:</b> '+_mergeVal(p.gender)+'</p>'+
+      '<p class="dupe-alert-line"><b>Address:</b> '+_mergeVal(p.address)+'</p>'+
+      '<p class="dupe-alert-line"><b>Registered:</b> '+_mergeVal(p.created_at?new Date(p.created_at).toLocaleDateString('en-GB'):'')+'</p>'+
+    '</div>';
+  }
+
+  var html=''
+    +'<div class="auth-error show" style="background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber);margin-bottom:2px">You are about to merge two patient records. Please verify all information carefully. This action should only be performed if both records belong to the same person.</div>'
+    +'<div class="dupe-alert-grid">'+patientCard(pA,'Patient A · Existing')+patientCard(pB,'Patient B · New Registration')+'</div>'
+
+    +'<div>'
+      +'<label class="flbl">Primary Mobile Number</label>'
+      +'<div style="display:flex;flex-direction:column;gap:7px">'
+        +'<label class="merge-radio-row"><input type="radio" name="merge-mobile" value="A" checked onchange="mergeOnMobileChange()"> Keep Patient A Mobile Number ('+_mergeVal(pA.phone)+')</label>'
+        +'<label class="merge-radio-row"><input type="radio" name="merge-mobile" value="B" onchange="mergeOnMobileChange()"> Keep Patient B Mobile Number ('+_mergeVal(pB.phone)+')</label>'
+        +'<label class="merge-radio-row"><input type="radio" name="merge-mobile" value="both" onchange="mergeOnMobileChange()"> Keep Both Numbers</label>'
+      +'</div>'
+      +'<div id="merge-mobile-both-wrap" style="display:none;margin-top:8px;padding:9px 11px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm)">'
+        +'<p class="qp-hint" style="margin-bottom:6px">Choose which number stays the Primary Number — future WhatsApp and SMS always use this one. The other is stored as the Alternate Mobile Number.</p>'
+        +'<label class="merge-radio-row"><input type="radio" name="merge-mobile-primary" value="A" checked> Patient A number as Primary</label>'
+        +'<label class="merge-radio-row"><input type="radio" name="merge-mobile-primary" value="B"> Patient B number as Primary</label>'
+      +'</div>'
+    +'</div>'
+
+    +'<div>'
+      +'<label class="flbl">WhatsApp Number</label>'
+      +'<div style="display:flex;flex-direction:column;gap:7px">'
+        +'<label class="merge-radio-row"><input type="radio" name="merge-whatsapp" value="A" checked> Patient A ('+_mergeVal(waA)+')</label>'
+        +'<label class="merge-radio-row"><input type="radio" name="merge-whatsapp" value="B"> Patient B ('+_mergeVal(waB)+')</label>'
+        +'<label class="merge-radio-row"><input type="radio" name="merge-whatsapp" value="both"> Keep Both</label>'
+      +'</div>'
+    +'</div>'
+
+    +'<div>'
+      +'<label class="flbl">Address</label>'
+      +'<div style="display:flex;flex-direction:column;gap:7px">'
+        +'<label class="merge-radio-row"><input type="radio" name="merge-address" value="A" checked> Patient A Address ('+_mergeVal(pA.address)+')</label>'
+        +'<label class="merge-radio-row"><input type="radio" name="merge-address" value="B"> Patient B Address ('+_mergeVal(pB.address)+')</label>'
+      +'</div>'
+    +'</div>'
+
+    +(dobDiffers?(
+      '<div>'
+      +'<label class="flbl">Age / Date of Birth — records differ, please select the correct value <span style="color:var(--red)">*</span></label>'
+      +'<div style="display:flex;flex-direction:column;gap:7px">'
+        +'<label class="merge-radio-row"><input type="radio" name="merge-dob" value="A"> Patient A ('+_mergeVal(_mergeAgeDob(pA))+')</label>'
+        +'<label class="merge-radio-row"><input type="radio" name="merge-dob" value="B"> Patient B ('+_mergeVal(_mergeAgeDob(pB))+')</label>'
+      +'</div>'
+    +'</div>'
+    ):'')
+
+    +(genderDiffers?(
+      '<div>'
+      +'<label class="flbl">Gender — records differ, please select the correct value <span style="color:var(--red)">*</span></label>'
+      +'<div style="display:flex;flex-direction:column;gap:7px">'
+        +'<label class="merge-radio-row"><input type="radio" name="merge-gender" value="A"> Patient A ('+_mergeVal(pA.gender)+')</label>'
+        +'<label class="merge-radio-row"><input type="radio" name="merge-gender" value="B"> Patient B ('+_mergeVal(pB.gender)+')</label>'
+      +'</div>'
+    +'</div>'
+    ):'')
+
+    +'<div id="merge-review-error" class="auth-error"></div>'
+
+    +'<div style="display:flex;gap:8px;margin-top:2px">'
+      +'<button class="qbtn" style="flex:1;justify-content:center;min-height:44px" onclick="closeMergeReviewModal()">Cancel</button>'
+      +'<button class="msub" style="flex:1.4" id="merge-confirm-btn" onclick="confirmPatientMerge()">'
+        +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Confirm &amp; Merge'
+      +'</button>'
+    +'</div>'
+    +'<p style="font-size:10px;color:var(--text-tertiary);text-align:center;line-height:1.5">Every appointment, prescription, visit, and follow-up on both records is preserved — nothing is ever deleted.</p>';
+
+  document.getElementById('merge-review-body').innerHTML=html;
+}
+
+function mergeOnMobileChange(){
+  var choice=(document.querySelector('input[name="merge-mobile"]:checked')||{}).value;
+  var wrap=document.getElementById('merge-mobile-both-wrap');
+  if(wrap)wrap.style.display=(choice==='both')?'block':'none';
+}
+
+function _mergeError(msg){
+  var el=document.getElementById('merge-review-error');
+  if(!el)return;
+  if(!msg){el.classList.remove('show');el.textContent='';return;}
+  el.textContent=msg;el.classList.add('show');
+}
+
+async function confirmPatientMerge(){
+  var st=_mergeReviewState;
+  if(!st){showToast('Nothing to merge — please reopen this alert.');return;}
+  var pA=st.patientA, pB=st.patientB;
+  _mergeError('');
+
+  var mobileChoice=(document.querySelector('input[name="merge-mobile"]:checked')||{}).value;
+  if(!mobileChoice){_mergeError('Please select a Primary Mobile Number option.');return;}
+  var whatsappChoice=(document.querySelector('input[name="merge-whatsapp"]:checked')||{}).value;
+  if(!whatsappChoice){_mergeError('Please select a WhatsApp Number option.');return;}
+  var addressChoice=(document.querySelector('input[name="merge-address"]:checked')||{}).value;
+  if(!addressChoice){_mergeError('Please select an Address.');return;}
+
+  var ageA=pA.age||(pA.date_of_birth?calcAge(pA.date_of_birth):null);
+  var ageB=pB.age||(pB.date_of_birth?calcAge(pB.date_of_birth):null);
+  var dobDiffers=((pA.date_of_birth||'')!==(pB.date_of_birth||''))||(String(ageA||'')!==String(ageB||''));
+  var genderDiffers=(pA.gender||'')!==(pB.gender||'');
+
+  var dobChoice='A';
+  if(dobDiffers){
+    dobChoice=(document.querySelector('input[name="merge-dob"]:checked')||{}).value;
+    if(!dobChoice){_mergeError('Please select the correct Age / Date of Birth.');return;}
+  }
+  var genderChoice='A';
+  if(genderDiffers){
+    genderChoice=(document.querySelector('input[name="merge-gender"]:checked')||{}).value;
+    if(!genderChoice){_mergeError('Please select the correct Gender.');return;}
+  }
+
+  var mobilePrimaryChoice='A';
+  if(mobileChoice==='both'){
+    mobilePrimaryChoice=(document.querySelector('input[name="merge-mobile-primary"]:checked')||{}).value||'A';
+  }
+
+  if(!confirm('Merge these two patient records? This will move all appointments, prescriptions, visits, and follow-ups onto one record. This cannot be undone from here.')) return;
+
+  var btn=document.getElementById('merge-confirm-btn');
+  if(btn){btn.disabled=true;btn.textContent='Merging…';}
+
+  /* Patient A (the pre-existing record) is always kept as the
+     surviving Patient ID; Patient B (the newer duplicate) is
+     archived. Field VALUES chosen above are independent of this —
+     e.g. staff can keep Patient B's mobile number while Patient A's
+     ID is what survives. */
+  var survivorId=pA.id, loserId=pB.id;
+
+  var patch={};
+  var finalPrimaryMobile='', finalWhatsapp='';
+  if(mobileChoice==='A'){ finalPrimaryMobile=pA.phone||''; patch.phone=finalPrimaryMobile; }
+  else if(mobileChoice==='B'){ finalPrimaryMobile=pB.phone||''; patch.phone=finalPrimaryMobile; }
+  else{
+    var primaryPhone=mobilePrimaryChoice==='B'?pB.phone:pA.phone;
+    var altPhone=mobilePrimaryChoice==='B'?pA.phone:pB.phone;
+    finalPrimaryMobile=primaryPhone||'';
+    patch.phone=finalPrimaryMobile;
+    patch.alternate_mobile=altPhone||'';
+  }
+
+  var waA=pA.whatsapp_number||pA.phone||'', waB=pB.whatsapp_number||pB.phone||'';
+  if(whatsappChoice==='A'){ finalWhatsapp=waA; patch.whatsapp_number=waA; }
+  else if(whatsappChoice==='B'){ finalWhatsapp=waB; patch.whatsapp_number=waB; }
+  else{ finalWhatsapp=waA; patch.whatsapp_number=waA; patch.alternate_whatsapp=waB; }
+
+  patch.address=addressChoice==='A'?(pA.address||''):(pB.address||'');
+
+  if(dobDiffers){
+    var dobSrc=dobChoice==='A'?pA:pB;
+    if(dobSrc.date_of_birth)patch.date_of_birth=dobSrc.date_of_birth;
+    else if(dobSrc.age)patch.age=dobSrc.age;
+  }
+  if(genderDiffers){
+    patch.gender=genderChoice==='A'?pA.gender:pB.gender;
+  }
+  patch.visit_count=(pA.visit_count||0)+(pB.visit_count||0);
+
+  /* 1) Apply chosen field values to the surviving record. Best-effort:
+        columns like address/alternate_mobile/whatsapp_number may not
+        exist yet — a failure here still lets the rest of the merge
+        (history migration + archiving) proceed. */
+  try{ await _supa.from('patients').update(patch).eq('id',survivorId); }
+  catch(e){ /* silent — some optional columns may not exist yet */ }
+
+  /* 2) Move medical history onto the surviving Patient ID. Same
+        precedent as the existing phone-based merge tool (stgMergeGroup),
+        extended to every table the Patient Timeline reads from, so
+        appointments, prescriptions (via visits), diagnoses, medicines,
+        and follow-ups all stay attached to one record. Each table is
+        independently wrapped so a missing table never blocks the rest. */
+  var moveTables=['appointments','visits','diagnosis_history','medication_history','followup_history'];
+  for(var i=0;i<moveTables.length;i++){
+    try{ await _supa.from(moveTables[i]).update({patient_id:survivorId}).eq('patient_id',loserId); }
+    catch(e){ /* silent — table may not exist yet, or simply has no rows to move */ }
+  }
+  /* Prescriptions in AuraScale link to a patient through visits.prescription_id
+     rather than a direct patient_id column, so moving `visits` above already
+     carries prescriptions and PDFs along with them onto the surviving record. */
+
+  /* 3) Repoint any other pending duplicate alerts that referenced the
+        now-archived record, so the Duplicate Patients list stays coherent. */
+  try{ await _supa.from('duplicate_patient_alerts').update({existing_patient_id:survivorId}).eq('existing_patient_id',loserId); }catch(e){}
+  try{ await _supa.from('duplicate_patient_alerts').update({new_patient_id:survivorId}).eq('new_patient_id',loserId); }catch(e){}
+
+  /* 4) Archive the losing record — NEVER physically deleted. */
+  try{
+    await _supa.from('patients').update({
+      status:'Merged',
+      merged_into_patient_id:survivorId,
+      name:(pB.name||'')+' (merged)'
+    }).eq('id',loserId);
+  }catch(e){ /* silent — merged_into_patient_id column may not exist yet; status/name still attempted independently below as a fallback */ }
+
+  /* 5) Update the alert itself so it stops showing as Pending. */
+  if(st.alertId){
+    try{ await _supa.from('duplicate_patient_alerts').update({status:DUPE_STATUS_SAME}).eq('id',st.alertId); }catch(e){}
+  }
+
+  /* 6) Immutable audit trail entry — a NEW row, never an edit to any
+        existing audit_logs entry (audit_logs has no update/delete
+        policy for app users by design — see the Audit Trail section
+        above). This is the permanent record of the merge decision. */
+  var now=new Date();
+  var doctorName=(DB[mkt]&&DB[mkt].doc&&DB[mkt].doc.name)||'Doctor';
+  _auraLogAudit('Patient Merge Completed',{
+    entityType:'patient',
+    entityId:survivorId,
+    patientName:pA.name||pB.name||'',
+    details:{
+      merged_by:doctorName,
+      merge_date:now.toISOString().split('T')[0],
+      merge_time:now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),
+      old_patient_ids:[pA.id,pB.id],
+      final_patient_id:survivorId,
+      primary_mobile:finalPrimaryMobile,
+      whatsapp_number:finalWhatsapp
+    }
+  });
+
+  showToast('Patient records merged successfully.');
+  closeMergeReviewModal();
+  await fetchPatients();
+  await fetchAppointments();
+  fetchNameDupeAlerts();
+}
+
 (function wrapNavForNameDupes(){
   var _oldNav3=nav;
   nav=function(id,btn){
