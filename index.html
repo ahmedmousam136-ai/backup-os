@@ -430,10 +430,10 @@ main.content{
 
 /* ─── TABLE ─── */
 .tw{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs)}
-.thead{display:grid;grid-template-columns:3fr 2fr 1.6fr 1fr;padding:8px 15px;border-bottom:1px solid var(--border);background:var(--bg)}
+.thead{display:grid;grid-template-columns:3fr 2fr 1fr;padding:8px 15px;border-bottom:1px solid var(--border);background:var(--bg)}
 .thead span{font-size:8.5px;text-transform:uppercase;letter-spacing:.11em;font-weight:700;color:var(--text-tertiary);display:flex;align-items:center}
 .cen{justify-content:center}
-.trow{display:grid;grid-template-columns:3fr 2fr 1.6fr 1fr;padding:11px 15px;align-items:center;border-bottom:1px solid rgba(228,224,216,.55);transition:background var(--ease);cursor:pointer}
+.trow{display:grid;grid-template-columns:3fr 2fr 1fr;padding:11px 15px;align-items:center;border-bottom:1px solid rgba(228,224,216,.55);transition:background var(--ease);cursor:pointer}
 .trow:hover .pname{color:var(--blue)}
 [data-theme="dark"] .trow{border-bottom-color:rgba(37,42,56,.9)}
 .trow:hover{background:var(--bg)}
@@ -1525,7 +1525,6 @@ main.content{
           <div class="thead">
             <span data-i18n="th_patient">Patient</span>
             <span class="col-phone" data-i18n="th_phone">Phone</span>
-            <span class="col-date" data-i18n="th_last_visit">Last Visit</span>
             <span class="col-visits cen" data-i18n="th_visits">Visits</span>
           </div>
           <div id="pat-table"></div>
@@ -2355,12 +2354,6 @@ main.content{
       </div>
       <span data-i18n="bn_home">Home</span>
     </button>
-    <button class="bn" onclick="navMob('patients',this)" data-t="patients">
-      <div class="bn-ico">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-      </div>
-      <span data-i18n="bn_patients">Patients</span>
-    </button>
     <button class="bn-fab" onclick="openAddAppointmentModal()" aria-label="New appointment">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
@@ -2902,7 +2895,6 @@ function renderPats(){
         <p class="pname" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</p>
       </div>
       <p class="pphone col-phone" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.phone}</p>
-      <p style="color:var(--text-secondary);font-size:10.5px;white-space:nowrap" class="col-date">${p.lastVisit}</p>
       <p class="pvisits col-visits">${p.visits}</p>
     </div>`).join("");
 }
@@ -3679,7 +3671,13 @@ function copyBookingLink(){
   catch(e){alert("Booking link:\n"+link);}
 }
 
-/* ══ FETCH PATIENTS FROM SUPABASE ══ */
+/* ══ FETCH PATIENTS FROM SUPABASE ══
+   Visit counts are always derived live from the `visits` table — the
+   exact same source the Patient Profile page (openPatientProfile)
+   uses to compute "Total Visits" — instead of the separately-stored
+   patients.visit_count counter, which can drift out of sync. This
+   guarantees the Patient List "Visits" number and the Patient Profile
+   "Total Visits" number can never disagree. */
 async function fetchPatients(){
   if(!_clinicId)return;
   const res=await _supa.from('patients')
@@ -3687,6 +3685,19 @@ async function fetchPatients(){
     .eq('clinic_id',_clinicId)
     .order('created_at',{ascending:false});
   if(res.error){showToast("Could not load patients: "+res.error.message);return;}
+
+  /* Live visit counts — same source of truth as the Patient Profile page */
+  var visitCounts={};
+  try{
+    var visitsRes=await _supa.from('visits').select('patient_id').eq('clinic_id',_clinicId);
+    if(!visitsRes.error&&visitsRes.data){
+      visitsRes.data.forEach(function(v){
+        if(!v.patient_id)return;
+        visitCounts[v.patient_id]=(visitCounts[v.patient_id]||0)+1;
+      });
+    }
+  }catch(e){ /* silent — falls back to the stored visit_count below if this can't be read */ }
+
   DB[mkt].patients=(res.data||[])
     .filter(p=>p.status!=='Merged')
     .map(p=>({
@@ -3696,7 +3707,7 @@ async function fetchPatients(){
     phone:p.phone||'',
     lastVisit:p.last_visit||'—',
     status:p.status||'Active',
-    visits:p.visit_count||0,
+    visits:visitCounts.hasOwnProperty(p.id)?visitCounts[p.id]:(p.visit_count||0),
     gender:p.gender||'',
     weight:p.weight||'',
     dob:p.date_of_birth||'',
