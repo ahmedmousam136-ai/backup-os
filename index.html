@@ -350,7 +350,7 @@ main.content{
 .ss{color:var(--text-tertiary);font-size:11.5px;margin-top:3px;line-height:1.5}
 
 /* ─── METRICS GRID ─── */
-.mg{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+.mg{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
 .mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 16px 14px;transition:all var(--ease);box-shadow:var(--sh-xs)}
 .mc:hover{box-shadow:var(--sh-sm);border-color:var(--border-mid);transform:translateY(-1px)}
 .mc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -904,7 +904,7 @@ main.content{
 @media(min-width:1280px){
   :root{--sidebar-w:272px}
   main.content{padding:24px 28px}
-  .mg{grid-template-columns:repeat(4,1fr);gap:14px}
+  .mg{grid-template-columns:repeat(3,1fr);gap:14px}
   .st{font-size:25px}
   .two-col{gap:16px}
 }
@@ -2852,11 +2852,10 @@ function renderDash(skipQueue){
   const cards=[
     {lbl:t("metric_total_patients"),val:Number(d.metrics.patients).toLocaleString(),sub:t("metric_all_time"),trend:`<span class="up">↑ 3.2%</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>`},
     {lbl:t("metric_reports"),sub:t("metric_reports_sub"),noVal:true,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polyline points="20 6 9 17 4 12"/></svg>`},
-    {lbl:t("metric_waiting"),val:am.waiting,sub:t("metric_in_queue"),trend:am.waiting>3?`<span class="dn">↑ busy</span>`:`<span class="up">◉ normal</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`},
     {lbl:t("metric_wa_activity"),val:am.waSentToday,sub:t("metric_sent_today"),trend:`<span class="up">↑ auto</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`},
   ];
   document.getElementById("dash-metrics").innerHTML=cards.map((c,i)=>`
-    <div class="mc"${i===0?' id="mc-total-patients" style="cursor:pointer" onclick="goToPatientList()" title="View all patients"':''}${i===1?' id="mc-reports" style="cursor:pointer" onclick="goToReports()" title="Open Reports & Analytics"':''}${i===3?' id="mc-wa-activity" style="cursor:pointer" onclick="goToWhatsAppActivity()" title="Open WhatsApp Activity"':''}>
+    <div class="mc"${i===0?' id="mc-total-patients" style="cursor:pointer" onclick="goToPatientList()" title="View all patients"':''}${i===1?' id="mc-reports" style="cursor:pointer" onclick="goToReports()" title="Open Reports & Analytics"':''}${i===2?' id="mc-wa-activity" style="cursor:pointer" onclick="goToWhatsAppActivity()" title="Open WhatsApp Activity"':''}>
       <div class="mc-top"><p class="mc-lbl">${c.lbl}</p><div class="mc-icon">${c.ic}</div></div>
       ${c.noVal?'':'<p class="mc-val">'+c.val+'</p>'}
       <p class="mc-sub"${c.noVal?' style="margin-top:0"':''}>${c.sub}${c.trend?(' · '+c.trend):''}</p>
@@ -2922,6 +2921,16 @@ function _ppFmtDate(d){
   var dt=new Date(d+'T00:00:00');
   if(isNaN(dt.getTime()))return d;
   return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+}
+
+/* Visits don't carry their own time column — the closest reliable
+   signal is the row's created_at timestamp (set the moment the
+   visit/prescription was logged). Falls back to null gracefully. */
+function _ppFmtTime(ts){
+  if(!ts)return null;
+  var d=new Date(ts);
+  if(isNaN(d.getTime()))return null;
+  return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
 }
 
 async function openPatientProfile(patientId){
@@ -3109,9 +3118,11 @@ function renderPpFollowupHistory(){
 }
 
 /* ── Download Summary ────────────────────────────────────────
-   Quick-overview PDF only: patient info, visit info, and a plain
-   chronological list of visit dates. Deliberately excludes full
-   prescriptions — that's what View Prescription History is for. ── */
+   A complete patient visit summary: patient info, visit info, and
+   a chronological timeline where each entry carries its date/time,
+   diagnosis, whether a follow-up was given, and the medicines
+   prescribed that day — a full overview without opening every
+   individual prescription PDF. ── */
 function ppDownloadSummary(){
   if(!_ppCurrentPatient){showToast('Nothing to download yet.');return;}
   var p=_ppCurrentPatient.patient, visits=_ppCurrentPatient.visits||[];
@@ -3119,14 +3130,16 @@ function ppDownloadSummary(){
   try{
     var jsPDFRef=window.jspdf.jsPDF;
     var doc=new jsPDFRef({unit:'mm',format:'a4'});
-    var W=210,x=16,y=20;
+    var W=210,H=297,x=16,rightX=W-16,y=20;
 
-    doc.setFont('helvetica','bold');doc.setFontSize(16);
+    function ensureSpace(need){ if(y+need>H-16){doc.addPage();y=20;} }
+
+    doc.setFont('helvetica','bold');doc.setFontSize(17);
     doc.text('Patient Summary',x,y);
     y+=10;
 
     var age=p.date_of_birth?calcAge(p.date_of_birth):(p.age||null);
-    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text('Patient Information',x,y); y+=6.5;
+    doc.setFont('helvetica','bold');doc.setFontSize(11.5);doc.text('Patient Information',x,y); y+=6.5;
     doc.setFont('helvetica','normal');doc.setFontSize(10);
     doc.text('Name: '+(p.name||'—'),x,y); y+=5.5;
     doc.text('Age: '+(age!==null&&age!==''?(age+' yrs'):'Not recorded'),x,y); y+=5.5;
@@ -3138,18 +3151,54 @@ function ppDownloadSummary(){
     var firstVisit=sortedAsc[0]?sortedAsc[0].visit_date:null;
     var lastVisit=sortedDesc[0]?sortedDesc[0].visit_date:null;
 
-    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text('Visit Information',x,y); y+=6.5;
+    doc.setFont('helvetica','bold');doc.setFontSize(11.5);doc.text('Visit Information',x,y); y+=6.5;
     doc.setFont('helvetica','normal');doc.setFontSize(10);
     doc.text('First Visit Date: '+_ppFmtDate(firstVisit),x,y); y+=5.5;
     doc.text('Last Visit Date: '+_ppFmtDate(lastVisit),x,y); y+=5.5;
     doc.text('Total Number of Visits: '+visits.length,x,y); y+=9;
 
-    doc.setDrawColor(210,206,198);doc.line(x,y,W-16,y); y+=8;
-    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text('Visit Timeline',x,y); y+=6.5;
-    doc.setFont('helvetica','normal');doc.setFontSize(10);
-    sortedDesc.forEach(function(v){
-      if(y>270){doc.addPage();y=20;}
-      doc.text(_ppFmtDate(v.visit_date),x+3,y); y+=5.5;
+    doc.setDrawColor(210,206,198);doc.line(x,y,rightX,y); y+=9;
+    doc.setFont('helvetica','bold');doc.setFontSize(12.5);doc.text('Visit Timeline',x,y); y+=8;
+
+    sortedDesc.forEach(function(v,idx){
+      ensureSpace(14);
+      var timeStr=_ppFmtTime(v.created_at);
+      doc.setFont('helvetica','bold');doc.setFontSize(11);
+      doc.text(_ppFmtDate(v.visit_date)+(timeStr?('  |  '+timeStr):''),x,y);
+      y+=6.5;
+
+      doc.setFont('helvetica','bold');doc.setFontSize(9.5);
+      doc.text('Diagnosis:',x+3,y); y+=5;
+      doc.setFont('helvetica','normal');doc.setFontSize(10);
+      var diagLines=doc.splitTextToSize(v.diagnosis||'Not recorded',rightX-(x+3));
+      diagLines.forEach(function(line){ ensureSpace(6); doc.text(line,x+3,y); y+=5; });
+
+      ensureSpace(6);
+      doc.setFont('helvetica','bold');doc.setFontSize(9.5);
+      doc.text('Follow-up:',x+3,y); y+=5;
+      ensureSpace(6);
+      doc.setFont('helvetica','normal');doc.setFontSize(10);
+      doc.text(v.follow_up_date?'Yes':'No',x+3,y); y+=5;
+
+      ensureSpace(6);
+      doc.setFont('helvetica','bold');doc.setFontSize(9.5);
+      doc.text('Medicines:',x+3,y); y+=5;
+      doc.setFont('helvetica','normal');doc.setFontSize(10);
+      var meds=Array.isArray(v.medicines)?v.medicines:[];
+      var medNames=meds.map(function(m){return m&&m.name;}).filter(Boolean);
+      if(medNames.length){
+        medNames.forEach(function(name){ ensureSpace(6); doc.text(name,x+3,y); y+=5; });
+      }else{
+        ensureSpace(6); doc.text('None recorded',x+3,y); y+=5;
+      }
+
+      y+=2;
+      if(idx<sortedDesc.length-1){
+        ensureSpace(6);
+        doc.setDrawColor(230,227,220);
+        doc.line(x,y,rightX,y);
+        y+=7;
+      }
     });
 
     doc.save((p.name||'patient').replace(/\s+/g,'_')+'_summary.pdf');
@@ -3889,14 +3938,13 @@ function _queueFilteredList(){
   return all; /* all */
 }
 
-/* Only two quick actions live below every queue row — Generate
-   Prescription and Send Reminder — for appointments and follow-ups
-   alike, so the doctor never has to leave the Dashboard. Kept
-   deliberately minimal: nothing else appears in the Queue. */
+/* Only one quick action lives below every queue row — Send Reminder
+   — for appointments and follow-ups alike, so the Queue stays a
+   scanning surface rather than a second place to take actions.
+   Prescriptions are generated from the Prescriptions page, not here. */
 function _queueActionButtons(p){
   var payload=JSON.stringify(p).replace(/'/g,"&#39;");
   return `
-    <button class="fu-btn" onclick='queueGeneratePrescription(${payload})'>${t("q_generate_rx")}</button>
     <button class="fu-btn" onclick='queueSendReminder(${payload})'>${t("q_send_reminder")}</button>`;
 }
 
