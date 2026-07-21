@@ -1534,6 +1534,10 @@ main.content{
               <p class="ss" id="pp-code">—</p>
             </div>
           </div>
+          <button class="msub" style="width:auto;margin-top:0;padding:12px 20px;white-space:nowrap;flex-shrink:0" onclick="ppGeneratePrescription()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Generate Prescription
+          </button>
         </div>
 
         <div id="pp-loading" class="empty"><div class="empty-ic">⏳</div><p class="empty-t">Loading patient record…</p></div>
@@ -2902,6 +2906,12 @@ function renderPats(){
    or backend changes, purely an additional front-end view.
    ══════════════════════════════════════════════════════════════ */
 var _ppCurrentPatient=null;
+/* True only when Generate Prescription was launched from inside the
+   Patient Profile — governs whether saving a prescription returns
+   the doctor straight to the Dashboard Queue (one continuous flow:
+   Dashboard → Patient Profile → Generate Prescription → Dashboard)
+   instead of leaving them parked on the general Prescriptions page. */
+var _rxFromProfile=false;
 
 function goToPatientList(){
   nav('patients', document.querySelector('.nb[onclick*="\'patients\'"]'));
@@ -3123,6 +3133,23 @@ function renderPpFollowupHistory(){
    diagnosis, whether a follow-up was given, and the medicines
    prescribed that day — a full overview without opening every
    individual prescription PDF. ── */
+/* ── Generate Prescription (from Patient Profile) ────────────
+   The one action that actually starts a consultation. Jumps to the
+   prescription form with this patient already selected, and flags
+   the flow so that a successful save returns straight to the
+   Dashboard Queue — not back to this profile, not left sitting on
+   the Prescriptions page. Dashboard → Profile → Generate → Dashboard. ── */
+function ppGeneratePrescription(){
+  if(!_ppCurrentPatient)return;
+  var pid=_ppCurrentPatient.patient.id;
+  _rxFromProfile=true;
+  nav('prescriptions', document.querySelector('.nb[onclick*="\'prescriptions\'"]'));
+  var sel=document.getElementById('rx-patient');
+  if(sel){ sel.value=pid; rxPickPatient(); }
+  var meds=document.getElementById('rx-meds');
+  if(meds)setTimeout(function(){ meds.scrollIntoView({behavior:'smooth',block:'center'}); },50);
+}
+
 function ppDownloadSummary(){
   if(!_ppCurrentPatient){showToast('Nothing to download yet.');return;}
   var p=_ppCurrentPatient.patient, visits=_ppCurrentPatient.visits||[];
@@ -3981,7 +4008,7 @@ function renderQueue(){
     var dateLbl=((_dashQueueFilter!=='today')||_dashQueueDate)?('<span style="color:var(--text-tertiary);margin-left:5px">· '+p.date+'</span>'):'';
     return `
     <div class="qrow" style="flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:9px;min-width:0;flex:1">
+      <div style="display:flex;align-items:center;gap:9px;min-width:0;flex:1${p.patientId?';cursor:pointer':''}"${p.patientId?` onclick="openPatientProfile('${p.patientId}')" title="Open patient profile"`:''}>
         <div class="token">${p.serial}</div>
         <div style="min-width:0">
           <p class="qname" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</p>
@@ -4061,7 +4088,7 @@ function renderFollowupQueue(){
       status:st.label,type:'followup',followupId:r.id,serial:i+1};
     return `
     <div class="qrow" style="flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:9px;min-width:0;flex:1">
+      <div style="display:flex;align-items:center;gap:9px;min-width:0;flex:1${p.patientId?';cursor:pointer':''}"${p.patientId?` onclick="openPatientProfile('${p.patientId}')" title="Open patient profile"`:''}>
         <div class="token">${p.serial}</div>
         <div style="min-width:0">
           <p class="qname" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</p>
@@ -4914,6 +4941,17 @@ if(ins.error){ rxError("Save failed: "+ins.error.message); btn.disabled=false; b
   btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Generate Prescription';
   fetchPrescriptions();
   setTimeout(loadPatientTimeline, 700); /* small delay lets the background visit-logging trigger finish writing before we re-read it */
+
+  /* Consultation complete — if this prescription was started from the
+     Patient Profile, the doctor is done with this patient. Return
+     directly to the Dashboard Queue instead of leaving them on the
+     general Prescriptions page. */
+  if(_rxFromProfile){
+    _rxFromProfile=false;
+    setTimeout(function(){
+      nav('dashboard', document.querySelector('.nb[onclick*="\'dashboard\'"]'));
+    }, 600);
+  }
 }
 
 /* ── RETRY: resend only, no new PDF ───────────────────────── */
