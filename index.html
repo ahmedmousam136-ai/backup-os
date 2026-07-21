@@ -1153,6 +1153,8 @@ main.content{
 #mc-total-patients:hover{box-shadow:var(--sh-sm);border-color:var(--blue-border);transform:translateY(-1px)}
 #mc-wa-activity{transition:box-shadow var(--ease),border-color var(--ease),transform var(--ease)}
 #mc-wa-activity:hover{box-shadow:var(--sh-sm);border-color:var(--blue-border);transform:translateY(-1px)}
+#mc-reports{transition:box-shadow var(--ease),border-color var(--ease),transform var(--ease)}
+#mc-reports:hover{box-shadow:var(--sh-sm);border-color:var(--blue-border);transform:translateY(-1px)}
 
 /* ══ PATIENT PROFILE — Apple-style vertical timeline ══ */
 .ptl-track{position:relative;display:flex;flex-direction:column}
@@ -2608,7 +2610,7 @@ const T={
     queue_title:"Queue",alerts_title:"Follow-up Alerts",alerts_window:"14-day window",
     patients_title:"Patients",patients_sub:"Search, review history, and open a patient's full record",new_appointment:"New Appointment",
     qf_today:"Today",qf_upcoming:"Upcoming",qf_followup:"Follow-up",qf_completed:"Completed",qf_all:"All",
-    q_generate_rx:"Generate Prescription",q_send_reminder:"Send Reminder",q_followup_appt:"Follow-up Appointment",q_ask_review:"Ask Review",
+    q_generate_rx:"Generate Prescription",q_send_reminder:"Send Reminder",
     q_no_followups:"No follow-up patients",q_no_followups_sub:"Patients due for a follow-up will appear here.",
     q_date_no_appts:"No appointments on this date",q_date_no_appts_sub:"Try picking a different date, or clear it to return to filters.",
     start_consult:"Start Consultation",gen_rx_short:"Prescription",complete_visit:"Complete Visit",
@@ -2632,6 +2634,7 @@ const T={
     metric_total_patients:"Total Patients",
     metric_appts:"Today's Appointments",
     metric_daily_progress:"Daily Progress",
+    metric_reports:"Reports",metric_reports_sub:"View performance & trends",
     metric_waiting:"Currently Waiting",
     metric_wa_reminders:"WA Reminders Sent",metric_wa_activity:"WhatsApp Activity",
     metric_unconfirmed:"Unconfirmed Apts.",
@@ -2676,7 +2679,7 @@ const T={
     queue_title:"সারি",alerts_title:"ফলো-আপ সতর্কতা",alerts_window:"১৪ দিনের উইন্ডো",
     patients_title:"রোগী",patients_sub:"খুঁজুন, ইতিহাস দেখুন এবং রোগীর সম্পূর্ণ রেকর্ড খুলুন",new_appointment:"নতুন অ্যাপয়েন্টমেন্ট",
     qf_today:"আজ",qf_upcoming:"আসন্ন",qf_followup:"ফলো-আপ",qf_completed:"সম্পন্ন",qf_all:"সব",
-    q_generate_rx:"প্রেসক্রিপশন তৈরি করুন",q_send_reminder:"রিমাইন্ডার পাঠান",q_followup_appt:"ফলো-আপ অ্যাপয়েন্টমেন্ট",q_ask_review:"রিভিউ চাই",
+    q_generate_rx:"প্রেসক্রিপশন তৈরি করুন",q_send_reminder:"রিমাইন্ডার পাঠান",
     q_no_followups:"কোনো ফলো-আপ রোগী নেই",q_no_followups_sub:"ফলো-আপের জন্য নির্ধারিত রোগীরা এখানে দেখা যাবে।",
     q_date_no_appts:"এই তারিখে কোনো অ্যাপয়েন্টমেন্ট নেই",q_date_no_appts_sub:"অন্য একটি তারিখ বেছে নিন, বা ফিল্টারে ফিরে যেতে এটি সাফ করুন।",
     start_consult:"পরামর্শ শুরু করুন",gen_rx_short:"প্রেসক্রিপশন",complete_visit:"ভিজিট সম্পন্ন করুন",
@@ -2700,6 +2703,7 @@ const T={
     metric_total_patients:"মোট রোগী",
     metric_appts:"আজকের অ্যাপয়েন্টমেন্ট",
     metric_daily_progress:"দৈনিক অগ্রগতি",
+    metric_reports:"রিপোর্ট",metric_reports_sub:"পারফরম্যান্স ও প্রবণতা দেখুন",
     metric_waiting:"বর্তমানে অপেক্ষায়",
     metric_wa_reminders:"WA রিমাইন্ডার পাঠানো",metric_wa_activity:"হোয়াটসঅ্যাপ কার্যক্রম",
     metric_unconfirmed:"অনিশ্চিত অ্যাপট.",
@@ -2831,15 +2835,15 @@ function renderDash(skipQueue){
   const am=d.actionMetrics;
   const cards=[
     {lbl:t("metric_total_patients"),val:Number(d.metrics.patients).toLocaleString(),sub:t("metric_all_time"),trend:`<span class="up">↑ 3.2%</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>`},
-    {lbl:t("metric_daily_progress"),val:`${am.seen}<span style="font-size:16px;color:var(--text-tertiary);font-family:'DM Sans',sans-serif;font-weight:500"> / ${am.totalAppts}</span>`,sub:t("metric_seen_of"),trend:`<span class="up">↑ on track</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polyline points="20 6 9 17 4 12"/></svg>`,raw:true},
+    {lbl:t("metric_reports"),sub:t("metric_reports_sub"),noVal:true,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polyline points="20 6 9 17 4 12"/></svg>`},
     {lbl:t("metric_waiting"),val:am.waiting,sub:t("metric_in_queue"),trend:am.waiting>3?`<span class="dn">↑ busy</span>`:`<span class="up">◉ normal</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`},
     {lbl:t("metric_wa_activity"),val:am.waSentToday,sub:t("metric_sent_today"),trend:`<span class="up">↑ auto</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`},
   ];
   document.getElementById("dash-metrics").innerHTML=cards.map((c,i)=>`
-    <div class="mc"${i===0?' id="mc-total-patients" style="cursor:pointer" onclick="goToPatientList()" title="View all patients"':''}${i===3?' id="mc-wa-activity" style="cursor:pointer" onclick="goToWhatsAppActivity()" title="Open WhatsApp Activity"':''}>
+    <div class="mc"${i===0?' id="mc-total-patients" style="cursor:pointer" onclick="goToPatientList()" title="View all patients"':''}${i===1?' id="mc-reports" style="cursor:pointer" onclick="goToReports()" title="Open Reports & Analytics"':''}${i===3?' id="mc-wa-activity" style="cursor:pointer" onclick="goToWhatsAppActivity()" title="Open WhatsApp Activity"':''}>
       <div class="mc-top"><p class="mc-lbl">${c.lbl}</p><div class="mc-icon">${c.ic}</div></div>
-      <p class="mc-val">${c.val}</p>
-      <p class="mc-sub">${c.sub} · ${c.trend}</p>
+      ${c.noVal?'':'<p class="mc-val">'+c.val+'</p>'}
+      <p class="mc-sub"${c.noVal?' style="margin-top:0"':''}>${c.sub}${c.trend?(' · '+c.trend):''}</p>
     </div>`).join("");
 
   if(!skipQueue)renderQueue();
@@ -2889,6 +2893,9 @@ function goToPatientList(){
 }
 function goToWhatsAppActivity(){
   nav('whatsapp', document.querySelector('.nb[onclick*="\'whatsapp\'"]'));
+}
+function goToReports(){
+  nav('analytics', document.querySelector('.nb[onclick*="\'analytics\'"]'));
 }
 function ppGoBack(){
   goToPatientList();
@@ -3771,7 +3778,7 @@ function dashClearQueueDate(){
 }
 
 /* Parses "9:00 AM" / "9:00 am" / "14:00" style strings into minutes
-   since midnight so the queue can always be sorted oldest-first,
+   since midnight so the queue can always be sorted correctly,
    regardless of how the time was stored. Unparseable values sort
    last rather than breaking the order of everything else. */
 function _queueTimeToMinutes(str){
@@ -3784,8 +3791,19 @@ function _queueTimeToMinutes(str){
   if(ap==='AM'&&h===12)h=0;
   return h*60+mins;
 }
-function _sortByApptTime(list){
-  return list.slice().sort(function(a,b){return _queueTimeToMinutes(a.time)-_queueTimeToMinutes(b.time);});
+/* Combines an appointment's date + time into one comparable value so
+   Upcoming/Completed/All can sort across multiple days, not just
+   within a single day. */
+function _queueDateTimeValue(p){
+  var d=p.date||'';
+  var dNum=/^\d{4}-\d{2}-\d{2}$/.test(d)?Date.parse(d+'T00:00:00'):0;
+  return dNum+_queueTimeToMinutes(p.time)*60000;
+}
+function _sortQueueAsc(list){ /* soonest first — Today, Upcoming, a picked date */
+  return list.slice().sort(function(a,b){return _queueDateTimeValue(a)-_queueDateTimeValue(b);});
+}
+function _sortQueueDesc(list){ /* most recent first — Completed, All */
+  return list.slice().sort(function(a,b){return _queueDateTimeValue(b)-_queueDateTimeValue(a);});
 }
 
 function _queueFilteredList(){
@@ -3799,28 +3817,31 @@ function _queueFilteredList(){
   return all; /* all */
 }
 
-/* Four quick actions live below EVERY queue row — for appointments
-   and follow-ups alike — so the doctor never has to leave the
-   Dashboard for prescriptions, reminders, scheduling a follow-up,
-   or asking for a review. */
+/* Only two quick actions live below every queue row — Generate
+   Prescription and Send Reminder — for appointments and follow-ups
+   alike, so the doctor never has to leave the Dashboard. Kept
+   deliberately minimal: nothing else appears in the Queue. */
 function _queueActionButtons(p){
   var payload=JSON.stringify(p).replace(/'/g,"&#39;");
   return `
     <button class="fu-btn" onclick='queueGeneratePrescription(${payload})'>${t("q_generate_rx")}</button>
-    <button class="fu-btn" onclick='queueSendReminder(${payload})'>${t("q_send_reminder")}</button>
-    <button class="fu-btn" onclick='queueScheduleFollowup(${payload})'>${t("q_followup_appt")}</button>
-    <button class="fu-btn" onclick='queueAskReview(${payload})'>${t("q_ask_review")}</button>`;
+    <button class="fu-btn" onclick='queueSendReminder(${payload})'>${t("q_send_reminder")}</button>`;
 }
 
 function renderQueue(){
   if(_dashQueueFilter==='followup' && !_dashQueueDate){renderFollowupQueue();return;}
 
-  var list=_sortByApptTime(_queueFilteredList().map(function(a,i){
+  var raw=_queueFilteredList().map(function(a,i){
     var s=a.status||'Waiting';
     return{id:a.id||a.appointment_id||i,patientId:a.patient_id||null,name:a.patient_name||'Unknown',
       phone:a.patient_phone||'',time:a.appointment_time||'',date:a.appointment_date||'',
       reason:a.reason||'',status:s,type:'appointment'};
-  }));
+  });
+  /* Today, Upcoming, and a picked date all read chronologically
+     (soonest appointment first). Completed and All read as a live
+     activity feed — most recent activity first. */
+  var mostRecentFirst=(!_dashQueueDate && (_dashQueueFilter==='completed'||_dashQueueFilter==='all'));
+  var list=mostRecentFirst?_sortQueueDesc(raw):_sortQueueAsc(raw);
   var q=list.map(function(p,i){p.serial=i+1;return p;});
   DB[mkt].queue=q;
   var cnt=document.getElementById('q-count');
@@ -3865,6 +3886,28 @@ function renderQueue(){
    same #queue-list panel used for appointments — same row shape,
    same four quick actions, same Serial/Name/Time/Reason/Status
    columns. There is no separate section anywhere on the Dashboard. */
+/* Nearest follow-up date first. When several fall on the same day,
+   break the tie using that patient's appointment time for that date,
+   if one is on file — so the follow-up list still reads in
+   time-of-day order on busy days. */
+function _followupTimeForTie(r){
+  var appts=window._auraAllAppointments||[];
+  for(var i=0;i<appts.length;i++){
+    var a=appts[i];
+    if(a.appointment_date!==r.followup_date)continue;
+    var samePatient=(r.patient_id&&a.patient_id&&a.patient_id===r.patient_id)||
+      (_phoneKey(a.patient_phone)&&_phoneKey(a.patient_phone)===_phoneKey(r.patient_phone));
+    if(samePatient)return _queueTimeToMinutes(a.appointment_time);
+  }
+  return 99999;
+}
+function _sortFollowupRows(rows){
+  return rows.slice().sort(function(a,b){
+    if(a.followup_date!==b.followup_date)return a.followup_date<b.followup_date?-1:1;
+    return _followupTimeForTie(a)-_followupTimeForTie(b);
+  });
+}
+
 function renderFollowupQueue(){
   var cnt=document.getElementById('q-count');
   var el=document.getElementById('queue-list');
@@ -3885,6 +3928,7 @@ function renderFollowupQueue(){
     fetchFollowupAlerts();
     return;
   }
+  rows=_sortFollowupRows(rows);
   if(cnt)cnt.textContent=`${rows.length} ${currentLang==="bn"?"রোগী":"patients"}`;
   if(!rows.length){
     el.innerHTML='<div class="empty"><div class="empty-ic">📋</div><p class="empty-t">'+t("q_no_followups")+'</p><p class="empty-s">'+t("q_no_followups_sub")+'</p></div>';
@@ -3973,35 +4017,6 @@ async function queueGeneratePrescription(p){
 function queueSendReminder(p){
   if(p.type==='followup' && p.followupId){openFollowupModal(p.followupId);return;}
   openWA({name:p.name,phone:p.phone},'reminder');
-}
-
-async function queueScheduleFollowup(p){
-  if(!_clinicId){showToast('Not connected — please sign in again.');return;}
-  var days=prompt('Schedule a follow-up in how many days from today?','7');
-  if(days===null)return;
-  days=parseInt(days,10);
-  if(!days||days<=0){showToast('Enter a valid number of days.');return;}
-  var followupDate=_fuAddDays(new Date().toISOString().split('T')[0],days);
-  try{
-    await _supa.from('followup_history').insert({
-      clinic_id:_clinicId,
-      patient_id:p.patientId||null,
-      patient_name:p.name,
-      patient_phone:p.phone,
-      doctor_name:(DB[mkt]&&DB[mkt].doc&&DB[mkt].doc.name)||'Doctor',
-      last_visit_date:new Date().toISOString().split('T')[0],
-      followup_date:followupDate,
-      status:'Scheduled',
-      reminder_status:'Pending'
-    });
-    _auraLogAudit('Follow-up Modified',{entityType:'followup',patientName:p.name,details:{status:'Scheduled',followup_date:followupDate}});
-    showToast('Follow-up scheduled for '+_fuPrettyDate(followupDate));
-    fetchFollowupAlerts();
-  }catch(e){ showToast('Could not schedule follow-up.'); }
-}
-
-function queueAskReview(p){
-  openWA({name:p.name,phone:p.phone},'review');
 }
 
 /* Wrap generatePrescription non-invasively: the moment a prescription
