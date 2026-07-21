@@ -572,7 +572,7 @@ main.content{
   background:rgba(255,255,255,.97);
   border-top:1px solid var(--border);
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  grid-template-columns:1fr 1fr;align-items:center;justify-items:center;
+  grid-template-columns:1fr auto 1fr;align-items:center;justify-items:center;
   box-shadow:0 -2px 20px rgba(0,0,0,.06);
   padding-top:6px;
   padding-bottom:6px;
@@ -1058,6 +1058,7 @@ main.content{
 .tl-qbtn{background:var(--surface);border:1px solid var(--border);color:var(--text-secondary);font-size:12px;font-weight:600;padding:9px 15px;border-radius:20px;white-space:nowrap;cursor:pointer;transition:all var(--ease);box-shadow:var(--sh-xs);flex-shrink:0}
 .tl-qbtn:hover{border-color:var(--blue-border);color:var(--blue)}
 .tl-qbtn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.tl-cal-btn{display:flex;align-items:center;justify-content:center;padding:9px 11px;margin-left:auto}
 .tl-section{display:none;flex-direction:column;gap:12px}
 .tl-section.on{display:flex}
 .tl-visit-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs);transition:box-shadow var(--ease)}
@@ -1150,8 +1151,6 @@ main.content{
 /* ══ CLICKABLE DASHBOARD METRIC (Total Patients → Patient List) ══ */
 #mc-total-patients{transition:box-shadow var(--ease),border-color var(--ease),transform var(--ease)}
 #mc-total-patients:hover{box-shadow:var(--sh-sm);border-color:var(--blue-border);transform:translateY(-1px)}
-#mc-daily-progress{transition:box-shadow var(--ease),border-color var(--ease),transform var(--ease)}
-#mc-daily-progress:hover{box-shadow:var(--sh-sm);border-color:var(--blue-border);transform:translateY(-1px)}
 #mc-wa-activity{transition:box-shadow var(--ease),border-color var(--ease),transform var(--ease)}
 #mc-wa-activity:hover{box-shadow:var(--sh-sm);border-color:var(--blue-border);transform:translateY(-1px)}
 
@@ -1318,6 +1317,10 @@ main.content{
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
         <span data-i18n="nav_dashboard">Dashboard</span>
       </button>
+      <button class="nb" onclick="nav('analytics',this)">
+        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+        <span data-i18n="nav_reports">Reports</span>
+      </button>
       <button class="nb" onclick="nav('missed-calls',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.42 19.42 0 0 1 4.43 9.68a2 2 0 0 1 2-2.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L10.68 13.31z"/><line x1="23" y1="1" x2="1" y2="23" stroke-width="1.8"/></svg></span>
         <span>Missed Call Recovery</span>
@@ -1450,33 +1453,28 @@ main.content{
 
         <div class="mg" id="dash-metrics"></div>
 
-        <div class="tl-quickbar" id="queue-filters" style="margin-top:2px">
+        <div class="tl-quickbar" id="queue-filters" style="margin-top:2px;align-items:center">
           <button class="tl-qbtn active" onclick="dashSetQueueFilter('today',this)" data-i18n="qf_today">Today</button>
           <button class="tl-qbtn" onclick="dashSetQueueFilter('upcoming',this)" data-i18n="qf_upcoming">Upcoming</button>
+          <button class="tl-qbtn" onclick="dashSetQueueFilter('followup',this)" data-i18n="qf_followup">Follow-up</button>
           <button class="tl-qbtn" onclick="dashSetQueueFilter('completed',this)" data-i18n="qf_completed">Completed</button>
           <button class="tl-qbtn" onclick="dashSetQueueFilter('all',this)" data-i18n="qf_all">All</button>
+          <button class="tl-qbtn tl-cal-btn" id="q-cal-btn" onclick="dashPickQueueDate()" aria-label="Pick a date" title="Choose a date">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </button>
+          <input type="date" id="q-date-input" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="dashSetQueueDate(this.value)"/>
         </div>
 
         <div class="panel">
           <div class="ph">
             <div class="pt">
               <span class="dot dot-g blink"></span>
-              <span data-i18n="queue_title">Today's Queue</span>
+              <span data-i18n="queue_title">Queue</span>
+              <span class="pb" id="q-date-badge" style="display:none;margin-left:6px;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);cursor:pointer" onclick="dashClearQueueDate()" title="Clear date filter"></span>
             </div>
             <span class="pb pb-b" id="q-count">0 patients</span>
           </div>
           <div id="queue-list"></div>
-        </div>
-
-        <div class="panel">
-          <div class="ph">
-            <div class="pt">
-              <span class="dot dot-a"></span>
-              <span data-i18n="alerts_title">Follow-up Alerts</span>
-            </div>
-            <span class="pb pb-r" id="fu-alert-count">0 due</span>
-          </div>
-          <div id="alerts-list"></div>
         </div>
 
         <div class="trust-bar">
@@ -2348,6 +2346,12 @@ main.content{
     <button class="bn-fab" onclick="openAddAppointmentModal()" aria-label="New appointment">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
+    <button class="bn" onclick="navMob('analytics',this)" data-t="analytics">
+      <div class="bn-ico">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      </div>
+      <span data-i18n="bn_reports">Reports</span>
+    </button>
   </nav>
 </div><!-- /#app -->
 </div><!-- /#app-shell -->
@@ -2601,9 +2605,12 @@ const T={
     onboard_title:"Complete your clinic setup (3 of 5)",
     onboard_sub:"Connect WhatsApp, add your first patients, and enable automated reminders to get started.",
     onboard_steps:"3 / 5 complete",
-    queue_title:"Today's Queue",alerts_title:"Follow-up Alerts",alerts_window:"14-day window",
+    queue_title:"Queue",alerts_title:"Follow-up Alerts",alerts_window:"14-day window",
     patients_title:"Patients",patients_sub:"Search, review history, and open a patient's full record",new_appointment:"New Appointment",
-    qf_today:"Today",qf_upcoming:"Upcoming",qf_completed:"Completed",qf_all:"All",
+    qf_today:"Today",qf_upcoming:"Upcoming",qf_followup:"Follow-up",qf_completed:"Completed",qf_all:"All",
+    q_generate_rx:"Generate Prescription",q_send_reminder:"Send Reminder",q_followup_appt:"Follow-up Appointment",q_ask_review:"Ask Review",
+    q_no_followups:"No follow-up patients",q_no_followups_sub:"Patients due for a follow-up will appear here.",
+    q_date_no_appts:"No appointments on this date",q_date_no_appts_sub:"Try picking a different date, or clear it to return to filters.",
     start_consult:"Start Consultation",gen_rx_short:"Prescription",complete_visit:"Complete Visit",
     wa_title:"WhatsApp Activity",wa_sub:"Automate patient communications and follow-ups",
     engine_live:"◉ Engine Live",quick_actions:"Quick Actions — Recent Patients",
@@ -2666,9 +2673,12 @@ const T={
     onboard_title:"ক্লিনিক সেটআপ সম্পন্ন করুন (৫টির মধ্যে ৩টি)",
     onboard_sub:"হোয়াটসঅ্যাপ সংযুক্ত করুন, প্রথম রোগী যোগ করুন এবং স্বয়ংক্রিয় রিমাইন্ডার চালু করুন।",
     onboard_steps:"৫ এর মধ্যে ৩ সম্পন্ন",
-    queue_title:"আজকের সারি",alerts_title:"ফলো-আপ সতর্কতা",alerts_window:"১৪ দিনের উইন্ডো",
+    queue_title:"সারি",alerts_title:"ফলো-আপ সতর্কতা",alerts_window:"১৪ দিনের উইন্ডো",
     patients_title:"রোগী",patients_sub:"খুঁজুন, ইতিহাস দেখুন এবং রোগীর সম্পূর্ণ রেকর্ড খুলুন",new_appointment:"নতুন অ্যাপয়েন্টমেন্ট",
-    qf_today:"আজ",qf_upcoming:"আসন্ন",qf_completed:"সম্পন্ন",qf_all:"সব",
+    qf_today:"আজ",qf_upcoming:"আসন্ন",qf_followup:"ফলো-আপ",qf_completed:"সম্পন্ন",qf_all:"সব",
+    q_generate_rx:"প্রেসক্রিপশন তৈরি করুন",q_send_reminder:"রিমাইন্ডার পাঠান",q_followup_appt:"ফলো-আপ অ্যাপয়েন্টমেন্ট",q_ask_review:"রিভিউ চাই",
+    q_no_followups:"কোনো ফলো-আপ রোগী নেই",q_no_followups_sub:"ফলো-আপের জন্য নির্ধারিত রোগীরা এখানে দেখা যাবে।",
+    q_date_no_appts:"এই তারিখে কোনো অ্যাপয়েন্টমেন্ট নেই",q_date_no_appts_sub:"অন্য একটি তারিখ বেছে নিন, বা ফিল্টারে ফিরে যেতে এটি সাফ করুন।",
     start_consult:"পরামর্শ শুরু করুন",gen_rx_short:"প্রেসক্রিপশন",complete_visit:"ভিজিট সম্পন্ন করুন",
     wa_title:"হোয়াটসঅ্যাপ কার্যক্রম",wa_sub:"রোগীদের যোগাযোগ ও ফলো-আপ স্বয়ংক্রিয় করুন",
     engine_live:"◉ ইঞ্জিন চালু",quick_actions:"দ্রুত পদক্ষেপ — সাম্প্রতিক রোগী",
@@ -2826,27 +2836,13 @@ function renderDash(skipQueue){
     {lbl:t("metric_wa_activity"),val:am.waSentToday,sub:t("metric_sent_today"),trend:`<span class="up">↑ auto</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`},
   ];
   document.getElementById("dash-metrics").innerHTML=cards.map((c,i)=>`
-    <div class="mc"${i===0?' id="mc-total-patients" style="cursor:pointer" onclick="goToPatientList()" title="View all patients"':''}${i===1?' id="mc-daily-progress" style="cursor:pointer" onclick="goToReports()" title="Open Reports & Analytics"':''}${i===3?' id="mc-wa-activity" style="cursor:pointer" onclick="goToWhatsAppActivity()" title="Open WhatsApp Activity"':''}>
+    <div class="mc"${i===0?' id="mc-total-patients" style="cursor:pointer" onclick="goToPatientList()" title="View all patients"':''}${i===3?' id="mc-wa-activity" style="cursor:pointer" onclick="goToWhatsAppActivity()" title="Open WhatsApp Activity"':''}>
       <div class="mc-top"><p class="mc-lbl">${c.lbl}</p><div class="mc-icon">${c.ic}</div></div>
       <p class="mc-val">${c.val}</p>
       <p class="mc-sub">${c.sub} · ${c.trend}</p>
     </div>`).join("");
 
   if(!skipQueue)renderQueue();
-
-  const al=d.alerts;
-  document.getElementById("alerts-list").innerHTML=al.length?al.map(p=>`
-    <div class="arow">
-      <div class="ai">
-        <div style="min-width:0;flex:1">
-          <p class="aname">${p.name}</p>
-          <p class="acond">${p.condition}</p>
-          <p class="adue">${currentLang==="bn"?"নির্ধারিত":"Due"} <span class="dv">${p.due}</span></p>
-        </div>
-        <button class="remind" onclick='openWA(${JSON.stringify(p)})'>${WA_SVG} ${t("send_reminder")}</button>
-      </div>
-    </div>`).join("")
-    :'<div class="empty" style="padding:24px 16px"><div class="empty-ic">🔔</div><p class="empty-t">No follow-up alerts</p><p class="empty-s">Alerts will appear when patients are due for a follow-up.</p></div>';
 }
 
 function renderPats(){
@@ -2893,9 +2889,6 @@ function goToPatientList(){
 }
 function goToWhatsAppActivity(){
   nav('whatsapp', document.querySelector('.nb[onclick*="\'whatsapp\'"]'));
-}
-function goToReports(){
-  nav('analytics', document.querySelector('.nb[onclick*="\'analytics\'"]'));
 }
 function ppGoBack(){
   goToPatientList();
@@ -3310,7 +3303,7 @@ document.addEventListener("keydown",e=>{
   }
 });
 
-function openWA(p){
+function openWA(p,kind){
   document.getElementById("wa-sub").textContent=p.name;
   const dial=DB[mkt].cur.dial;
   document.getElementById("wa-dial").textContent=dial;
@@ -3318,9 +3311,22 @@ function openWA(p){
   document.getElementById("wa-phone").textContent=rawPhone;
   const d=DB[mkt];
   const isBn=currentLang==="bn";
-  document.getElementById("wa-msg").value=isBn
-    ?`প্রিয় ${p.name},\n\nআপনার ফলো-আপ অ্যাপয়েন্টমেন্টের সময় হয়েছে। অনুগ্রহ করে যোগাযোগ করুন।\n\nধন্যবাদ,\n${d.doc.name}`
-    :`Dear ${p.name},\n\nThis is a friendly reminder from ${d.doc.clinic}. It's time for your follow-up appointment. Please contact us to schedule.\n\nBest regards,\n${d.doc.name}`;
+  var msgs={
+    followup:{
+      bn:`প্রিয় ${p.name},\n\nআপনার ফলো-আপ অ্যাপয়েন্টমেন্টের সময় হয়েছে। অনুগ্রহ করে যোগাযোগ করুন।\n\nধন্যবাদ,\n${d.doc.name}`,
+      en:`Dear ${p.name},\n\nThis is a friendly reminder from ${d.doc.clinic}. It's time for your follow-up appointment. Please contact us to schedule.\n\nBest regards,\n${d.doc.name}`
+    },
+    reminder:{
+      bn:`প্রিয় ${p.name},\n\nএটি আপনার আসন্ন অ্যাপয়েন্টমেন্টের একটি রিমাইন্ডার, ${d.doc.clinic} থেকে। কোনো প্রশ্ন থাকলে যোগাযোগ করুন।\n\nধন্যবাদ,\n${d.doc.name}`,
+      en:`Dear ${p.name},\n\nThis is a reminder about your appointment with ${d.doc.clinic}. Please reach out if you have any questions.\n\nBest regards,\n${d.doc.name}`
+    },
+    review:{
+      bn:`প্রিয় ${p.name},\n\n${d.doc.clinic}-এ ভিজিট করার জন্য ধন্যবাদ। আপনার অভিজ্ঞতা ভালো হয়ে থাকলে, আমাদের একটি গুগল রিভিউ দিলে আমরা কৃতজ্ঞ থাকব।\n\nধন্যবাদ,\n${d.doc.name}`,
+      en:`Dear ${p.name},\n\nThank you for visiting ${d.doc.clinic}. If you had a good experience, we'd really appreciate a quick Google review.\n\nBest regards,\n${d.doc.name}`
+    }
+  };
+  var m=msgs[kind]||msgs.followup;
+  document.getElementById("wa-msg").value=isBn?m.bn:m.en;
   openModal("wa-modal");
 }
 
@@ -3725,32 +3731,97 @@ async function fetchAppointments(){
   renderDash(true);
 }
 
-/* ── Unified Queue — replaces the old separate Appointments page.
-   One filter bar (Today / Upcoming / Completed / All) is the ONLY
-   way appointments are ever browsed now. ── */
+/* ── Unified Queue — one Queue for the whole Dashboard.
+   Filters: Today / Upcoming / Follow-up / Completed / All, plus a
+   calendar picker for any specific date. Follow-up now renders
+   straight into this same Queue instead of a separate dashboard
+   section — there is only ever ONE queue on the Dashboard. ── */
 var _dashQueueFilter='today';
+var _dashQueueDate=null; /* set when the calendar picker is used; overrides the filter bar */
+
 function dashSetQueueFilter(key,btn){
   _dashQueueFilter=key;
+  _dashQueueDate=null;
+  var badge=document.getElementById('q-date-badge');
+  if(badge)badge.style.display='none';
   document.querySelectorAll('#queue-filters .tl-qbtn').forEach(function(b){b.classList.remove('active');});
   if(btn)btn.classList.add('active');
   renderQueue();
 }
+
+function dashPickQueueDate(){
+  var inp=document.getElementById('q-date-input');
+  if(!inp)return;
+  if(inp.showPicker){try{inp.showPicker();return;}catch(e){}}
+  inp.click();
+}
+function dashSetQueueDate(value){
+  if(!value)return;
+  _dashQueueDate=value;
+  document.querySelectorAll('#queue-filters .tl-qbtn').forEach(function(b){b.classList.remove('active');});
+  var badge=document.getElementById('q-date-badge');
+  if(badge){badge.style.display='inline-flex';badge.innerHTML='📅 '+value+' &nbsp;✕';}
+  renderQueue();
+}
+function dashClearQueueDate(){
+  _dashQueueDate=null;
+  var badge=document.getElementById('q-date-badge');
+  if(badge)badge.style.display='none';
+  dashSetQueueFilter('today',document.querySelector('#queue-filters .tl-qbtn'));
+}
+
+/* Parses "9:00 AM" / "9:00 am" / "14:00" style strings into minutes
+   since midnight so the queue can always be sorted oldest-first,
+   regardless of how the time was stored. Unparseable values sort
+   last rather than breaking the order of everything else. */
+function _queueTimeToMinutes(str){
+  if(!str)return 99999;
+  var s=String(str).trim();
+  var m=s.match(/^(\d{1,2}):(\d{2})\s*([AaPp][Mm])?$/);
+  if(!m)return 99999;
+  var h=parseInt(m[1],10), mins=parseInt(m[2],10), ap=m[3]?m[3].toUpperCase():null;
+  if(ap==='PM'&&h!==12)h+=12;
+  if(ap==='AM'&&h===12)h=0;
+  return h*60+mins;
+}
+function _sortByApptTime(list){
+  return list.slice().sort(function(a,b){return _queueTimeToMinutes(a.time)-_queueTimeToMinutes(b.time);});
+}
+
 function _queueFilteredList(){
   var all=window._auraAllAppointments||[];
   var today=new Date().toISOString().split('T')[0];
+  if(_dashQueueDate)return all.filter(function(a){return a.appointment_date===_dashQueueDate;});
   if(_dashQueueFilter==='today')return all.filter(function(a){return a.appointment_date===today;});
   if(_dashQueueFilter==='upcoming')return all.filter(function(a){return a.appointment_date>today && a.status!=='Completed' && a.status!=='Cancelled';});
   if(_dashQueueFilter==='completed')return all.filter(function(a){return a.status==='Completed';});
+  if(_dashQueueFilter==='followup')return []; /* rendered separately from followup_history — see renderQueue */
   return all; /* all */
 }
+
+/* Four quick actions live below EVERY queue row — for appointments
+   and follow-ups alike — so the doctor never has to leave the
+   Dashboard for prescriptions, reminders, scheduling a follow-up,
+   or asking for a review. */
+function _queueActionButtons(p){
+  var payload=JSON.stringify(p).replace(/'/g,"&#39;");
+  return `
+    <button class="fu-btn" onclick='queueGeneratePrescription(${payload})'>${t("q_generate_rx")}</button>
+    <button class="fu-btn" onclick='queueSendReminder(${payload})'>${t("q_send_reminder")}</button>
+    <button class="fu-btn" onclick='queueScheduleFollowup(${payload})'>${t("q_followup_appt")}</button>
+    <button class="fu-btn" onclick='queueAskReview(${payload})'>${t("q_ask_review")}</button>`;
+}
+
 function renderQueue(){
-  var list=_queueFilteredList();
-  var q=list.map(function(a,i){
+  if(_dashQueueFilter==='followup' && !_dashQueueDate){renderFollowupQueue();return;}
+
+  var list=_sortByApptTime(_queueFilteredList().map(function(a,i){
     var s=a.status||'Waiting';
     return{id:a.id||a.appointment_id||i,patientId:a.patient_id||null,name:a.patient_name||'Unknown',
       phone:a.patient_phone||'',time:a.appointment_time||'',date:a.appointment_date||'',
-      reason:a.reason||'',status:s,token:'T-'+(i+1<10?'0'+(i+1):(i+1))};
-  });
+      reason:a.reason||'',status:s,type:'appointment'};
+  }));
+  var q=list.map(function(p,i){p.serial=i+1;return p;});
   DB[mkt].queue=q;
   var cnt=document.getElementById('q-count');
   if(cnt)cnt.textContent=`${q.length} ${currentLang==="bn"?"রোগী":"patients"}`;
@@ -3761,16 +3832,16 @@ function renderQueue(){
       upcoming:["No upcoming appointments","Future appointments will appear here."],
       completed:["No completed visits yet","Visits marked Completed will appear here."],
       all:["No appointments yet","Use New Appointment to create one."]};
-    var em=emptyMsgs[_dashQueueFilter]||emptyMsgs.all;
+    var em=_dashQueueDate?[t("q_date_no_appts"),t("q_date_no_appts_sub")]:(emptyMsgs[_dashQueueFilter]||emptyMsgs.all);
     el.innerHTML='<div class="empty"><div class="empty-ic">📋</div><p class="empty-t">'+em[0]+'</p><p class="empty-s">'+em[1]+'</p></div>';
     return;
   }
   el.innerHTML=q.map(function(p){
-    var dateLbl=(_dashQueueFilter!=='today')?('<span style="color:var(--text-tertiary);margin-left:5px">· '+p.date+'</span>'):'';
+    var dateLbl=((_dashQueueFilter!=='today')||_dashQueueDate)?('<span style="color:var(--text-tertiary);margin-left:5px">· '+p.date+'</span>'):'';
     return `
     <div class="qrow" style="flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:9px;min-width:0;flex:1">
-        <div class="token">${p.token}</div>
+        <div class="token">${p.serial}</div>
         <div style="min-width:0">
           <p class="qname" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</p>
           <p class="qtime">
@@ -3782,9 +3853,64 @@ function renderQueue(){
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
         <span style="margin-right:2px">${chipQ(p.status)}</span>
-        ${p.status==='Completed'?'':`<button class="fu-btn" onclick='qStartConsultation(${JSON.stringify(p)})'>${t("start_consult")}</button>`}
-        ${p.status==='Completed'?'':`<button class="fu-btn" onclick='qGeneratePrescription(${JSON.stringify(p)})'>${t("gen_rx_short")}</button>`}
-        ${p.status==='Completed'?'':`<button class="fu-btn fu-btn-done" onclick="qCompleteVisit('${p.id}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> ${t("complete_visit")}</button>`}
+        ${_queueActionButtons(p)}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+/* ── Follow-up patients, inside the same Queue ───────────────
+   Selecting the Follow-up filter reads live rows from
+   followup_history (due or upcoming) and paints them into the very
+   same #queue-list panel used for appointments — same row shape,
+   same four quick actions, same Serial/Name/Time/Reason/Status
+   columns. There is no separate section anywhere on the Dashboard. */
+function renderFollowupQueue(){
+  var cnt=document.getElementById('q-count');
+  var el=document.getElementById('queue-list');
+  if(!el)return;
+  if(!_clinicId){
+    if(cnt)cnt.textContent='0 patients';
+    el.innerHTML='<div class="empty"><div class="empty-ic">⏳</div><p class="empty-t">Loading…</p></div>';
+    return;
+  }
+  if(window._fuSetupNeeded){
+    if(cnt)cnt.textContent='0 patients';
+    el.innerHTML='<div class="empty" style="padding:24px 16px"><div class="empty-ic">⚙️</div><p class="empty-t">Follow-up tracking isn\'t set up yet</p><p class="empty-s">Ask your admin to run the follow-up setup script in Supabase (see AURA_FOLLOWUP_SETUP_SQL in the code, or the setup guide provided with this update).</p></div>';
+    return;
+  }
+  var rows=(window._fuAlertRowsList)||null;
+  if(!rows){
+    el.innerHTML='<div class="empty"><div class="empty-ic">⏳</div><p class="empty-t">Loading follow-ups…</p></div>';
+    fetchFollowupAlerts();
+    return;
+  }
+  if(cnt)cnt.textContent=`${rows.length} ${currentLang==="bn"?"রোগী":"patients"}`;
+  if(!rows.length){
+    el.innerHTML='<div class="empty"><div class="empty-ic">📋</div><p class="empty-t">'+t("q_no_followups")+'</p><p class="empty-s">'+t("q_no_followups_sub")+'</p></div>';
+    return;
+  }
+  el.innerHTML=rows.map(function(r,i){
+    var st=_fuStatusFor(r.followup_date);
+    var p={id:r.id,patientId:r.patient_id||null,name:r.patient_name||'Unknown',phone:r.patient_phone||'',
+      time:_fuDaysLabel(st),date:r.followup_date||'',reason:'Follow-up · last visit '+_fuPrettyDate(r.last_visit_date),
+      status:st.label,type:'followup',followupId:r.id,serial:i+1};
+    return `
+    <div class="qrow" style="flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:9px;min-width:0;flex:1">
+        <div class="token">${p.serial}</div>
+        <div style="min-width:0">
+          <p class="qname" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</p>
+          <p class="qtime">
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            ${p.time}
+          </p>
+          <p class="qtime" style="margin-top:2px;color:var(--text-secondary)">${p.reason}</p>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+        <span class="fu-badge ${st.cls}" style="margin-right:2px">${st.label}</span>
+        ${_queueActionButtons(p)}
       </div>
     </div>`;
   }).join("");
@@ -3830,6 +3956,52 @@ async function qCompleteVisit(id){
   if(!id)return;
   await updateAppointmentStatus(id,'Completed');
   showToast('Visit marked as completed.');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   UNIFIED QUEUE QUICK ACTIONS
+   These four actions appear below every row in the Queue — whether
+   it's an appointment or a follow-up patient — so the doctor never
+   needs to leave the Dashboard. Replaces the old separate
+   WhatsApp-Engine-only workflow for these tasks. ══════════════════ */
+async function queueGeneratePrescription(p){
+  if(p.type==='appointment' && p.id)await updateAppointmentStatus(p.id,'In Consultation');
+  _auraConsultAppointmentId=(p.type==='appointment')?(p.id||null):null;
+  _qGoToPrescription(p);
+}
+
+function queueSendReminder(p){
+  if(p.type==='followup' && p.followupId){openFollowupModal(p.followupId);return;}
+  openWA({name:p.name,phone:p.phone},'reminder');
+}
+
+async function queueScheduleFollowup(p){
+  if(!_clinicId){showToast('Not connected — please sign in again.');return;}
+  var days=prompt('Schedule a follow-up in how many days from today?','7');
+  if(days===null)return;
+  days=parseInt(days,10);
+  if(!days||days<=0){showToast('Enter a valid number of days.');return;}
+  var followupDate=_fuAddDays(new Date().toISOString().split('T')[0],days);
+  try{
+    await _supa.from('followup_history').insert({
+      clinic_id:_clinicId,
+      patient_id:p.patientId||null,
+      patient_name:p.name,
+      patient_phone:p.phone,
+      doctor_name:(DB[mkt]&&DB[mkt].doc&&DB[mkt].doc.name)||'Doctor',
+      last_visit_date:new Date().toISOString().split('T')[0],
+      followup_date:followupDate,
+      status:'Scheduled',
+      reminder_status:'Pending'
+    });
+    _auraLogAudit('Follow-up Modified',{entityType:'followup',patientName:p.name,details:{status:'Scheduled',followup_date:followupDate}});
+    showToast('Follow-up scheduled for '+_fuPrettyDate(followupDate));
+    fetchFollowupAlerts();
+  }catch(e){ showToast('Could not schedule follow-up.'); }
+}
+
+function queueAskReview(p){
+  openWA({name:p.name,phone:p.phone},'review');
 }
 
 /* Wrap generatePrescription non-invasively: the moment a prescription
@@ -6460,15 +6632,15 @@ function _fuDaysLabel(st){
   return 'In '+st.days+' days';
 }
 
-/* ── Dashboard widget — real-time Follow-up Alerts ───────────
-   Replaces the static DB[mkt].alerts rendering with live rows from
-   followup_history. Re-fetched on dashboard nav, right after login,
-   and every 60 seconds while the app is open so the widget reflects
-   day-rollovers (Today → Overdue etc.) without a manual refresh. */
+/* ── Follow-up data, feeding the unified Queue ───────────────
+   Fetches live rows from followup_history in the background.
+   Re-fetched on dashboard nav, right after login, and every 60
+   seconds while the app is open so day-rollovers (Today → Overdue
+   etc.) stay correct without a manual refresh. Follow-ups now render
+   straight into the Queue panel (see renderFollowupQueue) whenever
+   the Follow-up filter is selected — there is no separate widget. */
 async function fetchFollowupAlerts(){
-  var el=document.getElementById('alerts-list');
-  var cnt=document.getElementById('fu-alert-count');
-  if(!el||!_clinicId)return;
+  if(!_clinicId)return;
   var res=await _supa.from('followup_history')
     .select('*')
     .eq('clinic_id',_clinicId)
@@ -6480,37 +6652,18 @@ async function fetchFollowupAlerts(){
        looking identical to "zero follow-ups", so this is diagnosable
        without opening the browser console. */
     console.warn('[AuraFollowUp] followup_history read failed:',res.error.message);
-    if(cnt)cnt.textContent='Setup needed';
-    el.innerHTML='<div class="empty" style="padding:24px 16px"><div class="empty-ic">⚙️</div><p class="empty-t">Follow-up tracking isn\'t set up yet</p><p class="empty-s">Ask your admin to run the follow-up setup script in Supabase (see AURA_FOLLOWUP_SETUP_SQL in the code, or the setup guide provided with this update).</p></div>';
+    window._fuAlertRows={};
+    window._fuAlertRowsList=[];
+    window._fuSetupNeeded=true;
+    if(_dashQueueFilter==='followup' && !_dashQueueDate)renderFollowupQueue();
     return;
   }
   var rows=res.data||[];
   window._fuAlertRows={};
   rows.forEach(function(r){window._fuAlertRows[r.id]=r;});
-  if(cnt)cnt.textContent=rows.length+(currentLang==='bn'?' জন বকেয়া':' due');
-  if(!rows.length){
-    el.innerHTML='<div class="empty" style="padding:24px 16px"><div class="empty-ic">🔔</div><p class="empty-t">No follow-up alerts</p><p class="empty-s">Alerts will appear when patients are due for a follow-up.</p></div>';
-    return;
-  }
-  el.innerHTML=rows.map(function(r){
-    var st=_fuStatusFor(r.followup_date);
-    return '<div class="fu-row">'+
-      '<div class="fu-top">'+
-        '<div style="min-width:0">'+
-          '<p class="fu-name">'+(r.patient_name||'—')+'</p>'+
-          '<p class="fu-meta"><b>Mobile:</b> '+(r.patient_phone||'—')+' &nbsp; <b>Doctor:</b> '+(r.doctor_name||'—')+'</p>'+
-          '<p class="fu-meta"><b>Last Visit:</b> '+_fuPrettyDate(r.last_visit_date)+' &nbsp; <b>Next Follow-up:</b> '+_fuPrettyDate(r.followup_date)+'</p>'+
-          '<p class="fu-meta">'+_fuDaysLabel(st)+(r.reminder_sent_at?(' &nbsp; · &nbsp; Reminder sent '+new Date(r.reminder_sent_at).toLocaleString('en-GB')):'')+'</p>'+
-        '</div>'+
-        '<span class="fu-badge '+st.cls+'">'+st.label+'</span>'+
-      '</div>'+
-      '<div class="fu-actions">'+
-        '<button class="fu-btn" onclick="openFollowupModal(\''+r.id+'\')">'+WA_SVG+' Send Follow-up Reminder</button>'+
-        '<button class="fu-btn fu-btn-done" onclick="markFollowupCompleted(\''+r.id+'\')">'+
-          '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Mark as Completed</button>'+
-      '</div>'+
-    '</div>';
-  }).join('');
+  window._fuAlertRowsList=rows;
+  window._fuSetupNeeded=false;
+  if(_dashQueueFilter==='followup' && !_dashQueueDate)renderFollowupQueue();
 }
 
 async function markFollowupCompleted(id){
