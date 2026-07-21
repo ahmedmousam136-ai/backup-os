@@ -572,7 +572,7 @@ main.content{
   background:rgba(255,255,255,.97);
   border-top:1px solid var(--border);
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  grid-template-columns:1fr auto 1fr;align-items:center;justify-items:center;
+  grid-template-columns:1fr 1fr;align-items:center;justify-items:center;
   box-shadow:0 -2px 20px rgba(0,0,0,.06);
   padding-top:6px;
   padding-bottom:6px;
@@ -1150,6 +1150,8 @@ main.content{
 /* ══ CLICKABLE DASHBOARD METRIC (Total Patients → Patient List) ══ */
 #mc-total-patients{transition:box-shadow var(--ease),border-color var(--ease),transform var(--ease)}
 #mc-total-patients:hover{box-shadow:var(--sh-sm);border-color:var(--blue-border);transform:translateY(-1px)}
+#mc-daily-progress{transition:box-shadow var(--ease),border-color var(--ease),transform var(--ease)}
+#mc-daily-progress:hover{box-shadow:var(--sh-sm);border-color:var(--blue-border);transform:translateY(-1px)}
 #mc-wa-activity{transition:box-shadow var(--ease),border-color var(--ease),transform var(--ease)}
 #mc-wa-activity:hover{box-shadow:var(--sh-sm);border-color:var(--blue-border);transform:translateY(-1px)}
 
@@ -1315,10 +1317,6 @@ main.content{
       <button class="nb on" onclick="nav('dashboard',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
         <span data-i18n="nav_dashboard">Dashboard</span>
-      </button>
-      <button class="nb" onclick="nav('analytics',this)">
-        <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
-        <span data-i18n="nav_reports">Reports</span>
       </button>
       <button class="nb" onclick="nav('missed-calls',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.42 19.42 0 0 1 4.43 9.68a2 2 0 0 1 2-2.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L10.68 13.31z"/><line x1="23" y1="1" x2="1" y2="23" stroke-width="1.8"/></svg></span>
@@ -2350,12 +2348,6 @@ main.content{
     <button class="bn-fab" onclick="openAddAppointmentModal()" aria-label="New appointment">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
-    <button class="bn" onclick="navMob('analytics',this)" data-t="analytics">
-      <div class="bn-ico">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      </div>
-      <span data-i18n="bn_reports">Reports</span>
-    </button>
   </nav>
 </div><!-- /#app -->
 </div><!-- /#app-shell -->
@@ -2834,7 +2826,7 @@ function renderDash(skipQueue){
     {lbl:t("metric_wa_activity"),val:am.waSentToday,sub:t("metric_sent_today"),trend:`<span class="up">↑ auto</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`},
   ];
   document.getElementById("dash-metrics").innerHTML=cards.map((c,i)=>`
-    <div class="mc"${i===0?' id="mc-total-patients" style="cursor:pointer" onclick="goToPatientList()" title="View all patients"':''}${i===3?' id="mc-wa-activity" style="cursor:pointer" onclick="goToWhatsAppActivity()" title="Open WhatsApp Activity"':''}>
+    <div class="mc"${i===0?' id="mc-total-patients" style="cursor:pointer" onclick="goToPatientList()" title="View all patients"':''}${i===1?' id="mc-daily-progress" style="cursor:pointer" onclick="goToReports()" title="Open Reports & Analytics"':''}${i===3?' id="mc-wa-activity" style="cursor:pointer" onclick="goToWhatsAppActivity()" title="Open WhatsApp Activity"':''}>
       <div class="mc-top"><p class="mc-lbl">${c.lbl}</p><div class="mc-icon">${c.ic}</div></div>
       <p class="mc-val">${c.val}</p>
       <p class="mc-sub">${c.sub} · ${c.trend}</p>
@@ -2901,6 +2893,9 @@ function goToPatientList(){
 }
 function goToWhatsAppActivity(){
   nav('whatsapp', document.querySelector('.nb[onclick*="\'whatsapp\'"]'));
+}
+function goToReports(){
+  nav('analytics', document.querySelector('.nb[onclick*="\'analytics\'"]'));
 }
 function ppGoBack(){
   goToPatientList();
