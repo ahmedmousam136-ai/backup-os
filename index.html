@@ -1681,21 +1681,12 @@ main.content{
           </div>
         </div>
         <div class="mg" id="ana-metrics"></div>
-        <div class="two-col">
-          <div class="panel">
-            <div class="ph">
-              <div class="pt" data-i18n="auto_breakdown">Automation Breakdown</div>
-              <span class="pb pb-b" data-i18n="thirty_days">30 days</span>
-            </div>
-            <div id="auto-stats"></div>
+        <div class="panel">
+          <div class="ph">
+            <div class="pt" data-i18n="auto_breakdown">Automation Breakdown</div>
+            <span class="pb pb-b" data-i18n="thirty_days">30 days</span>
           </div>
-          <div class="panel">
-            <div class="ph">
-              <div class="pt" data-i18n="health_summary">Patient Health Summary</div>
-              <span class="pb pb-g" data-i18n="current">Current</span>
-            </div>
-            <div id="pat-stats"></div>
-          </div>
+          <div id="auto-stats"></div>
         </div>
       </div>
 
@@ -2666,7 +2657,7 @@ const T={
     metric_reviews:"Google Reviews",metric_success:"Automation Success",
     metric_sent_sub:"Last 30 days",metric_revisits:"Confirmed revisits",
     metric_generated:"Generated this month",metric_delivery:"Delivery rate",
-    auto_confirmations:"Confirmations Sent",auto_reminders:"14-Day Reminders",
+    auto_confirmations:"Confirmations Sent",auto_reminders:"Follow-up Reminder",
     auto_followup:"Follow-Up Messages",auto_review_req:"Review Requests",
     pat_active:"Active",pat_atrisk:"At Risk",pat_inactive:"Inactive",
     quick_send_reminder:"Send Reminder",quick_followup:"Follow-Up",
@@ -2735,7 +2726,7 @@ const T={
     metric_reviews:"গুগল রিভিউ",metric_success:"অটোমেশন সাফল্য",
     metric_sent_sub:"শেষ ৩০ দিন",metric_revisits:"নিশ্চিত পুনর্ভিজিট",
     metric_generated:"এই মাসে তৈরি",metric_delivery:"ডেলিভারি হার",
-    auto_confirmations:"নিশ্চিতকরণ পাঠানো",auto_reminders:"১৪ দিনের রিমাইন্ডার",
+    auto_confirmations:"নিশ্চিতকরণ পাঠানো",auto_reminders:"ফলো-আপ রিমাইন্ডার",
     auto_followup:"ফলো-আপ বার্তা",auto_review_req:"রিভিউ অনুরোধ",
     pat_active:"সক্রিয়",pat_atrisk:"ঝুঁকিতে",pat_inactive:"নিষ্ক্রিয়",
     quick_send_reminder:"রিমাইন্ডার পাঠান",quick_followup:"ফলো-আপ",
@@ -3270,7 +3261,6 @@ function renderAna(){
   const cards=[
     {lbl:t("metric_sent"),val:a.sent,sub:t("metric_sent_sub"),trend:`<span class="up">↑ 12.4%</span>`},
     {lbl:t("metric_returning"),val:a.returning,sub:t("metric_revisits"),trend:`<span class="up">↑ 7.1%</span>`},
-    {lbl:t("metric_reviews"),val:a.reviews,sub:t("metric_generated"),trend:`<span class="up">↑ 22.3%</span>`},
     {lbl:t("metric_success"),val:a.success,sub:t("metric_delivery"),trend:`<span class="up">↑ 1.8%</span>`},
   ];
   document.getElementById("ana-metrics").innerHTML=cards.map(c=>`
@@ -3281,33 +3271,12 @@ function renderAna(){
     </div>`).join("");
 
   const bars=[
-    {lbl:t("auto_confirmations"),val:Math.round(a.sent*.38),pct:"38%"},
     {lbl:t("auto_reminders"),val:Math.round(a.sent*.31),pct:"31%"},
-    {lbl:t("auto_followup"),val:Math.round(a.sent*.21),pct:"21%"},
-    {lbl:t("auto_review_req"),val:Math.round(a.sent*.10),pct:"10%"},
   ];
   document.getElementById("auto-stats").innerHTML=bars.map(b=>`
     <div class="abar-row">
       <div class="abar-top"><span class="abar-lbl">${b.lbl}</span><span class="abar-val">${b.val}</span></div>
       <div class="abar-bg"><div class="abar-fill" style="width:${b.pct}"></div></div>
-    </div>`).join("");
-
-  const pats=DB[mkt].patients;
-  const active=pats.filter(p=>p.status==="Active").length;
-  const atRisk=pats.filter(p=>p.status==="At Risk").length;
-  const inactive=pats.filter(p=>p.status==="Inactive").length;
-  const total=pats.length;
-  document.getElementById("pat-stats").innerHTML=[
-    {lbl:t("pat_active"),count:active,color:"var(--green)",pct:Math.round((active/total)*100)},
-    {lbl:t("pat_atrisk"),count:atRisk,color:"var(--amber)",pct:Math.round((atRisk/total)*100)},
-    {lbl:t("pat_inactive"),count:inactive,color:"var(--red)",pct:Math.round((inactive/total)*100)},
-  ].map(s=>`
-    <div class="pstat-row">
-      <div class="pstat-top">
-        <div class="pstat-l"><span class="dot" style="background:${s.color}"></span><span class="pstat-lbl">${s.lbl}</span></div>
-        <span class="pstat-count">${s.count} <span class="pstat-tot">/ ${total}</span></span>
-      </div>
-      <div class="abar-bg"><div class="abar-fill" style="width:${s.pct}%;background:${s.color}"></div></div>
     </div>`).join("");
 }
 
