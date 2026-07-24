@@ -572,7 +572,7 @@ main.content{
   background:rgba(255,255,255,.97);
   border-top:1px solid var(--border);
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  grid-template-columns:1fr auto 1fr;align-items:center;justify-items:center;
+  grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;justify-items:center;
   box-shadow:0 -2px 20px rgba(0,0,0,.06);
   padding-top:6px;
   padding-bottom:6px;
@@ -604,6 +604,8 @@ main.content{
 }
 .bn-fab:hover{transform:scale(1.07);box-shadow:0 6px 20px rgba(46,99,212,.5)}
 .bn-fab:active{transform:scale(.92)}
+.bn-fab-green{background:var(--green);box-shadow:0 4px 16px rgba(18,151,106,.4)}
+.bn-fab-green:hover{box-shadow:0 6px 20px rgba(18,151,106,.5)}
 
 /* ─── EMPTY STATE ─── */
 .empty{text-align:center;padding:40px 24px;color:var(--text-tertiary)}
@@ -1379,7 +1381,7 @@ main.content{
       <div class="hdr-r">
         <div class="date-pill">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <span data-i18n="date_label">Friday, 22 May 2026</span>
+          <span id="live-date-time">—</span>
         </div>
         <button class="hdr-lang-btn" onclick="openLangModal()" id="hdr-lang-btn" aria-label="Change language">
           <span class="lang-dot"></span>
@@ -1419,7 +1421,7 @@ main.content{
         <div class="sh">
           <div>
             <h1 class="st" data-i18n="dash_greeting">Good morning, Dr. Laskar</h1>
-            <p class="ss" data-i18n="dash_subtitle">Clinic overview · Friday, 22 May 2026</p>
+            <p class="ss" id="dash-live-subtitle">Clinic overview · —</p>
             <span style="display:inline-block;margin-top:4px;padding:2px 8px;background:#e53935;color:#fff;font-size:10px;font-weight:700;border-radius:4px;letter-spacing:.5px">BUILD 8</span>
           </div>
           <button class="add-btn" onclick="openAddAppointmentModal()">
@@ -2346,20 +2348,29 @@ main.content{
 
   <!-- BOTTOM NAV -->
   <nav class="bnav" id="bnav">
+    <button class="bn" onclick="navMob('missed-calls',this)" data-t="missed-calls">
+      <div class="bn-ico">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.42 19.42 0 0 1 4.43 9.68a2 2 0 0 1 2-2.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L10.68 13.31z"/><line x1="23" y1="1" x2="1" y2="23" stroke-width="1.8"/></svg>
+      </div>
+      <span>Calls</span>
+    </button>
+    <button class="bn-fab" onclick="openAppointmentChoiceModal()" aria-label="New appointment — manual or voice">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
     <button class="bn on" onclick="navMob('dashboard',this)" data-t="dashboard">
       <div class="bn-ico">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       </div>
       <span data-i18n="bn_home">Home</span>
     </button>
-    <button class="bn-fab" onclick="openAddAppointmentModal()" aria-label="New appointment">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <button class="bn-fab bn-fab-green" onclick="openPrescriptionChoiceModal()" aria-label="New prescription — manual or voice">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
     </button>
-    <button class="bn" onclick="navMob('analytics',this)" data-t="analytics">
+    <button class="bn" onclick="navMob('settings',this)" data-t="settings">
       <div class="bn-ico">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
       </div>
-      <span data-i18n="bn_reports">Reports</span>
+      <span data-i18n="nav_settings">Settings</span>
     </button>
   </nav>
 </div><!-- /#app -->
@@ -2587,6 +2598,71 @@ main.content{
   </div>
 </div>
 
+<!-- MANUAL / VOICE CHOICE MODAL — shown when tapping either bottom-nav FAB -->
+<div class="mod-ov" id="choice-modal">
+  <div class="modal" style="max-width:340px">
+    <div class="mh">
+      <div style="display:flex;align-items:center;gap:9px">
+        <div class="mic" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <p class="mtitle" id="choice-modal-title">New Appointment</p>
+      </div>
+      <button class="mclose" onclick="closeModal('choice-modal')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="mb" style="gap:10px">
+      <button class="qbtn" style="justify-content:center;min-height:52px;font-size:13px;gap:8px" id="choice-manual-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+        Manual Entry
+      </button>
+      <button class="qbtn" style="justify-content:center;min-height:52px;font-size:13px;gap:8px;background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)" id="choice-voice-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        Voice Entry
+      </button>
+      <p style="font-size:10px;color:var(--text-tertiary);text-align:center;line-height:1.5">Tap Voice → speak naturally → tap Send. Everything else happens automatically.</p>
+    </div>
+  </div>
+</div>
+
+<!-- VOICE INPUT MODAL — shared by Voice Appointment and Voice Prescription -->
+<div class="mod-ov" id="voice-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="mh">
+      <div style="display:flex;align-items:center;gap:9px">
+        <div class="mic" id="voice-modal-icon" style="background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </div>
+        <p class="mtitle" id="voice-modal-title">Voice Appointment</p>
+      </div>
+      <button class="mclose" onclick="closeVoiceModal()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="mb">
+      <div style="text-align:center;padding:6px 0 2px">
+        <div id="voice-pulse" style="width:60px;height:60px;border-radius:50%;background:var(--blue-bg);border:2px solid var(--blue-border);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;color:var(--blue)">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </div>
+        <p id="voice-status-text" style="font-size:12px;color:var(--text-secondary)">Tap the mic and start speaking…</p>
+      </div>
+      <div id="voice-transcript" style="min-height:80px;max-height:150px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 12px;font-size:12.5px;color:var(--text-primary);line-height:1.6"></div>
+      <div style="display:flex;gap:8px">
+        <button class="qbtn" id="voice-mic-btn" style="flex:1;justify-content:center;min-height:46px;gap:6px" onclick="voiceToggleListening()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+          Start Speaking
+        </button>
+        <button class="msub" id="voice-send-btn" style="flex:1;opacity:.5;pointer-events:none" onclick="voiceSendTranscript()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Send
+        </button>
+      </div>
+      <p style="font-size:10px;color:var(--text-tertiary);text-align:center;line-height:1.5">Everything else happens automatically after Send — no extra confirmation needed.</p>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ══ SUPABASE CLIENT ══ */
 const SUPABASE_URL = 'https://qquyqejqrxfhtmidmgkb.supabase.co';
@@ -2809,6 +2885,30 @@ function applyTranslations(){
   if(stgTheme)stgTheme.textContent=currentTheme==="dark"?t("theme_light"):t("theme_dark");
 }
 
+/* ══ LIVE DATE & TIME — always reflects the user's actual device
+   clock (never a hard-coded date), updates every few seconds so the
+   header pill and dashboard subtitle never go stale. ══ */
+function _auraFormatDateTime(){
+  var now=new Date();
+  var locale=currentLang==="bn"?"bn-BD":"en-GB";
+  var dateStr=now.toLocaleDateString(locale,{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  var timeStr=now.toLocaleTimeString(locale,{hour:"numeric",minute:"2-digit",hour12:true});
+  return {dateStr:dateStr,timeStr:timeStr};
+}
+function updateLiveClock(){
+  var dt=_auraFormatDateTime();
+  var pill=document.getElementById("live-date-time");
+  if(pill)pill.textContent=dt.dateStr+" · "+dt.timeStr+(currentLang==="bn"?"":" (live)");
+  var sub=document.getElementById("dash-live-subtitle");
+  if(sub){
+    var base=currentLang==="bn"?"ক্লিনিক সারসংক্ষেপ":"Clinic overview";
+    sub.textContent=base+" · "+dt.dateStr;
+  }
+}
+setInterval(updateLiveClock,15000);
+document.addEventListener("DOMContentLoaded",updateLiveClock);
+updateLiveClock();
+
 function chipQ(s){
   const cls={"Waiting":"ch-wait","Checked In":"ch-in","In Consultation":"ch-prog","Completed":"ch-done","Cancelled":"ch-miss"};
   return`<span class="chip ${cls[s]||'ch-wait'}" style="font-size:9.5px">${s||'Waiting'}</span>`;
@@ -2837,19 +2937,20 @@ function chipP(s){
 
 const WA_SVG=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`;
 
+const WA_BRAND_ICON_LG=`<svg width="30" height="30" viewBox="0 0 24 24" fill="var(--green)" stroke="none"><path d="M12.04 2.003c-5.46 0-9.9 4.43-9.9 9.9 0 1.746.458 3.45 1.328 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.004c5.46 0 9.9-4.43 9.9-9.9 0-2.645-1.03-5.13-2.902-6.998a9.83 9.83 0 0 0-6.998-2.9zm5.8 14.16c-.245.688-1.415 1.32-1.93 1.4-.494.078-1.12.11-1.804-.113-.416-.137-.95-.31-1.64-.605-2.887-1.247-4.774-4.15-4.917-4.343-.144-.194-1.174-1.564-1.174-2.983 0-1.42.744-2.117 1.008-2.407.264-.29.577-.363.77-.363l.55.01c.176.008.412-.067.645.492.244.577.83 1.994.902 2.14.072.144.12.313.024.507-.096.194-.144.313-.288.482-.144.17-.303.38-.433.51-.144.145-.295.303-.127.594.168.29.744 1.23 1.598 1.993 1.098.98 2.024 1.283 2.312 1.428.288.145.457.12.626-.073.168-.194.72-.84.912-1.128.192-.288.384-.24.647-.145.264.096 1.674.79 1.962.933.288.145.48.216.55.336.072.12.072.694-.17 1.38z"/></svg>`;
 function renderDash(skipQueue){
   const d=DB[mkt];
   const am=d.actionMetrics;
   const cards=[
     {lbl:t("metric_total_patients"),val:Number(d.metrics.patients).toLocaleString(),sub:t("metric_all_time"),trend:`<span class="up">↑ 3.2%</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>`},
-    {lbl:t("metric_reports"),sub:t("metric_reports_sub"),noVal:true,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polyline points="20 6 9 17 4 12"/></svg>`},
-    {lbl:t("metric_wa_activity"),val:am.waSentToday,sub:t("metric_sent_today"),trend:`<span class="up">↑ auto</span>`,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`},
+    {lbl:t("metric_reports"),sub:t("metric_reports_sub"),noVal:true,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="12" width="4" height="9" rx="1"/><rect x="10" y="7" width="4" height="14" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/></svg>`},
+    {lbl:t("metric_wa_activity"),sub:t("metric_sent_today"),waIcon:true,ic:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`},
   ];
   document.getElementById("dash-metrics").innerHTML=cards.map((c,i)=>`
     <div class="mc"${i===0?' id="mc-total-patients" style="cursor:pointer" onclick="goToPatientList()" title="View all patients"':''}${i===1?' id="mc-reports" style="cursor:pointer" onclick="goToReports()" title="Open Reports & Analytics"':''}${i===2?' id="mc-wa-activity" style="cursor:pointer" onclick="goToWhatsAppActivity()" title="Open WhatsApp Activity"':''}>
       <div class="mc-top"><p class="mc-lbl">${c.lbl}</p><div class="mc-icon">${c.ic}</div></div>
-      ${c.noVal?'':'<p class="mc-val">'+c.val+'</p>'}
-      <p class="mc-sub"${c.noVal?' style="margin-top:0"':''}>${c.sub}${c.trend?(' · '+c.trend):''}</p>
+      ${c.waIcon?'<div style="display:flex;align-items:center;justify-content:center;padding:2px 0 4px">'+WA_BRAND_ICON_LG+'</div>':(c.noVal?'':'<p class="mc-val">'+c.val+'</p>')}
+      <p class="mc-sub"${(c.noVal||c.waIcon)?' style="margin-top:0;text-align:center"':''}>${c.sub}${c.trend?(' · '+c.trend):''}</p>
     </div>`).join("");
 
   if(!skipQueue)renderQueue();
@@ -3347,6 +3448,7 @@ function setLang(lang){
   currentLang=lang;
   updateLangUI();
   renderAll();
+  updateLiveClock();
   closeLangModal();
   try{localStorage.setItem("aura_lang",lang)}catch(e){}
 }
@@ -7083,6 +7185,283 @@ _auditFriendlyMap['Reminder Resent']={icon:'🔁',en:'Follow-up reminder resent'
 AUDIT_VISIBLE_EVENTS.push('Reminder Sent','Reminder Failed','Reminder Delivered','Reminder Resent');
 if(AUDIT_FILTER_GROUPS['reminders']){
   AUDIT_FILTER_GROUPS['reminders']=AUDIT_FILTER_GROUPS['reminders'].concat(['Reminder Sent','Reminder Failed','Reminder Delivered','Reminder Resent']);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   VOICE-FIRST WORKFLOW — Appointment & Prescription
+   Tap the FAB → choose Manual or Voice → (if Voice) speak → tap
+   Send once → everything else happens automatically. Manual entry
+   remains fully available and completely unchanged.
+
+   Uses the browser's built-in Web Speech API (SpeechRecognition) for
+   speech-to-text, then a lightweight keyword/pattern parser to pull
+   out the relevant fields. This is a best-effort, on-device parser —
+   it favours clear, explicit phrasing (e.g. "patient name is Ravi
+   Das, phone number is 98765 43210, age 42, gender male, reason
+   fever, symptoms cough and body ache"). It can always be swapped
+   for a stronger NLU/AI backend later without changing anything
+   else in this workflow, since every call funnels through
+   voiceProcessAppointment()/voiceProcessPrescription() below.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Manual vs Voice choice sheet, opened from the bottom-nav FABs ── */
+function openAppointmentChoiceModal(){
+  document.getElementById('choice-modal-title').textContent='New Appointment';
+  document.getElementById('choice-manual-btn').onclick=function(){closeModal('choice-modal');openAddAppointmentModal();};
+  document.getElementById('choice-voice-btn').onclick=function(){closeModal('choice-modal');openVoiceModal('appointment');};
+  openModal('choice-modal');
+}
+function openPrescriptionChoiceModal(){
+  document.getElementById('choice-modal-title').textContent='New Prescription';
+  document.getElementById('choice-manual-btn').onclick=function(){
+    closeModal('choice-modal');
+    nav('prescriptions', document.querySelector('.nb[onclick*="\'prescriptions\'"]'));
+  };
+  document.getElementById('choice-voice-btn').onclick=function(){closeModal('choice-modal');openVoiceModal('prescription');};
+  openModal('choice-modal');
+}
+
+/* ── Shared voice modal state & controls ─────────────────────── */
+var _voiceMode=null;          /* 'appointment' | 'prescription' */
+var _voiceRecognition=null;
+var _voiceListening=false;
+var _voiceTranscript='';
+
+function _voiceSupported(){
+  return !!(window.SpeechRecognition||window.webkitSpeechRecognition);
+}
+
+function openVoiceModal(mode){
+  _voiceMode=mode;
+  _voiceTranscript='';
+  var supported=_voiceSupported();
+  document.getElementById('voice-transcript').textContent='';
+  document.getElementById('voice-modal-title').textContent=mode==='appointment'?'Voice Appointment':'Voice Prescription';
+  document.getElementById('voice-status-text').textContent=supported?'Tap the mic and start speaking…':"Voice input isn't supported in this browser — please use manual entry instead.";
+  var sb=document.getElementById('voice-send-btn'); sb.style.opacity='.5'; sb.style.pointerEvents='none';
+  sb.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send';
+  var mb=document.getElementById('voice-mic-btn');
+  mb.disabled=!supported;
+  mb.style.opacity=supported?'1':'.5';
+  mb.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg> Start Speaking';
+  if(mode==='prescription' && (!document.getElementById('rx-patient')||!document.getElementById('rx-patient').value)){
+    showToast('Tip: select a patient in Prescriptions first, or voice will ask you to pick one before sending.');
+  }
+  openModal('voice-modal');
+}
+function closeVoiceModal(){
+  voiceStopListening();
+  closeModal('voice-modal');
+}
+function voiceToggleListening(){
+  if(_voiceListening)voiceStopListening();
+  else voiceStartListening();
+}
+function voiceStartListening(){
+  if(!_voiceSupported())return;
+  try{
+    var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    _voiceRecognition=new SR();
+    _voiceRecognition.continuous=true;
+    _voiceRecognition.interimResults=true;
+    _voiceRecognition.lang=currentLang==='bn'?'bn-BD':'en-IN';
+    _voiceRecognition.onresult=function(e){
+      var interim='', finalChunk='';
+      for(var i=e.resultIndex;i<e.results.length;i++){
+        if(e.results[i].isFinal)finalChunk+=e.results[i][0].transcript+' ';
+        else interim+=e.results[i][0].transcript;
+      }
+      if(finalChunk)_voiceTranscript+=finalChunk;
+      var box=document.getElementById('voice-transcript');
+      if(box)box.textContent=(_voiceTranscript+' '+interim).trim();
+      var sb=document.getElementById('voice-send-btn');
+      if(_voiceTranscript.trim().length>3 && sb){ sb.style.opacity='1'; sb.style.pointerEvents='auto'; }
+    };
+    _voiceRecognition.onerror=function(e){
+      if(e.error==='no-speech'||e.error==='aborted')return;
+      showToast('Voice input error: '+e.error);
+    };
+    _voiceRecognition.onend=function(){
+      /* keep listening continuously until the doctor explicitly stops */
+      if(_voiceListening){ try{_voiceRecognition.start();}catch(e){} }
+    };
+    _voiceRecognition.start();
+    _voiceListening=true;
+    var mb=document.getElementById('voice-mic-btn');
+    if(mb)mb.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="6" width="12" height="12" rx="2"/></svg> Stop';
+    var st=document.getElementById('voice-status-text'); if(st)st.textContent='Listening… speak naturally.';
+    var pulse=document.getElementById('voice-pulse'); if(pulse)pulse.classList.add('blink');
+  }catch(e){ showToast('Could not start voice input.'); }
+}
+function voiceStopListening(){
+  _voiceListening=false;
+  if(_voiceRecognition){ try{_voiceRecognition.onend=null;_voiceRecognition.stop();}catch(e){} }
+  var mb=document.getElementById('voice-mic-btn');
+  if(mb)mb.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg> Start Speaking';
+  var st=document.getElementById('voice-status-text'); if(st)st.textContent='Tap the mic and start speaking…';
+  var pulse=document.getElementById('voice-pulse'); if(pulse)pulse.classList.remove('blink');
+}
+
+/* ── One tap on Send: stop listening, close the modal, and run the
+   whole workflow automatically — no second confirmation click. ── */
+async function voiceSendTranscript(){
+  voiceStopListening();
+  var text=_voiceTranscript.trim();
+  if(!text){showToast('No speech captured yet — please try speaking again.');return;}
+  var mode=_voiceMode;
+  closeModal('voice-modal');
+  showToast('Processing your voice input…');
+  if(mode==='appointment')await voiceProcessAppointment(text);
+  else if(mode==='prescription')await voiceProcessPrescription(text);
+}
+
+/* ── Lightweight pattern-based field extraction ──────────────── */
+function _voiceExtract(text, patterns){
+  for(var i=0;i<patterns.length;i++){
+    var m=text.match(patterns[i]);
+    if(m&&m[1])return m[1].trim().replace(/[.,;]+$/,'');
+  }
+  return '';
+}
+
+/* ── Appointment voice parser: name, phone, DOB/age, gender, reason,
+   symptoms ── */
+function voiceParseAppointment(text){
+  var t=' '+text+' ';
+  var name=_voiceExtract(t,[
+    /patient(?:'s)? name is\s+([a-zA-Z][a-zA-Z\s.]*?)(?:,|\.| phone| number| age| gender| reason| symptom|$)/i,
+    /\bname is\s+([a-zA-Z][a-zA-Z\s.]*?)(?:,|\.| phone| number| age| gender| reason| symptom|$)/i
+  ]);
+  var phone=_voiceExtract(t,[
+    /(?:phone number is|phone is|mobile number is|mobile is|contact number is|number is)\s*([\d][\d\s]{6,14}\d)/i
+  ]);
+  var dob=_voiceExtract(t,[/(?:date of birth is|dob is|born on)\s*([\d]{1,2}[\/\-][\d]{1,2}[\/\-][\d]{2,4})/i]);
+  var age=_voiceExtract(t,[/age(?: is)?\s*(\d{1,3})\s*(?:years?|yrs?)?/i]);
+  var gender=_voiceExtract(t,[/gender(?: is)?\s*(male|female|other)/i]);
+  if(!gender){
+    if(/\bfemale\b/i.test(t))gender='Female';
+    else if(/\bmale\b/i.test(t))gender='Male';
+  }
+  var reason=_voiceExtract(t,[/reason (?:for visit )?is\s+([^,.]+?)(?:,|\.| symptom|$)/i,/visiting for\s+([^,.]+?)(?:,|\.| symptom|$)/i]);
+  var symptoms=_voiceExtract(t,[/symptoms? (?:are|is)\s+([^.]+)$/i,/complaining of\s+([^.]+)$/i]);
+  return {name:name,phone:phone,dob:dob,age:age,gender:gender,reason:reason,symptoms:symptoms};
+}
+
+/* ── One tap on Send → appointment is created automatically → the
+   doctor is redirected straight to the Prescription screen with the
+   patient pre-loaded, ready to continue (voice or manual). ── */
+async function voiceProcessAppointment(text){
+  var data=voiceParseAppointment(text);
+  if(!data.name){
+    showToast("Couldn't clearly hear the patient's name — opening manual entry so you can finish this appointment.");
+    openAddAppointmentModal();
+    return;
+  }
+  if(!data.phone){
+    showToast("Couldn't clearly hear a phone number — opening manual entry so you can finish this appointment.");
+    openAddAppointmentModal();
+    var ne=document.getElementById('add-name'); if(ne)ne.value=data.name;
+    return;
+  }
+  add_resetModal();
+  document.getElementById('add-name').value=data.name;
+  document.getElementById('add-phone').value=data.phone.replace(/\D/g,'');
+  document.getElementById('add-gender').value=data.gender||'Other';
+  if(data.dob)document.getElementById('add-dob').value=_voiceIsoDob(data.dob);
+  document.getElementById('add-age').value=data.dob?'':(data.age||'30');
+  add_onDobChange();
+  var reasonCombined=[data.reason,data.symptoms].filter(Boolean).join(' — ');
+  document.getElementById('add-reason').value=reasonCombined||'General Consultation';
+  document.getElementById('add-date').value=new Date().toISOString().split('T')[0];
+  populateAddSlots();
+  var slotSel=document.getElementById('add-slot');
+  if(slotSel&&slotSel.options.length>1)slotSel.selectedIndex=1;
+
+  add_onPhoneInput();
+  await new Promise(function(r){setTimeout(r,600);}); /* let the phone lookup resolve so we don't create a duplicate patient */
+
+  showToast('Creating appointment for '+data.name+' from voice…');
+  await addAppointment();
+
+  setTimeout(function(){
+    nav('prescriptions', document.querySelector('.nb[onclick*="\'prescriptions\'"]'));
+    var sel=document.getElementById('rx-patient');
+    var pats=DB[mkt].patients||[];
+    var match=pats.filter(function(p){return p.name.toLowerCase()===data.name.toLowerCase();})[0];
+    if(sel&&match){ sel.value=match.id; rxPickPatient(); }
+    showToast('Ready for prescription — use the voice or manual option.');
+  },900);
+}
+function _voiceIsoDob(raw){
+  var m=raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if(!m)return '';
+  var d=m[1].padStart(2,'0'), mo=m[2].padStart(2,'0'), y=m[3].length===2?('20'+m[3]):m[3];
+  return y+'-'+mo+'-'+d;
+}
+
+/* ── Prescription voice parser: diagnosis, medicines (dose/duration/
+   timing), follow-up, instructions ── */
+function _voiceTimingMap(raw){
+  if(!raw)return'';
+  raw=raw.toLowerCase();
+  if(raw.indexOf('before')>-1)return'Before Food';
+  if(raw.indexOf('after')>-1)return'After Food';
+  if(raw.indexOf('with')>-1)return'With Food';
+  if(raw.indexOf('empty')>-1)return'Empty Stomach';
+  if(raw.indexOf('bed')>-1)return'Bedtime';
+  return'';
+}
+function voiceParsePrescription(text){
+  var t=' '+text+' ';
+  var diagnosis=_voiceExtract(t,[/diagnos(?:is|ed with) is?\s+([^,.]+?)(?:,|\.| medicine| prescribe|$)/i,/diagnosed with\s+([^,.]+?)(?:,|\.| medicine| prescribe|$)/i]);
+  var followupNo=/(no follow[\s-]?up|follow[\s-]?up (?:is )?not required|does not need a? follow[\s-]?up)/i.test(t);
+  var followupYes=/(follow[\s-]?up (?:is )?required|needs? a? follow[\s-]?up|schedule a? follow[\s-]?up)/i.test(t);
+  var instructions=_voiceExtract(t,[/instructions? (?:are|is)\s+([^.]+)$/i,/advice is\s+([^.]+)$/i]);
+
+  var meds=[];
+  var medRegex=/(?:medicine|prescribe|give)\s+([a-zA-Z][a-zA-Z0-9\s]*?)(?:\s+(\d+\s?mg))?(?:[, ]+(?:dose|dosage)\s+([\d](?:[\-\d])*))?(?:[, ]+(?:for|duration)\s+(\d+)\s*days?)?(?:[, ]+(before food|after food|with food|empty stomach|bedtime))?(?=[,.]|\s+(?:medicine|prescribe|give)|$)/gi;
+  var m;
+  while((m=medRegex.exec(t))!==null){
+    var mname=(m[1]||'').trim();
+    if(!mname||mname.length<2)continue;
+    meds.push({
+      name:(mname+(m[2]?(' '+m[2]):'')).trim(),
+      dose:m[3]||'1-0-1',
+      duration:m[4]||'5',
+      timing:_voiceTimingMap(m[5])||'After Food'
+    });
+  }
+  return {diagnosis:diagnosis,meds:meds,followup:followupYes&&!followupNo,noFollowup:followupNo,instructions:instructions};
+}
+
+/* ── One tap on Send → prescription is generated, PDF built, and
+   sent to the patient's WhatsApp automatically — no extra click on
+   "Generate Prescription" needed. ── */
+async function voiceProcessPrescription(text){
+  var sel=document.getElementById('rx-patient');
+  if(!sel||!sel.value){
+    showToast('Please select a patient on the Prescriptions screen first, then use Voice again.');
+    nav('prescriptions', document.querySelector('.nb[onclick*="\'prescriptions\'"]'));
+    return;
+  }
+  var data=voiceParsePrescription(text);
+  document.getElementById('rx-meds').innerHTML='';
+  if(data.meds.length){
+    data.meds.forEach(function(m){ addMedRow(m.name,m.dose,m.duration,m.timing); });
+  }else{
+    addMedRow();
+    showToast("Couldn't clearly detect medicines from your voice — please review the prescription before it sends.");
+  }
+  var instrParts=[];
+  if(data.diagnosis)instrParts.push('Diagnosis: '+data.diagnosis);
+  if(data.instructions)instrParts.push(data.instructions);
+  document.getElementById('rx-instr').value=instrParts.join('\n');
+  var fuSel=document.getElementById('rx-followup');
+  if(fuSel)fuSel.value=data.followup?'14':'';
+  rxOnFollowupChange();
+
+  showToast('Generating prescription from voice and sending to WhatsApp…');
+  await generatePrescription();
 }
 </script>
 </body>
