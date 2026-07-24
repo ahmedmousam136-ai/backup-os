@@ -1815,9 +1815,29 @@ main.content{
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         <span data-i18n="rx_new">New Prescription</span>
       </div>
-      <span class="pb pb-g">1-Click · Auto WhatsApp</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <button class="qbtn" style="padding:5px 10px;font-size:10px;gap:4px" onclick="openVoiceModal('prescription')" title="Dictate this prescription">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+          Voice Entry
+        </button>
+        <span class="pb pb-g">1-Click · Auto WhatsApp</span>
+      </div>
     </div>
     <div class="mb" style="padding:16px 17px">
+      <!-- Compact patient badge — shown instead of the editable fields
+           below whenever a patient has already been resolved (e.g. by
+           the voice appointment flow). The doctor only sees the
+           prescription creation area; "Change Patient" reveals the
+           full fields as a manual fallback. -->
+      <div id="rx-patient-badge" style="display:none;align-items:center;gap:10px;background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--r-md);padding:11px 13px">
+        <div style="width:34px;height:34px;border-radius:8px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',serif;font-size:15px;flex-shrink:0" id="rx-patient-badge-av">P</div>
+        <div style="flex:1;min-width:0">
+          <p style="font-size:13px;font-weight:700;color:var(--text-primary)" id="rx-patient-badge-name">Patient</p>
+          <p style="font-size:10.5px;color:var(--text-secondary)" id="rx-patient-badge-phone">—</p>
+        </div>
+        <button class="qbtn" style="padding:6px 10px;font-size:10.5px" onclick="rxShowPatientFields()">Change Patient</button>
+      </div>
+      <div id="rx-patient-fields-wrap">
       <div>
   <label class="flbl">Select Patient (auto-fills name, number, gender, age, weight &amp; ID)</label>
   <select class="finput" id="rx-patient" onchange="rxPickPatient()" style="color:var(--text-primary)">
@@ -1852,6 +1872,7 @@ main.content{
           <p class="qp-hint">Auto-filled from patient record · editable for this visit</p>
         </div>
       </div>
+      </div><!-- /rx-patient-fields-wrap -->
 
       <div>
         <label class="flbl">Medicines <span style="color:var(--red)">*</span></label>
@@ -2641,24 +2662,24 @@ main.content{
       </button>
     </div>
     <div class="mb">
+      <div id="voice-guide-box" style="background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--r-sm);padding:11px 13px">
+        <p id="voice-guide-title" style="font-size:11px;font-weight:700;color:var(--blue);margin-bottom:5px">Please say:</p>
+        <ol id="voice-guide-list" style="margin:0 0 0 16px;padding:0;font-size:11.5px;color:var(--text-secondary);line-height:1.75"></ol>
+      </div>
       <div style="text-align:center;padding:6px 0 2px">
         <div id="voice-pulse" style="width:60px;height:60px;border-radius:50%;background:var(--blue-bg);border:2px solid var(--blue-border);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;color:var(--blue)">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
         </div>
-        <p id="voice-status-text" style="font-size:12px;color:var(--text-secondary)">Tap the mic and start speaking…</p>
+        <p id="voice-status-text" style="font-size:12px;color:var(--text-secondary)">Starting microphone…</p>
       </div>
       <div id="voice-transcript" style="min-height:80px;max-height:150px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 12px;font-size:12.5px;color:var(--text-primary);line-height:1.6"></div>
       <div style="display:flex;gap:8px">
-        <button class="qbtn" id="voice-mic-btn" style="flex:1;justify-content:center;min-height:46px;gap:6px" onclick="voiceToggleListening()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
-          Start Speaking
-        </button>
-        <button class="msub" id="voice-send-btn" style="flex:1;opacity:.5;pointer-events:none" onclick="voiceSendTranscript()">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          Send
+        <button class="msub" id="voice-finish-btn" style="flex:1;background:var(--red);box-shadow:0 2px 8px rgba(194,56,56,.25)" onclick="voiceManualFinish()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+          <span id="voice-finish-lbl">Stop / Finish</span>
         </button>
       </div>
-      <p style="font-size:10px;color:var(--text-tertiary);text-align:center;line-height:1.5">Everything else happens automatically after Send — no extra confirmation needed.</p>
+      <p id="voice-hint-text" style="font-size:10px;color:var(--text-tertiary);text-align:center;line-height:1.5">Listening starts automatically. Everything else happens on its own — no extra clicks needed.</p>
     </div>
   </div>
 </div>
@@ -5004,6 +5025,7 @@ if(ins.error){ rxError("Save failed: "+ins.error.message); btn.disabled=false; b
   }
   document.getElementById("rx-instr").value="";
   document.getElementById("rx-meds").innerHTML=""; addMedRow();
+  rxHidePatientBadge(); window._rxVoicePatientPreset=false;
   btn.disabled=false;
   btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Generate Prescription';
   fetchPrescriptions();
@@ -5098,6 +5120,39 @@ function populateRxPatients(){
   sel.value=cur;
   if(sel.value!==cur){sel.value="";}
 }
+/* Compact patient badge helpers — used after a voice-created
+   appointment auto-selects a patient, so the doctor only sees the
+   prescription creation area instead of editable name/phone fields.
+   "Change Patient" is the manual fallback that reveals the full
+   Select-Patient dropdown + fields again. */
+function rxShowPatientBadge(p){
+  if(!p)return;
+  var badge=document.getElementById('rx-patient-badge');
+  var wrap=document.getElementById('rx-patient-fields-wrap');
+  if(!badge||!wrap)return;
+  var av=document.getElementById('rx-patient-badge-av');
+  var nm=document.getElementById('rx-patient-badge-name');
+  var ph=document.getElementById('rx-patient-badge-phone');
+  if(av)av.textContent=(p.name||'?').charAt(0);
+  if(nm)nm.textContent=p.name||'Patient';
+  if(ph)ph.textContent=p.phone||'';
+  badge.style.display='flex';
+  wrap.style.display='none';
+}
+function rxShowPatientFields(){
+  var badge=document.getElementById('rx-patient-badge');
+  var wrap=document.getElementById('rx-patient-fields-wrap');
+  if(badge)badge.style.display='none';
+  if(wrap)wrap.style.display='';
+  window._rxVoicePatientPreset=false;
+}
+function rxHidePatientBadge(){
+  var badge=document.getElementById('rx-patient-badge');
+  var wrap=document.getElementById('rx-patient-fields-wrap');
+  if(badge)badge.style.display='none';
+  if(wrap)wrap.style.display='';
+}
+
 function rxPickPatient(){
   var sel=document.getElementById("rx-patient");
   var nameEl=document.getElementById("rx-name");
@@ -7221,11 +7276,37 @@ function openPrescriptionChoiceModal(){
   openModal('choice-modal');
 }
 
-/* ── Shared voice modal state & controls ─────────────────────── */
+/* ── Shared voice modal state & controls ─────────────────────────
+   One tap → mic starts automatically → doctor/patient speaks
+   naturally → session ends on its own (or on the Stop/Finish
+   button) → the whole workflow runs with no further clicks. ── */
 var _voiceMode=null;          /* 'appointment' | 'prescription' */
 var _voiceRecognition=null;
 var _voiceListening=false;
 var _voiceTranscript='';
+var _voiceLastSpeechAt=0;
+var _voiceSilenceTimer=null;
+var _voiceFinished=false;     /* guards against double-finish (command + timer + button) */
+
+var VOICE_GUIDES={
+  appointment:[
+    'Full Name','Mobile Number','Gender','Age or Date of Birth','Reason for Visit'
+  ],
+  prescription:[
+    'Medicine Name, Dose &amp; Duration',
+    'Food Timing — Before / After / With Food, Empty Stomach, Bedtime, or As Needed',
+    'Instructions / Advice',
+    'Next Follow-up Date',
+    'Say "Done" or "Finish Prescription" when you\'re finished'
+  ]
+};
+
+/* Appointment sessions end automatically after a short natural pause
+   once something has been said (patients don't need to know a
+   command). Prescription sessions never auto-end on a pause — a
+   doctor thinking or checking a chart is normal — they only end on
+   the "finish"/"done" voice command or the Stop/Finish button. */
+var VOICE_APPT_SILENCE_MS=3500;
 
 function _voiceSupported(){
   return !!(window.SpeechRecognition||window.webkitSpeechRecognition);
@@ -7234,28 +7315,32 @@ function _voiceSupported(){
 function openVoiceModal(mode){
   _voiceMode=mode;
   _voiceTranscript='';
+  _voiceFinished=false;
   var supported=_voiceSupported();
   document.getElementById('voice-transcript').textContent='';
   document.getElementById('voice-modal-title').textContent=mode==='appointment'?'Voice Appointment':'Voice Prescription';
-  document.getElementById('voice-status-text').textContent=supported?'Tap the mic and start speaking…':"Voice input isn't supported in this browser — please use manual entry instead.";
-  var sb=document.getElementById('voice-send-btn'); sb.style.opacity='.5'; sb.style.pointerEvents='none';
-  sb.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send';
-  var mb=document.getElementById('voice-mic-btn');
-  mb.disabled=!supported;
-  mb.style.opacity=supported?'1':'.5';
-  mb.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg> Start Speaking';
-  if(mode==='prescription' && (!document.getElementById('rx-patient')||!document.getElementById('rx-patient').value)){
-    showToast('Tip: select a patient in Prescriptions first, or voice will ask you to pick one before sending.');
+  document.getElementById('voice-guide-title').textContent=mode==='appointment'?'Please say:':'Please dictate:';
+  var list=document.getElementById('voice-guide-list');
+  if(list)list.innerHTML=(VOICE_GUIDES[mode]||[]).map(function(s){return '<li>'+s+'</li>';}).join('');
+  var hint=document.getElementById('voice-hint-text');
+  if(hint)hint.textContent=mode==='appointment'
+    ?'Listening starts automatically and stops on its own once you finish speaking.'
+    :'Take your time — pauses are fine. Say "Done" or "Finish Prescription", or tap Stop/Finish, when you\'re done.';
+  var finBtn=document.getElementById('voice-finish-btn');
+  if(finBtn)finBtn.style.display=supported?'flex':'none';
+  document.getElementById('voice-status-text').textContent=supported?'Starting microphone…':"Voice input isn't supported in this browser — please use manual entry instead.";
+  if(mode==='prescription' && (!document.getElementById('rx-patient')||!document.getElementById('rx-patient').value) && !window._rxVoicePatientPreset){
+    showToast('Tip: select a patient in Prescriptions first for best results.');
   }
   openModal('voice-modal');
+  if(supported){
+    /* mic starts on its own — no separate "Start Speaking" action */
+    setTimeout(voiceStartListening,250);
+  }
 }
 function closeVoiceModal(){
   voiceStopListening();
   closeModal('voice-modal');
-}
-function voiceToggleListening(){
-  if(_voiceListening)voiceStopListening();
-  else voiceStartListening();
 }
 function voiceStartListening(){
   if(!_voiceSupported())return;
@@ -7272,44 +7357,78 @@ function voiceStartListening(){
         else interim+=e.results[i][0].transcript;
       }
       if(finalChunk)_voiceTranscript+=finalChunk;
+      _voiceLastSpeechAt=Date.now();
       var box=document.getElementById('voice-transcript');
       if(box)box.textContent=(_voiceTranscript+' '+interim).trim();
-      var sb=document.getElementById('voice-send-btn');
-      if(_voiceTranscript.trim().length>3 && sb){ sb.style.opacity='1'; sb.style.pointerEvents='auto'; }
+
+      /* Prescription: a spoken "finish"/"done" command ends the
+         session immediately — checked on every final chunk. */
+      if(_voiceMode==='prescription' && finalChunk && _voiceIsFinishCommand(finalChunk)){
+        _voiceTranscript=_voiceStripFinishCommand(_voiceTranscript);
+        voiceFinish();
+        return;
+      }
+      if(_voiceMode==='appointment')_voiceArmSilenceCheck();
     };
     _voiceRecognition.onerror=function(e){
       if(e.error==='no-speech'||e.error==='aborted')return;
       showToast('Voice input error: '+e.error);
     };
     _voiceRecognition.onend=function(){
-      /* keep listening continuously until the doctor explicitly stops */
-      if(_voiceListening){ try{_voiceRecognition.start();}catch(e){} }
+      /* keep listening continuously until the session explicitly ends */
+      if(_voiceListening && !_voiceFinished){ try{_voiceRecognition.start();}catch(e){} }
     };
     _voiceRecognition.start();
     _voiceListening=true;
-    var mb=document.getElementById('voice-mic-btn');
-    if(mb)mb.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="6" width="12" height="12" rx="2"/></svg> Stop';
+    _voiceLastSpeechAt=Date.now();
     var st=document.getElementById('voice-status-text'); if(st)st.textContent='Listening… speak naturally.';
     var pulse=document.getElementById('voice-pulse'); if(pulse)pulse.classList.add('blink');
+    if(_voiceMode==='appointment')_voiceArmSilenceCheck();
   }catch(e){ showToast('Could not start voice input.'); }
 }
 function voiceStopListening(){
   _voiceListening=false;
+  clearTimeout(_voiceSilenceTimer);
   if(_voiceRecognition){ try{_voiceRecognition.onend=null;_voiceRecognition.stop();}catch(e){} }
-  var mb=document.getElementById('voice-mic-btn');
-  if(mb)mb.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg> Start Speaking';
-  var st=document.getElementById('voice-status-text'); if(st)st.textContent='Tap the mic and start speaking…';
+  var st=document.getElementById('voice-status-text'); if(st)st.textContent='Starting microphone…';
   var pulse=document.getElementById('voice-pulse'); if(pulse)pulse.classList.remove('blink');
 }
 
-/* ── One tap on Send: stop listening, close the modal, and run the
-   whole workflow automatically — no second confirmation click. ── */
-async function voiceSendTranscript(){
+/* Appointment-only: after each chunk of speech, wait
+   VOICE_APPT_SILENCE_MS of true silence before treating the patient
+   as finished — a natural pause-to-end, no button required. */
+function _voiceArmSilenceCheck(){
+  clearTimeout(_voiceSilenceTimer);
+  _voiceSilenceTimer=setTimeout(function(){
+    if(_voiceMode!=='appointment'||_voiceFinished)return;
+    if(!_voiceTranscript.trim())return; /* nothing said yet — keep waiting */
+    if(Date.now()-_voiceLastSpeechAt>=VOICE_APPT_SILENCE_MS-200)voiceFinish();
+  },VOICE_APPT_SILENCE_MS);
+}
+
+var VOICE_FINISH_PATTERN=/\b(finish(?:ed)? prescription|that'?s (?:all|it|done)|i'?m done|i am done|^done$|\bdone\b\.?$)/i;
+function _voiceIsFinishCommand(chunk){
+  return VOICE_FINISH_PATTERN.test(chunk.trim());
+}
+function _voiceStripFinishCommand(text){
+  return text.replace(/\b(finish(?:ed)? prescription|that'?s (?:all|it|done)|i'?m done|i am done|done)\b\.?\s*$/i,'').trim();
+}
+
+/* Manual override — the Stop/Finish button, always available as a
+   fallback for both flows even though neither strictly requires it. */
+function voiceManualFinish(){ voiceFinish(); }
+
+/* ── Ends the session (auto or manual), closes the modal, and runs
+   the whole workflow automatically — no further clicks needed. ── */
+async function voiceFinish(){
+  if(_voiceFinished)return;
+  _voiceFinished=true;
+  clearTimeout(_voiceSilenceTimer);
   voiceStopListening();
   var text=_voiceTranscript.trim();
-  if(!text){showToast('No speech captured yet — please try speaking again.');return;}
   var mode=_voiceMode;
   closeModal('voice-modal');
+  if(!text){showToast('No speech captured — please try again.');return;}
   showToast('Processing your voice input…');
   if(mode==='appointment')await voiceProcessAppointment(text);
   else if(mode==='prescription')await voiceProcessPrescription(text);
@@ -7347,9 +7466,11 @@ function voiceParseAppointment(text){
   return {name:name,phone:phone,dob:dob,age:age,gender:gender,reason:reason,symptoms:symptoms};
 }
 
-/* ── One tap on Send → appointment is created automatically → the
-   doctor is redirected straight to the Prescription screen with the
-   patient pre-loaded, ready to continue (voice or manual). ── */
+/* ── Appointment finishes speaking → the appointment is created
+   fully automatically (date = today, time = next available slot —
+   the patient never has to say either) → the doctor's screen jumps
+   straight to Prescriptions with the patient already selected and
+   shown as a compact badge, not editable fields. ── */
 async function voiceProcessAppointment(text){
   var data=voiceParseAppointment(text);
   if(!data.name){
@@ -7372,6 +7493,8 @@ async function voiceProcessAppointment(text){
   add_onDobChange();
   var reasonCombined=[data.reason,data.symptoms].filter(Boolean).join(' — ');
   document.getElementById('add-reason').value=reasonCombined||'General Consultation';
+  /* Appointment date/time are always generated by the system — the
+     current date and the next available slot — never spoken. */
   document.getElementById('add-date').value=new Date().toISOString().split('T')[0];
   populateAddSlots();
   var slotSel=document.getElementById('add-slot');
@@ -7388,8 +7511,12 @@ async function voiceProcessAppointment(text){
     var sel=document.getElementById('rx-patient');
     var pats=DB[mkt].patients||[];
     var match=pats.filter(function(p){return p.name.toLowerCase()===data.name.toLowerCase();})[0];
-    if(sel&&match){ sel.value=match.id; rxPickPatient(); }
-    showToast('Ready for prescription — use the voice or manual option.');
+    if(sel&&match){
+      sel.value=match.id; rxPickPatient();
+      rxShowPatientBadge(match); /* doctor only sees the prescription area, not editable name/phone fields */
+      window._rxVoicePatientPreset=true;
+    }
+    showToast('Ready for prescription — tap Voice Entry to dictate, or fill it in manually.');
   },900);
 }
 function _voiceIsoDob(raw){
@@ -7415,7 +7542,8 @@ function voiceParsePrescription(text){
   var t=' '+text+' ';
   var diagnosis=_voiceExtract(t,[/diagnos(?:is|ed with) is?\s+([^,.]+?)(?:,|\.| medicine| prescribe|$)/i,/diagnosed with\s+([^,.]+?)(?:,|\.| medicine| prescribe|$)/i]);
   var followupNo=/(no follow[\s-]?up|follow[\s-]?up (?:is )?not required|does not need a? follow[\s-]?up)/i.test(t);
-  var followupYes=/(follow[\s-]?up (?:is )?required|needs? a? follow[\s-]?up|schedule a? follow[\s-]?up)/i.test(t);
+  var followupDaysRaw=_voiceExtract(t,[/follow[\s-]?up(?: date)?(?: is| in| after)?\s*(\d{1,3})\s*days?/i]);
+  var followupYes=followupDaysRaw||/(follow[\s-]?up (?:is )?required|needs? a? follow[\s-]?up|schedule a? follow[\s-]?up)/i.test(t);
   var instructions=_voiceExtract(t,[/instructions? (?:are|is)\s+([^.]+)$/i,/advice is\s+([^.]+)$/i]);
 
   var meds=[];
@@ -7431,12 +7559,23 @@ function voiceParsePrescription(text){
       timing:_voiceTimingMap(m[5])||'After Food'
     });
   }
-  return {diagnosis:diagnosis,meds:meds,followup:followupYes&&!followupNo,noFollowup:followupNo,instructions:instructions};
+  return {diagnosis:diagnosis,meds:meds,followup:followupYes&&!followupNo,followupDays:followupDaysRaw?parseInt(followupDaysRaw,10):null,noFollowup:followupNo,instructions:instructions};
+}
+function _voiceNearestFollowupOption(days){
+  if(!days)return '14';
+  var best=RX_FOLLOWUP_DAY_OPTIONS[0], bestDiff=Infinity;
+  RX_FOLLOWUP_DAY_OPTIONS.forEach(function(d){
+    var diff=Math.abs(d-days);
+    if(diff<bestDiff){bestDiff=diff;best=d;}
+  });
+  return String(best);
 }
 
-/* ── One tap on Send → prescription is generated, PDF built, and
-   sent to the patient's WhatsApp automatically — no extra click on
-   "Generate Prescription" needed. ── */
+/* ── Doctor finishes speaking (voice command or Stop/Finish) → the
+   whole prescription — medicines, dose, timing, advice, follow-up —
+   is built, the PDF is generated with the consultation summary
+   included in that same PDF, and it is sent to the patient's
+   WhatsApp automatically. No "Generate Prescription" click needed. ── */
 async function voiceProcessPrescription(text){
   var sel=document.getElementById('rx-patient');
   if(!sel||!sel.value){
@@ -7457,7 +7596,7 @@ async function voiceProcessPrescription(text){
   if(data.instructions)instrParts.push(data.instructions);
   document.getElementById('rx-instr').value=instrParts.join('\n');
   var fuSel=document.getElementById('rx-followup');
-  if(fuSel)fuSel.value=data.followup?'14':'';
+  if(fuSel)fuSel.value=data.followup?_voiceNearestFollowupOption(data.followupDays):'';
   rxOnFollowupChange();
 
   showToast('Generating prescription from voice and sending to WhatsApp…');
