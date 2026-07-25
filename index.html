@@ -1324,7 +1324,7 @@ main.content{
       <button class="nb" onclick="nav('missed-calls',this)">
         <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.42 19.42 0 0 1 4.43 9.68a2 2 0 0 1 2-2.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L10.68 13.31z"/><line x1="23" y1="1" x2="1" y2="23" stroke-width="1.8"/></svg></span>
         <span>Missed Call Recovery</span>
-        <span class="nb-badge">5</span>
+        <span class="nb-badge" id="mcr-nav-badge" style="display:none">0</span>
       </button>
     <button class="nb" onclick="nav('prescriptions',this)">
   <span class="nb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
@@ -1605,15 +1605,15 @@ main.content{
         <div style="display:flex;flex-direction:column;gap:10px">
           <div class="tmpl-card">
             <div class="tmpl-head">
-              <p class="tmpl-title">14-Day Follow-Up Reminder</p>
+              <p class="tmpl-title">Follow-Up Reminder</p>
               <span class="tmpl-badge green">Auto-Active</span>
             </div>
             <div class="tmpl-body">
-              <div class="tmpl-preview">"Dear [Patient Name], it's been 14 days since your visit at Laskar Health Clinic. Time for your follow-up! Please call us or reply to book. — Dr. Laskar"</div>
+              <div class="tmpl-preview">"Dear [Patient Name], it's time for your follow-up visit at Laskar Health Clinic. Please call us or reply to book. — Dr. Laskar"</div>
               <div class="tmpl-footer">
                 <p class="tmpl-trigger">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  Triggers 14 days after last visit
+                  Triggers when a patient is due for follow-up
                 </p>
                 <button class="tmpl-send-btn" onclick="sendTemplate('follow-up')">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
@@ -2823,6 +2823,54 @@ const AUTOS=[
   {label_en:"AI Reception Assistant",label_bn:"এআই রিসেপশন সহকারী",desc_en:"Answers common patient questions automatically",desc_bn:"সাধারণ রোগীর প্রশ্নের স্বয়ংক্রিয় উত্তর দেয়",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,on:false},
 ];
 
+/* Missed Call Recovery — starts empty. The sidebar/mobile badge and
+   the "X pending" badge only appear once a real missed call actually
+   comes in and is awaiting a WhatsApp recovery message; nothing here
+   is placeholder/demo data. */
+let MISSED_CALLS=[];
+function renderMcr(){
+  const pending=MISSED_CALLS.filter(c=>c.status==='pending').length;
+  const navBadge=document.getElementById('mcr-nav-badge');
+  if(navBadge){
+    if(pending>0){ navBadge.textContent=String(pending); navBadge.style.display=''; }
+    else navBadge.style.display='none';
+  }
+  const pendBadge=document.getElementById('mcr-pending-badge');
+  if(pendBadge){
+    pendBadge.textContent=pending+' pending';
+    pendBadge.className='pb '+(pending>0?'pb-r':'pb-g');
+  }
+  const list=document.getElementById('mcr-recent-list');
+  if(list){
+    if(!MISSED_CALLS.length){
+      list.innerHTML='<div style="padding:28px 16px;text-align:center;color:var(--text-tertiary);font-size:12.5px">No missed calls yet. As calls come in, they\'ll show up here for WhatsApp recovery.</div>';
+    }else{
+      list.innerHTML=MISSED_CALLS.map(c=>`
+        <div class="mcr-row">
+          <div>
+            <p class="mcr-name">${c.name}</p>
+            <p class="mcr-time">${c.time}</p>
+          </div>
+          ${c.status==='pending'?`
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="mcr-status mcr-pending">WhatsApp Pending</span>
+            <button class="tmpl-send-btn" style="font-size:10px;padding:5px 9px" onclick="mcrSendRecovery('${c.id}')">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              Send
+            </button>
+          </div>`:c.status==='sent'?`<span class="mcr-status mcr-sent">WA Sent</span>`:`<span class="mcr-status mcr-booked">&#x2713; Booked</span>`}
+        </div>`).join('');
+    }
+  }
+}
+function mcrSendRecovery(id){
+  const c=MISSED_CALLS.find(x=>x.id===id);
+  if(!c)return;
+  c.status='sent';
+  renderMcr();
+  showToast('WhatsApp sent to '+c.name);
+}
+
 const TABS_KEYS={prescriptions:"nav_rx",dashboard:"nav_dashboard",patients:"nav_patients",whatsapp:"nav_whatsapp",analytics:"nav_reports","missed-calls":"nav_dashboard",book:"nav_dashboard",settings:"nav_settings",audit:"nav_audit"};
 let mkt="india";
 let currentLang="en";
@@ -3344,7 +3392,7 @@ function renderAll(){
   const bookDocEl=document.getElementById("book-doc-name");
   if(bookDocEl)bookDocEl.textContent=d.doc.name;
   applyTranslations();
-  renderDash();renderPats();renderWA();renderAna();renderSettings();
+  renderDash();renderPats();renderWA();renderAna();renderSettings();renderMcr();
 }
 
 function renderSettings(){
@@ -4562,7 +4610,7 @@ function showToast(msg){
 
 /* ══ FOLLOW-UP TEMPLATES ══ */
 function sendTemplate(type){
-  const msgs={"follow-up":"14-day follow-up reminder sent to 3 patients due for a visit!","medication":"Medication reminder sent to selected patients.","review":"Review request sent to today's 6 completed patients!"};
+  const msgs={"follow-up":"Follow-up reminder sent to 3 patients due for a visit!","medication":"Medication reminder sent to selected patients.","review":"Review request sent to today's 6 completed patients!"};
   showToast(msgs[type]||"Message sent!");
   if(type==='medication')_auraLogAudit('Medicine Reminder Scheduled', {entityType:'reminder_template'}); /* audit trail — silent, never blocks the reminder flow */
   else if(type==='follow-up')_auraLogAudit('Follow-up Reminder Scheduled', {entityType:'reminder_template'}); /* audit trail — silent, never blocks the reminder flow */
@@ -5693,7 +5741,7 @@ async function stgMergeGroup(gi){
                                        buttons across Dashboard/Patients/WhatsApp)
      • Medicine Reminder Scheduled  — "Send Now" on the Medication template
      • Follow-up Reminder Scheduled — "Send to Due Patients" on the
-                                       14-Day Follow-Up template
+                                       Follow-Up Reminder template
      • Review Request Sent          — "Send to Today's Patients" on the
                                        Review Request template
 
