@@ -546,6 +546,21 @@ main.content{
 }
 .ftextarea:focus{border-color:var(--blue);background:var(--surface)}
 .prow{display:flex;gap:7px}
+.rx-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rx-med-row{display:grid;grid-template-columns:1.7fr 0.9fr 0.6fr 1.3fr 30px;gap:6px;margin-bottom:7px;align-items:center}
+@media(max-width:560px){
+  .rx-2col{grid-template-columns:1fr}
+  .rx-med-row{
+    grid-template-columns:1fr auto;
+    grid-template-areas:"name close" "dose dur" "timing timing";
+    row-gap:6px;
+  }
+  .rx-med-row .rx-m-name{grid-area:name;min-width:0}
+  .rx-med-row .mclose{grid-area:close;align-self:center}
+  .rx-med-row .rx-m-dose{grid-area:dose;min-width:0}
+  .rx-med-row .rx-m-dur{grid-area:dur;min-width:0}
+  .rx-med-row .rx-m-timing{grid-area:timing;min-width:0}
+}
 .ppfx{
   background:var(--blue-bg);border:1px solid var(--blue-border);
   border-radius:var(--r-sm);padding:11px 12px;
@@ -1797,7 +1812,7 @@ main.content{
   </select>
   <p class="qp-hint" id="rx-patient-id-hint">Patient ID: —</p>
 </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="rx-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div>
           <label class="flbl">Patient Name <span style="color:var(--red)">*</span></label>
           <input type="text" class="finput" id="rx-name" placeholder="Full name" autocapitalize="words"/>
@@ -1812,7 +1827,7 @@ main.content{
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="rx-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div>
           <label class="flbl">Gender / Age</label>
           <div class="finput" id="rx-gender-age" style="display:flex;align-items:center;color:var(--text-tertiary)">—</div>
@@ -4661,7 +4676,7 @@ function _auraDD_open(input,datalistId){
   _auraDD_active={input:input,menu:menu};
 
   Array.prototype.forEach.call(menu.querySelectorAll(".aura-dd-opt"),function(opt){
-    opt.addEventListener("mousedown",function(e){
+    opt.addEventListener("pointerdown",function(e){
       e.preventDefault();
       input.value=opt.textContent;
       input.dispatchEvent(new Event("input",{bubbles:true}));
@@ -4680,7 +4695,7 @@ function attachAuraDropdown(input,datalistId){
     if(e.key==="Enter"||e.key==="Tab"){_auraDD_closeActive();}
   });
 }
-document.addEventListener("mousedown",function(e){
+document.addEventListener("pointerdown",function(e){
   if(!_auraDD_active)return;
   var m=_auraDD_active.menu,inp=_auraDD_active.input;
   if(e.target===inp||(m&&m.contains(e.target)))return;
@@ -4689,8 +4704,17 @@ document.addEventListener("mousedown",function(e){
 document.addEventListener("keydown",function(e){
   if(e.key==="Escape")_auraDD_closeActive();
 });
-window.addEventListener("scroll",function(){if(_auraDD_active)_auraDD_closeActive();},true);
-window.addEventListener("resize",function(){if(_auraDD_active)_auraDD_closeActive();});
+/* On mobile, focusing an input opens the on-screen keyboard, which
+   fires resize/scroll events as the viewport shrinks and the page
+   scrolls the field into view. That used to be treated as "the user
+   clicked away" and closed the menu the instant it opened. Now these
+   events just reposition the already-open dropdown instead. */
+window.addEventListener("resize",function(){if(_auraDD_active)_auraDD_position(_auraDD_active.menu,_auraDD_active.input);});
+window.addEventListener("scroll",function(){if(_auraDD_active)_auraDD_position(_auraDD_active.menu,_auraDD_active.input);},true);
+if(window.visualViewport){
+  window.visualViewport.addEventListener("resize",function(){if(_auraDD_active)_auraDD_position(_auraDD_active.menu,_auraDD_active.input);});
+  window.visualViewport.addEventListener("scroll",function(){if(_auraDD_active)_auraDD_position(_auraDD_active.menu,_auraDD_active.input);});
+}
 
 /* ══════════════════════════════════════════════════════════════
    PRESCRIPTION MODULE — PDF · Storage · Signed URL · Auto WhatsApp
@@ -4733,7 +4757,6 @@ function addMedRow(name,dose,dur,timing){
   if(!wrap)return;
   var row=document.createElement("div");
   row.className="rx-med-row";
-  row.style.cssText="display:grid;grid-template-columns:1.7fr 0.9fr 0.6fr 1.3fr 30px;gap:6px;margin-bottom:7px;align-items:center";
   var timingOpts=RX_TIMING_OPTIONS.map(function(o){return '<option value="'+o+'"'+(o===(timing||"After Food")?' selected':'')+'>'+o+'</option>';}).join("");
   row.innerHTML=
     '<input type="text" class="finput rx-m-name" placeholder="Medicine (e.g. Paracetamol 500mg)" value="'+(name||"")+'"/>'+
