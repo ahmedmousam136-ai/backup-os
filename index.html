@@ -390,7 +390,7 @@ main.content{
 .qrow:hover{background:var(--bg)}
 .qrow:last-child{border-bottom:none}
 .token{width:28px;height:28px;border-radius:6px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:700;color:var(--text-secondary);flex-shrink:0}
-.qname{color:var(--text-primary);font-size:12px;font-weight:500}
+.qname{color:var(--text-primary);font-size:12px;font-weight:500;overflow-wrap:anywhere}
 .qtime{color:var(--text-tertiary);font-size:10px;display:flex;align-items:center;gap:3px;margin-top:1px}
 
 .wa-icon-btn{
@@ -988,6 +988,8 @@ main.content{
   .live-badge{font-size:10px;padding:4px 8px}
   .ph{padding:11px 13px}
   .qrow{padding:10px 13px}
+  .qrow{align-items:flex-start}
+  .qrow>div{flex:1 1 100% !important}
   .arow{padding:10px 13px}
   .auto-row{padding:11px 13px}
   .qr{padding:10px 13px}
@@ -4075,21 +4077,21 @@ function renderQueue(){
     return;
   }
   el.innerHTML=q.map(function(p){
-    var dateLbl=((_dashQueueFilter!=='today')||_dashQueueDate)?('<span style="color:var(--text-tertiary);margin-left:5px">· '+p.date+'</span>'):'';
+    var dateLbl=((_dashQueueFilter!=='today')||_dashQueueDate)?('<span style="color:var(--text-tertiary);margin-left:5px;white-space:nowrap">· '+_fuPrettyDate(p.date)+'</span>'):'';
     return `
     <div class="qrow" style="flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:9px;min-width:0;flex:1${p.patientId?';cursor:pointer':''}"${p.patientId?` onclick="openPatientProfile('${p.patientId}')" title="Open patient profile"`:''}>
-        <div class="token">${p.serial}</div>
+      <div style="display:flex;align-items:flex-start;gap:9px;min-width:0;flex:1 1 180px${p.patientId?';cursor:pointer':''}"${p.patientId?` onclick="openPatientProfile('${p.patientId}')" title="Open patient profile"`:''}>
+        <div class="token" style="flex-shrink:0">${p.serial}</div>
         <div style="min-width:0">
-          <p class="qname" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</p>
-          <p class="qtime">
-            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            ${p.time}${dateLbl}
+          <p class="qname">${p.name}</p>
+          <p class="qtime" style="flex-wrap:wrap">
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span style="white-space:nowrap">${p.time}</span>${dateLbl}
           </p>
           ${p.reason?('<p class="qtime" style="margin-top:2px;color:var(--text-secondary)">'+p.reason+'</p>'):''}
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0">
         <span style="margin-right:2px">${chipQ(p.status)}</span>
         ${_queueActionButtons(p)}
       </div>
@@ -4158,18 +4160,18 @@ function renderFollowupQueue(){
       status:st.label,type:'followup',followupId:r.id,serial:i+1};
     return `
     <div class="qrow" style="flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:9px;min-width:0;flex:1${p.patientId?';cursor:pointer':''}"${p.patientId?` onclick="openPatientProfile('${p.patientId}')" title="Open patient profile"`:''}>
-        <div class="token">${p.serial}</div>
+      <div style="display:flex;align-items:flex-start;gap:9px;min-width:0;flex:1 1 180px${p.patientId?';cursor:pointer':''}"${p.patientId?` onclick="openPatientProfile('${p.patientId}')" title="Open patient profile"`:''}>
+        <div class="token" style="flex-shrink:0">${p.serial}</div>
         <div style="min-width:0">
-          <p class="qname" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</p>
+          <p class="qname">${p.name}</p>
           <p class="qtime">
-            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             ${p.time}
           </p>
           <p class="qtime" style="margin-top:2px;color:var(--text-secondary)">${p.reason}</p>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0">
         <span class="fu-badge ${st.cls}" style="margin-right:2px">${st.label}</span>
         ${_queueActionButtons(p)}
       </div>
