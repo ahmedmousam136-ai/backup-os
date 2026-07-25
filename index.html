@@ -1140,8 +1140,16 @@ main.content{
   border-radius:var(--r-sm);box-shadow:var(--sh-md);max-height:220px;overflow-y:auto;
   -webkit-overflow-scrolling:touch}
 .aura-dd-opt{padding:8px 12px;font-size:12.5px;color:var(--text-primary);cursor:pointer;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid var(--border)}
+.aura-dd-opt:last-child{border-bottom:none}
 .aura-dd-opt:hover,.aura-dd-opt.hi{background:var(--blue-bg);color:var(--blue)}
+/* On phones, ditch the cramped input-width popover for a roomy,
+   full-width list — same big, easy-to-tap row style as the native
+   Food Timing picker — so medicine names are never cut off. */
+@media(max-width:560px){
+  .aura-dd-menu{border-radius:var(--r-md);max-height:46vh}
+  .aura-dd-opt{padding:14px 16px;font-size:14px;white-space:normal;overflow:visible;text-overflow:clip;line-height:1.35}
+}
 
 /* ══ FOLLOW-UP MANAGEMENT SYSTEM ══ */
 .fu-row{padding:11px 15px;border-bottom:1px solid rgba(228,224,216,.65);transition:background var(--ease)}
@@ -1812,7 +1820,7 @@ main.content{
   </select>
   <p class="qp-hint" id="rx-patient-id-hint">Patient ID: —</p>
 </div>
-      <div class="rx-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="rx-2col">
         <div>
           <label class="flbl">Patient Name <span style="color:var(--red)">*</span></label>
           <input type="text" class="finput" id="rx-name" placeholder="Full name" autocapitalize="words"/>
@@ -1827,7 +1835,7 @@ main.content{
         </div>
       </div>
 
-      <div class="rx-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="rx-2col">
         <div>
           <label class="flbl">Gender / Age</label>
           <div class="finput" id="rx-gender-age" style="display:flex;align-items:center;color:var(--text-tertiary)">—</div>
@@ -4652,9 +4660,29 @@ function _auraDD_closeActive(){
 }
 function _auraDD_position(menu,input){
   var r=input.getBoundingClientRect();
-  menu.style.left=r.left+"px";
-  menu.style.top=(r.bottom+2)+"px";
-  menu.style.width=r.width+"px";
+  if(window.innerWidth<=560){
+    /* Full-width panel, same idea as the native select's own
+       full-width picker — never as narrow as the medicine/dose
+       input itself, so option text is never squeezed or truncated. */
+    var margin=16;
+    menu.style.left=margin+"px";
+    menu.style.width=(window.innerWidth-margin*2)+"px";
+    var spaceBelow=window.innerHeight-r.bottom;
+    if(spaceBelow<160 && r.top>160){
+      /* not enough room below the field (keyboard is covering it) —
+         show the list above the field instead of off-screen */
+      menu.style.top="";
+      menu.style.bottom=(window.innerHeight-r.top+6)+"px";
+    }else{
+      menu.style.bottom="";
+      menu.style.top=(r.bottom+6)+"px";
+    }
+  }else{
+    menu.style.bottom="";
+    menu.style.left=r.left+"px";
+    menu.style.top=(r.bottom+2)+"px";
+    menu.style.width=r.width+"px";
+  }
 }
 function _auraDD_options(input,datalistId){
   var q=(input.value||"").trim().toLowerCase();
