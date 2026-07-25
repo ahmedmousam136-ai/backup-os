@@ -4667,18 +4667,29 @@ function _auraDD_position(menu,input){
     var margin=16;
     menu.style.left=margin+"px";
     menu.style.width=(window.innerWidth-margin*2)+"px";
-    var spaceBelow=window.innerHeight-r.bottom;
-    if(spaceBelow<160 && r.top>160){
+    /* visualViewport reflects the area actually visible above the
+       on-screen keyboard (window.innerHeight often doesn't shrink on
+       iOS Safari when the keyboard opens), so use it when available
+       for correctly deciding above vs. below and how tall the list
+       can be before the keyboard covers it. */
+    var vv=window.visualViewport;
+    var visibleBottom=vv?(vv.offsetTop+vv.height):window.innerHeight;
+    var spaceBelow=visibleBottom-r.bottom;
+    var spaceAbove=r.top-(vv?vv.offsetTop:0);
+    if(spaceBelow<160 && spaceAbove>spaceBelow){
       /* not enough room below the field (keyboard is covering it) —
          show the list above the field instead of off-screen */
       menu.style.top="";
       menu.style.bottom=(window.innerHeight-r.top+6)+"px";
+      menu.style.maxHeight=Math.max(120,spaceAbove-16)+"px";
     }else{
       menu.style.bottom="";
       menu.style.top=(r.bottom+6)+"px";
+      menu.style.maxHeight=Math.max(120,spaceBelow-16)+"px";
     }
   }else{
     menu.style.bottom="";
+    menu.style.maxHeight="";
     menu.style.left=r.left+"px";
     menu.style.top=(r.bottom+2)+"px";
     menu.style.width=r.width+"px";
@@ -4723,7 +4734,14 @@ function attachAuraDropdown(input,datalistId){
     if(e.key==="Enter"||e.key==="Tab"){_auraDD_closeActive();}
   });
 }
-document.addEventListener("pointerdown",function(e){
+/* Close on a genuine tap/click only — NOT on "pointerdown", which
+   also fires at the very start of a scroll/drag gesture. On mobile,
+   the medicine/dose/days list often opens right above the on-screen
+   keyboard, so people try to scroll the page to see it better; using
+   pointerdown here closed the list the instant that scroll began,
+   forcing them to re-open it over and over. A real click doesn't
+   fire if the touch turned into a scroll, so this fixes that loop. */
+document.addEventListener("click",function(e){
   if(!_auraDD_active)return;
   var m=_auraDD_active.menu,inp=_auraDD_active.input;
   if(e.target===inp||(m&&m.contains(e.target)))return;
