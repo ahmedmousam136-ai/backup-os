@@ -1662,12 +1662,6 @@ main.content{
           </div>
         </div>
 
-        <div class="panel">
-          <div class="ph">
-            <div class="pt" data-i18n="quick_actions">Quick Actions — Recent Patients</div>
-          </div>
-          <div id="quick-list"></div>
-        </div>
       </div>
 
       <!-- ── ANALYTICS ── -->
@@ -1701,18 +1695,18 @@ main.content{
         <div class="mcr-mg">
           <div class="mcr-mc">
             <p class="mcr-mc-lbl">Missed Calls</p>
-            <p class="mcr-mc-val">38</p>
+            <p class="mcr-mc-val">0</p>
             <p class="mcr-mc-sub">This month</p>
           </div>
           <div class="mcr-mc">
             <p class="mcr-mc-lbl">Recovered</p>
-            <p class="mcr-mc-val" style="color:var(--green)">24</p>
+            <p class="mcr-mc-val" style="color:var(--green)">0</p>
             <p class="mcr-mc-sub">Bookings made</p>
           </div>
           <div class="mcr-mc">
             <p class="mcr-mc-lbl">Recovery Rate</p>
-            <p class="mcr-mc-val" style="color:var(--blue)">63%</p>
-            <p class="mcr-mc-sub">&#x2191; from 41%</p>
+            <p class="mcr-mc-val" style="color:var(--blue)">—</p>
+            <p class="mcr-mc-sub">No data yet</p>
           </div>
         </div>
 
@@ -1747,55 +1741,11 @@ main.content{
         <div class="panel">
           <div class="ph">
             <div class="pt">Recent Missed Calls</div>
-            <span class="pb pb-r">5 pending</span>
+            <span class="pb pb-g" id="mcr-pending-badge">0 pending</span>
           </div>
-          <div>
-            <div class="mcr-row">
-              <div>
-                <p class="mcr-name">+91 98456 77890</p>
-                <p class="mcr-time">Today, 10:42 AM · 2 missed calls</p>
-              </div>
-              <div style="display:flex;align-items:center;gap:8px">
-                <span class="mcr-status mcr-pending">WhatsApp Pending</span>
-                <button class="tmpl-send-btn" style="font-size:10px;padding:5px 9px" onclick="alert('WhatsApp sent to +91 98456 77890')">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                  Send
-                </button>
-              </div>
-            </div>
-            <div class="mcr-row">
-              <div>
-                <p class="mcr-name">Priya Sengupta</p>
-                <p class="mcr-time">Today, 09:15 AM · Known patient</p>
-              </div>
-              <span class="mcr-status mcr-sent">WA Sent</span>
-            </div>
-            <div class="mcr-row">
-              <div>
-                <p class="mcr-name">+91 70015 33214</p>
-                <p class="mcr-time">Yesterday, 04:30 PM · 1 missed call</p>
-              </div>
-              <span class="mcr-status mcr-booked">&#x2713; Booked</span>
-            </div>
-            <div class="mcr-row">
-              <div>
-                <p class="mcr-name">Ruma Das</p>
-                <p class="mcr-time">Yesterday, 02:10 PM · Known patient</p>
-              </div>
-              <span class="mcr-status mcr-booked">&#x2713; Booked</span>
-            </div>
-            <div class="mcr-row">
-              <div>
-                <p class="mcr-name">+91 90023 11009</p>
-                <p class="mcr-time">Yesterday, 11:50 AM · 3 missed calls</p>
-              </div>
-              <div style="display:flex;align-items:center;gap:8px">
-                <span class="mcr-status mcr-pending">Pending</span>
-                <button class="tmpl-send-btn" style="font-size:10px;padding:5px 9px" onclick="alert('WhatsApp sent!')">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                  Send
-                </button>
-              </div>
+          <div id="mcr-recent-list">
+            <div style="padding:28px 16px;text-align:center;color:var(--text-tertiary);font-size:12.5px">
+              No missed calls yet. As calls come in, they'll show up here for WhatsApp recovery.
             </div>
           </div>
         </div>
@@ -2719,7 +2669,7 @@ const T={
     q_date_no_appts:"No appointments on this date",q_date_no_appts_sub:"Try picking a different date, or clear it to return to filters.",
     start_consult:"Start Consultation",gen_rx_short:"Prescription",complete_visit:"Complete Visit",
     wa_title:"WhatsApp Activity",wa_sub:"Automate patient communications and follow-ups",
-    engine_live:"◉ Engine Live",quick_actions:"Quick Actions — Recent Patients",
+    engine_live:"◉ Engine Live",
     ana_title:"Reports & Analytics",ana_sub:"Last 30 days · Updated just now",
     auto_breakdown:"Automation Breakdown",thirty_days:"30 days",
     health_summary:"Patient Health Summary",current:"Current",
@@ -2788,7 +2738,7 @@ const T={
     q_date_no_appts:"এই তারিখে কোনো অ্যাপয়েন্টমেন্ট নেই",q_date_no_appts_sub:"অন্য একটি তারিখ বেছে নিন, বা ফিল্টারে ফিরে যেতে এটি সাফ করুন।",
     start_consult:"পরামর্শ শুরু করুন",gen_rx_short:"প্রেসক্রিপশন",complete_visit:"ভিজিট সম্পন্ন করুন",
     wa_title:"হোয়াটসঅ্যাপ কার্যক্রম",wa_sub:"রোগীদের যোগাযোগ ও ফলো-আপ স্বয়ংক্রিয় করুন",
-    engine_live:"◉ ইঞ্জিন চালু",quick_actions:"দ্রুত পদক্ষেপ — সাম্প্রতিক রোগী",
+    engine_live:"◉ ইঞ্জিন চালু",
     ana_title:"রিপোর্ট ও বিশ্লেষণ",ana_sub:"শেষ ৩০ দিন · এইমাত্র আপডেট হয়েছে",
     auto_breakdown:"অটোমেশন বিভাজন",thirty_days:"৩০ দিন",
     health_summary:"রোগীর স্বাস্থ্য সারসংক্ষেপ",current:"বর্তমান",
@@ -2866,8 +2816,7 @@ const DB={
 
 const AUTOS=[
   {label_en:"Appointment Confirmation",label_bn:"অ্যাপয়েন্টমেন্ট নিশ্চিতকরণ",desc_en:"Sent 24h before scheduled visit",desc_bn:"নির্ধারিত ভিজিটের ২৪ ঘণ্টা আগে পাঠানো হয়",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,on:true},
-  {label_en:"14-Day Return Reminder",label_bn:"১৪ দিনের রিটার্ন রিমাইন্ডার",desc_en:"Auto-reminds patients 14 days post-visit",desc_bn:"ভিজিটের ১৪ দিন পর রোগীদের স্বয়ংক্রিয়ভাবে মনে করিয়ে দেয়",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,on:true},
-  {label_en:"48-Hour Follow-Up",label_bn:"৪৮ ঘণ্টার ফলো-আপ",desc_en:"Check-in message 2 days after appointment",desc_bn:"অ্যাপয়েন্টমেন্টের ২ দিন পর চেক-ইন বার্তা",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,on:true},
+  {label_en:"Follow-Up Reminder",label_bn:"ফলো-আপ রিমাইন্ডার",desc_en:"Auto-reminds patients to book their follow-up visit",desc_bn:"রোগীদের ফলো-আপ ভিজিট বুক করতে স্বয়ংক্রিয়ভাবে মনে করিয়ে দেয়",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,on:true},
   {label_en:"Missed Appointment Recovery",label_bn:"মিস অ্যাপয়েন্টমেন্ট পুনরুদ্ধার",desc_en:"Smart recovery flow for missed visits",desc_bn:"মিস হওয়া ভিজিটের জন্য স্মার্ট রিকভারি প্রবাহ",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5.01"/></svg>`,on:true},
   {label_en:"Google Review Request",label_bn:"গুগল রিভিউ অনুরোধ",desc_en:"Asks for review 2h after completed appointment",desc_bn:"অ্যাপয়েন্টমেন্টের ২ ঘণ্টা পর রিভিউ চায়",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,on:false},
   {label_en:"WhatsApp Broadcast",label_bn:"হোয়াটসঅ্যাপ ব্রডকাস্ট",desc_en:"Send health campaigns to patient segments",desc_bn:"রোগীদের বিভাগে স্বাস্থ্য প্রচারণা পাঠান",icon:`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,on:false},
@@ -3356,21 +3305,6 @@ function renderWA(){
       <button class="toggle ${a.on?'on':'off'}" onclick="toggleAuto(${i})" aria-label="${a.on?'Disable':'Enable'} ${a.label_en}">
         <span class="tknob"></span>
       </button>
-    </div>`).join("");
-
-  const pats=DB[mkt].patients.slice(0,5);
-  const acts=[t("quick_send_reminder"),t("quick_followup"),t("quick_confirm"),t("quick_review")];
-  document.getElementById("quick-list").innerHTML=pats.map(p=>`
-    <div class="qr">
-      <div class="qr-inner">
-        <div style="display:flex;align-items:center;gap:9px">
-          <div class="qav">${p.name.charAt(0)}</div>
-          <div><p class="qrname">${p.name}</p><p class="qrphone">${p.phone}</p></div>
-        </div>
-        <div class="qbtns">
-          ${acts.map(b=>`<button class="qbtn" onclick='openWA(${JSON.stringify(p)})'>${b}</button>`).join("")}
-        </div>
-      </div>
     </div>`).join("");
 }
 
