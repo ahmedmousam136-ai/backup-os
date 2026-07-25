@@ -4619,6 +4619,7 @@ async function addAppointment(){
   await fetchAppointments();
   await fetchPatients();
   showToast('Appointment saved for '+name.trim());
+  return {patientId:patientId, appointmentId:(ins.data&&ins.data.id)||null};
 }
 
 /* ══ TOAST ══ */
@@ -4667,29 +4668,18 @@ function _auraDD_position(menu,input){
     var margin=16;
     menu.style.left=margin+"px";
     menu.style.width=(window.innerWidth-margin*2)+"px";
-    /* visualViewport reflects the area actually visible above the
-       on-screen keyboard (window.innerHeight often doesn't shrink on
-       iOS Safari when the keyboard opens), so use it when available
-       for correctly deciding above vs. below and how tall the list
-       can be before the keyboard covers it. */
-    var vv=window.visualViewport;
-    var visibleBottom=vv?(vv.offsetTop+vv.height):window.innerHeight;
-    var spaceBelow=visibleBottom-r.bottom;
-    var spaceAbove=r.top-(vv?vv.offsetTop:0);
-    if(spaceBelow<160 && spaceAbove>spaceBelow){
+    var spaceBelow=window.innerHeight-r.bottom;
+    if(spaceBelow<160 && r.top>160){
       /* not enough room below the field (keyboard is covering it) —
          show the list above the field instead of off-screen */
       menu.style.top="";
       menu.style.bottom=(window.innerHeight-r.top+6)+"px";
-      menu.style.maxHeight=Math.max(120,spaceAbove-16)+"px";
     }else{
       menu.style.bottom="";
       menu.style.top=(r.bottom+6)+"px";
-      menu.style.maxHeight=Math.max(120,spaceBelow-16)+"px";
     }
   }else{
     menu.style.bottom="";
-    menu.style.maxHeight="";
     menu.style.left=r.left+"px";
     menu.style.top=(r.bottom+2)+"px";
     menu.style.width=r.width+"px";
@@ -4734,14 +4724,7 @@ function attachAuraDropdown(input,datalistId){
     if(e.key==="Enter"||e.key==="Tab"){_auraDD_closeActive();}
   });
 }
-/* Close on a genuine tap/click only — NOT on "pointerdown", which
-   also fires at the very start of a scroll/drag gesture. On mobile,
-   the medicine/dose/days list often opens right above the on-screen
-   keyboard, so people try to scroll the page to see it better; using
-   pointerdown here closed the list the instant that scroll began,
-   forcing them to re-open it over and over. A real click doesn't
-   fire if the touch turned into a scroll, so this fixes that loop. */
-document.addEventListener("click",function(e){
+document.addEventListener("pointerdown",function(e){
   if(!_auraDD_active)return;
   var m=_auraDD_active.menu,inp=_auraDD_active.input;
   if(e.target===inp||(m&&m.contains(e.target)))return;
@@ -5094,6 +5077,7 @@ if(ins.error){ rxError("Save failed: "+ins.error.message); btn.disabled=false; b
       nav('dashboard', document.querySelector('.nb[onclick*="\'dashboard\'"]'));
     }, 600);
   }
+  return {prescriptionId:rxId, patientId:(document.getElementById("rx-patient")||{}).value||null};
 }
 
 /* ── RETRY: resend only, no new PDF ───────────────────────── */
@@ -7340,6 +7324,11 @@ var _voiceTranscript='';
 var _voiceLastSpeechAt=0;
 var _voiceSilenceTimer=null;
 var _voiceFinished=false;     /* guards against double-finish (command + timer + button) */
+var _voiceMediaStream=null;   /* raw mic stream, captured in parallel with speech recognition so
+                                  the actual audio can be logged to Supabase alongside the transcript */
+var _voiceRecorder=null;
+var _voiceAudioChunks=[];
+var _voiceRecordStartedAt=0;
 
 var VOICE_GUIDES={
   appointment:[
@@ -7360,6 +7349,23 @@ var VOICE_GUIDES={
    doctor thinking or checking a chart is normal — they only end on
    the "finish"/"done" voice command or the Stop/Finish button. */
 var VOICE_APPT_SILENCE_MS=3500;
+
+/* ══════════════════════════════════════════════════════════════
+   VOICE SESSION LOGGING (transcript + audio recording)
+
+   Requires the `voice_logs` table and a private `voice-recordings`
+   storage bucket (see supabase/2026_07_18_voice_logs.sql). Columns
+   used: id, clinic_id, patient_id, appointment_id, prescription_id,
+   session_type ('appointment'|'prescription'), transcript,
+   audio_path, duration_seconds, doctor_name, created_at.
+
+   Every read/write is defensively wrapped exactly like the rest of
+   this file's background layers (ABDM foundation, audit trail,
+   follow-up management) — a missing table or bucket never blocks
+   the actual appointment/prescription voice workflow, it only means
+   that particular session doesn't get logged. This module is purely
+   additive.
+   ══════════════════════════════════════════════════════════════ */
 
 function _voiceSupported(){
   return !!(window.SpeechRecognition||window.webkitSpeechRecognition);
@@ -7393,6 +7399,7 @@ function openVoiceModal(mode){
 }
 function closeVoiceModal(){
   voiceStopListening();
+  if(!_voiceFinished)_voiceCleanupAudioCapture(); /* aborted session — don't save a partial/incomplete recording */
   closeModal('voice-modal');
 }
 function voiceStartListening(){
@@ -7437,6 +7444,7 @@ function voiceStartListening(){
     var st=document.getElementById('voice-status-text'); if(st)st.textContent='Listening… speak naturally.';
     var pulse=document.getElementById('voice-pulse'); if(pulse)pulse.classList.add('blink');
     if(_voiceMode==='appointment')_voiceArmSilenceCheck();
+    _voiceStartAudioCapture(); /* best-effort, in parallel — never blocks speech-to-text if it fails */
   }catch(e){ showToast('Could not start voice input.'); }
 }
 function voiceStopListening(){
@@ -7445,6 +7453,58 @@ function voiceStopListening(){
   if(_voiceRecognition){ try{_voiceRecognition.onend=null;_voiceRecognition.stop();}catch(e){} }
   var st=document.getElementById('voice-status-text'); if(st)st.textContent='Starting microphone…';
   var pulse=document.getElementById('voice-pulse'); if(pulse)pulse.classList.remove('blink');
+}
+
+/* ── Parallel mic recording, purely for the Supabase voice log ──
+   SpeechRecognition never exposes the underlying audio, so logging
+   the actual recording (not just the transcript) needs its own,
+   independent getUserMedia + MediaRecorder capture running
+   alongside it. Entirely best-effort: if the browser/device doesn't
+   support it, or the extra mic grant is denied, voice-to-text keeps
+   working exactly as before — only the audio log is skipped. */
+async function _voiceStartAudioCapture(){
+  _voiceAudioChunks=[];
+  try{
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||typeof MediaRecorder==='undefined')return;
+    var stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    if(!_voiceListening){ stream.getTracks().forEach(function(t){t.stop();}); return; } /* session already ended while permission was pending */
+    _voiceMediaStream=stream;
+    var mimeCandidates=['audio/webm;codecs=opus','audio/webm','audio/mp4'];
+    var mime=mimeCandidates.find(function(t){return window.MediaRecorder.isTypeSupported&&window.MediaRecorder.isTypeSupported(t);})||'';
+    _voiceRecorder=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);
+    _voiceRecorder.ondataavailable=function(e){ if(e.data&&e.data.size>0)_voiceAudioChunks.push(e.data); };
+    _voiceRecordStartedAt=Date.now();
+    _voiceRecorder.start();
+  }catch(e){
+    _voiceMediaStream=null; _voiceRecorder=null; /* mic denied/unsupported — silently skip the audio log */
+  }
+}
+/* Stops the recorder and resolves the recorded Blob (or null). Always
+   safe to call even if recording never actually started. */
+function _voiceStopAudioCapture(){
+  return new Promise(function(resolve){
+    if(!_voiceRecorder||_voiceRecorder.state==='inactive'){
+      _voiceCleanupAudioCapture();
+      resolve(null);
+      return;
+    }
+    var durationSec=Math.max(1,Math.round((Date.now()-_voiceRecordStartedAt)/1000));
+    var recorder=_voiceRecorder;
+    recorder.onstop=function(){
+      var mimeType=recorder.mimeType||'audio/webm';
+      var blob=_voiceAudioChunks.length?new Blob(_voiceAudioChunks,{type:mimeType}):null;
+      _voiceCleanupAudioCapture();
+      resolve(blob?{blob:blob,durationSec:durationSec}:null);
+    };
+    try{recorder.stop();}catch(e){ _voiceCleanupAudioCapture(); resolve(null); }
+  });
+}
+/* Stops mic tracks and discards any in-progress recording without
+   saving it — used when a session is aborted (modal closed early)
+   rather than genuinely finished. */
+function _voiceCleanupAudioCapture(){
+  if(_voiceMediaStream){ try{_voiceMediaStream.getTracks().forEach(function(t){t.stop();});}catch(e){} }
+  _voiceMediaStream=null; _voiceRecorder=null; _voiceAudioChunks=[];
 }
 
 /* Appointment-only: after each chunk of speech, wait
@@ -7478,13 +7538,52 @@ async function voiceFinish(){
   _voiceFinished=true;
   clearTimeout(_voiceSilenceTimer);
   voiceStopListening();
+  var audioResult=await _voiceStopAudioCapture(); /* {blob,durationSec} or null — best-effort */
   var text=_voiceTranscript.trim();
   var mode=_voiceMode;
   closeModal('voice-modal');
   if(!text){showToast('No speech captured — please try again.');return;}
   showToast('Processing your voice input…');
-  if(mode==='appointment')await voiceProcessAppointment(text);
-  else if(mode==='prescription')await voiceProcessPrescription(text);
+  var linked={};
+  if(mode==='appointment')linked=await voiceProcessAppointment(text,linked);
+  else if(mode==='prescription')linked=await voiceProcessPrescription(text,linked);
+  _voiceSaveLog(mode,text,audioResult,linked||{});
+}
+
+/* ── Persists the transcript + (if captured) the actual audio
+   recording to Supabase, linked to whichever patient/appointment/
+   prescription the session produced. Wrapped defensively like every
+   other background layer in this file: a missing `voice_logs` table
+   or `voice-recordings` storage bucket never blocks the appointment
+   or prescription that was just created — it only skips the log. ── */
+async function _voiceSaveLog(mode,transcript,audioResult,linked){
+  try{
+    var cid=_clinicId||(await _ensureClinicId());
+    if(!cid)return;
+    var audioPath=null;
+    if(audioResult&&audioResult.blob){
+      var mt=(audioResult.blob.type||'audio/webm');
+      var ext=mt.indexOf('mp4')>-1?'m4a':(mt.indexOf('ogg')>-1?'ogg':'webm');
+      audioPath=cid+'/'+mode+'/'+Date.now()+'_'+Math.random().toString(36).slice(2,8)+'.'+ext;
+      var up=await _supa.storage.from('voice-recordings').upload(audioPath,audioResult.blob,{contentType:mt});
+      if(up.error)audioPath=null; /* bucket missing/not set up yet — save the transcript anyway */
+    }
+    await _supa.from('voice_logs').insert({
+      clinic_id:cid,
+      session_type:mode,
+      transcript:transcript,
+      audio_path:audioPath,
+      duration_seconds:audioResult?audioResult.durationSec:null,
+      patient_id:linked.patientId||null,
+      appointment_id:linked.appointmentId||null,
+      prescription_id:linked.prescriptionId||null,
+      doctor_name:(DB[mkt]&&DB[mkt].doc&&DB[mkt].doc.name)||null
+    });
+  }catch(e){
+    /* voice_logs / voice-recordings not set up yet in this Supabase
+       project — see the AURA_VOICE_LOGS_SETUP_SQL comment further
+       down in this file. Never blocks the actual workflow. */
+  }
 }
 
 /* ── Lightweight pattern-based field extraction ──────────────── */
@@ -7524,18 +7623,19 @@ function voiceParseAppointment(text){
    the patient never has to say either) → the doctor's screen jumps
    straight to Prescriptions with the patient already selected and
    shown as a compact badge, not editable fields. ── */
-async function voiceProcessAppointment(text){
+async function voiceProcessAppointment(text, linked){
+  linked=linked||{};
   var data=voiceParseAppointment(text);
   if(!data.name){
     showToast("Couldn't clearly hear the patient's name — opening manual entry so you can finish this appointment.");
     openAddAppointmentModal();
-    return;
+    return linked;
   }
   if(!data.phone){
     showToast("Couldn't clearly hear a phone number — opening manual entry so you can finish this appointment.");
     openAddAppointmentModal();
     var ne=document.getElementById('add-name'); if(ne)ne.value=data.name;
-    return;
+    return linked;
   }
   add_resetModal();
   document.getElementById('add-name').value=data.name;
@@ -7557,7 +7657,8 @@ async function voiceProcessAppointment(text){
   await new Promise(function(r){setTimeout(r,600);}); /* let the phone lookup resolve so we don't create a duplicate patient */
 
   showToast('Creating appointment for '+data.name+' from voice…');
-  await addAppointment();
+  var created=await addAppointment();
+  if(created){ linked.patientId=created.patientId; linked.appointmentId=created.appointmentId; }
 
   setTimeout(function(){
     nav('prescriptions', document.querySelector('.nb[onclick*="\'prescriptions\'"]'));
@@ -7571,6 +7672,7 @@ async function voiceProcessAppointment(text){
     }
     showToast('Ready for prescription — tap Voice Entry to dictate, or fill it in manually.');
   },900);
+  return linked;
 }
 function _voiceIsoDob(raw){
   var m=raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
@@ -7629,13 +7731,15 @@ function _voiceNearestFollowupOption(days){
    is built, the PDF is generated with the consultation summary
    included in that same PDF, and it is sent to the patient's
    WhatsApp automatically. No "Generate Prescription" click needed. ── */
-async function voiceProcessPrescription(text){
+async function voiceProcessPrescription(text, linked){
+  linked=linked||{};
   var sel=document.getElementById('rx-patient');
   if(!sel||!sel.value){
     showToast('Please select a patient on the Prescriptions screen first, then use Voice again.');
     nav('prescriptions', document.querySelector('.nb[onclick*="\'prescriptions\'"]'));
-    return;
+    return linked;
   }
+  linked.patientId=sel.value;
   var data=voiceParsePrescription(text);
   document.getElementById('rx-meds').innerHTML='';
   if(data.meds.length){
@@ -7653,7 +7757,9 @@ async function voiceProcessPrescription(text){
   rxOnFollowupChange();
 
   showToast('Generating prescription from voice and sending to WhatsApp…');
-  await generatePrescription();
+  var created=await generatePrescription();
+  if(created){ linked.prescriptionId=created.prescriptionId; linked.patientId=created.patientId||linked.patientId; }
+  return linked;
 }
 </script>
 </body>
