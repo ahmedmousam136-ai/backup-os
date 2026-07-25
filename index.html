@@ -7324,11 +7324,7 @@ var _voiceTranscript='';
 var _voiceLastSpeechAt=0;
 var _voiceSilenceTimer=null;
 var _voiceFinished=false;     /* guards against double-finish (command + timer + button) */
-var _voiceMediaStream=null;   /* raw mic stream, captured in parallel with speech recognition so
-                                  the actual audio can be logged to Supabase alongside the transcript */
-var _voiceRecorder=null;
-var _voiceAudioChunks=[];
-var _voiceRecordStartedAt=0;
+var _voiceRecordStartedAt=0;  /* session start time — used only to estimate duration for voice_logs */
 
 var VOICE_GUIDES={
   appointment:[
@@ -7399,7 +7395,7 @@ function openVoiceModal(mode){
 }
 function closeVoiceModal(){
   voiceStopListening();
-  if(!_voiceFinished)_voiceCleanupAudioCapture(); /* aborted session — don't save a partial/incomplete recording */
+  _voiceRecordStartedAt=0; /* reset — an aborted session is never logged */
   closeModal('voice-modal');
 }
 function voiceStartListening(){
@@ -7441,10 +7437,10 @@ function voiceStartListening(){
     _voiceRecognition.start();
     _voiceListening=true;
     _voiceLastSpeechAt=Date.now();
+    _voiceRecordStartedAt=Date.now(); /* timestamp only — no separate mic stream, so nothing competes with SpeechRecognition */
     var st=document.getElementById('voice-status-text'); if(st)st.textContent='Listening… speak naturally.';
     var pulse=document.getElementById('voice-pulse'); if(pulse)pulse.classList.add('blink');
     if(_voiceMode==='appointment')_voiceArmSilenceCheck();
-    _voiceStartAudioCapture(); /* best-effort, in parallel — never blocks speech-to-text if it fails */
   }catch(e){ showToast('Could not start voice input.'); }
 }
 function voiceStopListening(){
@@ -7462,49 +7458,13 @@ function voiceStopListening(){
    alongside it. Entirely best-effort: if the browser/device doesn't
    support it, or the extra mic grant is denied, voice-to-text keeps
    working exactly as before — only the audio log is skipped. */
-async function _voiceStartAudioCapture(){
-  _voiceAudioChunks=[];
-  try{
-    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||typeof MediaRecorder==='undefined')return;
-    var stream=await navigator.mediaDevices.getUserMedia({audio:true});
-    if(!_voiceListening){ stream.getTracks().forEach(function(t){t.stop();}); return; } /* session already ended while permission was pending */
-    _voiceMediaStream=stream;
-    var mimeCandidates=['audio/webm;codecs=opus','audio/webm','audio/mp4'];
-    var mime=mimeCandidates.find(function(t){return window.MediaRecorder.isTypeSupported&&window.MediaRecorder.isTypeSupported(t);})||'';
-    _voiceRecorder=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);
-    _voiceRecorder.ondataavailable=function(e){ if(e.data&&e.data.size>0)_voiceAudioChunks.push(e.data); };
-    _voiceRecordStartedAt=Date.now();
-    _voiceRecorder.start();
-  }catch(e){
-    _voiceMediaStream=null; _voiceRecorder=null; /* mic denied/unsupported — silently skip the audio log */
-  }
-}
-/* Stops the recorder and resolves the recorded Blob (or null). Always
-   safe to call even if recording never actually started. */
-function _voiceStopAudioCapture(){
-  return new Promise(function(resolve){
-    if(!_voiceRecorder||_voiceRecorder.state==='inactive'){
-      _voiceCleanupAudioCapture();
-      resolve(null);
-      return;
-    }
-    var durationSec=Math.max(1,Math.round((Date.now()-_voiceRecordStartedAt)/1000));
-    var recorder=_voiceRecorder;
-    recorder.onstop=function(){
-      var mimeType=recorder.mimeType||'audio/webm';
-      var blob=_voiceAudioChunks.length?new Blob(_voiceAudioChunks,{type:mimeType}):null;
-      _voiceCleanupAudioCapture();
-      resolve(blob?{blob:blob,durationSec:durationSec}:null);
-    };
-    try{recorder.stop();}catch(e){ _voiceCleanupAudioCapture(); resolve(null); }
-  });
-}
-/* Stops mic tracks and discards any in-progress recording without
-   saving it — used when a session is aborted (modal closed early)
-   rather than genuinely finished. */
-function _voiceCleanupAudioCapture(){
-  if(_voiceMediaStream){ try{_voiceMediaStream.getTracks().forEach(function(t){t.stop();});}catch(e){} }
-  _voiceMediaStream=null; _voiceRecorder=null; _voiceAudioChunks=[];
+/* NOTE: this used to also open a second, parallel getUserMedia/MediaRecorder
+   stream so the raw audio could be uploaded alongside the transcript. That
+   competed with SpeechRecognition for the microphone and caused transcripts
+   to silently come back empty ("No speech captured"). Removed — we now only
+   log the transcript + duration to voice_logs, not a raw audio file. */
+function _voiceSessionDurationSec(){
+  return _voiceRecordStartedAt?Math.max(1,Math.round((Date.now()-_voiceRecordStartedAt)/1000)):null;
 }
 
 /* Appointment-only: after each chunk of speech, wait
@@ -7538,7 +7498,7 @@ async function voiceFinish(){
   _voiceFinished=true;
   clearTimeout(_voiceSilenceTimer);
   voiceStopListening();
-  var audioResult=await _voiceStopAudioCapture(); /* {blob,durationSec} or null — best-effort */
+  var durationSec=_voiceSessionDurationSec();
   var text=_voiceTranscript.trim();
   var mode=_voiceMode;
   closeModal('voice-modal');
@@ -7547,7 +7507,7 @@ async function voiceFinish(){
   var linked={};
   if(mode==='appointment')linked=await voiceProcessAppointment(text,linked);
   else if(mode==='prescription')linked=await voiceProcessPrescription(text,linked);
-  _voiceSaveLog(mode,text,audioResult,linked||{});
+  _voiceSaveLog(mode,text,durationSec,linked||{});
 }
 
 /* ── Persists the transcript + (if captured) the actual audio
@@ -7556,33 +7516,27 @@ async function voiceFinish(){
    other background layer in this file: a missing `voice_logs` table
    or `voice-recordings` storage bucket never blocks the appointment
    or prescription that was just created — it only skips the log. ── */
-async function _voiceSaveLog(mode,transcript,audioResult,linked){
+async function _voiceSaveLog(mode,transcript,durationSec,linked){
   try{
     var cid=_clinicId||(await _ensureClinicId());
     if(!cid)return;
-    var audioPath=null;
-    if(audioResult&&audioResult.blob){
-      var mt=(audioResult.blob.type||'audio/webm');
-      var ext=mt.indexOf('mp4')>-1?'m4a':(mt.indexOf('ogg')>-1?'ogg':'webm');
-      audioPath=cid+'/'+mode+'/'+Date.now()+'_'+Math.random().toString(36).slice(2,8)+'.'+ext;
-      var up=await _supa.storage.from('voice-recordings').upload(audioPath,audioResult.blob,{contentType:mt});
-      if(up.error)audioPath=null; /* bucket missing/not set up yet — save the transcript anyway */
-    }
-    await _supa.from('voice_logs').insert({
+    var ins=await _supa.from('voice_logs').insert({
       clinic_id:cid,
       session_type:mode,
       transcript:transcript,
-      audio_path:audioPath,
-      duration_seconds:audioResult?audioResult.durationSec:null,
+      audio_path:null, /* raw audio capture removed — it competed with SpeechRecognition for the mic and broke transcripts */
+      duration_in_seconds:durationSec||null, /* matches the actual voice_logs column name */
       patient_id:linked.patientId||null,
       appointment_id:linked.appointmentId||null,
       prescription_id:linked.prescriptionId||null,
       doctor_name:(DB[mkt]&&DB[mkt].doc&&DB[mkt].doc.name)||null
     });
+    if(ins.error){
+      console.warn('[AuraVoiceLogs] Could not save voice log:',ins.error.message);
+    }
   }catch(e){
-    /* voice_logs / voice-recordings not set up yet in this Supabase
-       project — see the AURA_VOICE_LOGS_SETUP_SQL comment further
-       down in this file. Never blocks the actual workflow. */
+    /* logging is best-effort and must never interrupt the appointment/
+       prescription that voice entry just successfully created */
   }
 }
 
